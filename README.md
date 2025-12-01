@@ -58,4 +58,4 @@ Supervised by: Dr.Heba Kandil & Eng.Mayada Magdy
 | **UI/UX Designer** | Yousef Mohamed Abdel Monem Mohamed |
 | **UI/UX Designer** | Ahmed Saad Atya Mohamed |
 
-Submitted to the Faculty of Computers and Information Systems (FCIS), Mansoura University - Information Technology Department (2025).
+Submitted to the Faculty of Computers and Information Sciences (FCIS), Mansoura University - Information Technology Department (2025).
