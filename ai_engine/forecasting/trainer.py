@@ -2,7 +2,7 @@ from prophet import Prophet
 import joblib
 import os
 
-MODEL_DIR = "models/saved_models"
+MODEL_DIR = "models"
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 def train_prophet(df, item_name: str):
