@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+import pandas as pd
+
 from preprocessing.loader import load_data
 from preprocessing.cleaner import clean_data
 from preprocessing.aggregator import aggregate_hourly
@@ -7,7 +9,8 @@ from forecasting.predictor import forecast
 
 app = FastAPI(title="ZeroBite ML Service")
 
-MIN_HOURS = 14 * 24  # minimum 14 days history
+MIN_HOURS = 14 * 24  # 14 days minimum history
+FORECAST_HOURS = 7 * 24  # 1 week
 
 
 @app.get("/")
@@ -21,8 +24,7 @@ def train_model(path: str):
     df = clean_data(df)
     df = aggregate_hourly(df)
 
-    trained = []
-    skipped = []
+    trained, skipped = [], []
 
     for item in df["item_name"].unique():
         item_df = df[df["item_name"] == item]
@@ -40,24 +42,43 @@ def train_model(path: str):
     }
 
 
+# ================================
+# Hourly Forecast (internal use)
+# ================================
 @app.post("/forecast/{item_name}")
-def get_forecast(
-    item_name: str,
-    future_weather: list[int] | None = None,
-    future_events: list[int] | None = None
-):
-    # Defaults (normal conditions)
-    if not future_weather or len(future_weather) != 168:
-        future_weather = [1] * 168
-
-    if not future_events or len(future_events) != 168:
-        future_events = [0] * 168
-
-    if len(future_weather) != 168 or len(future_events) != 168:
-        raise HTTPException(
-            status_code=400,
-            detail="weather_good and event_day must have 168 values"
-        )
+def hourly_forecast(item_name: str):
+    future_weather = [1] * FORECAST_HOURS
+    future_events = [0] * FORECAST_HOURS
 
     result = forecast(item_name, future_weather, future_events)
+
     return result.to_dict(orient="records")
+
+
+# ================================
+# Daily Aggregated Forecast
+# ================================
+@app.post("/forecast/daily/{item_name}")
+def daily_forecast(item_name: str):
+    future_weather = [1] * FORECAST_HOURS
+    future_events = [0] * FORECAST_HOURS
+
+    hourly = forecast(item_name, future_weather, future_events)
+
+    if hourly.empty:
+        raise HTTPException(status_code=404, detail="No forecast data")
+
+    # Convert ds to date
+    hourly["date"] = hourly["ds"].dt.date
+
+    daily = (
+        hourly
+        .groupby("date", as_index=False)["yhat"]
+        .sum()
+        .rename(columns={"yhat": "daily_demand"})
+    )
+
+    # Round & clip (step 1 already applied, but double safe)
+    daily["daily_demand"] = daily["daily_demand"].round().clip(lower=0).astype(int)
+
+    return daily.to_dict(orient="records")
