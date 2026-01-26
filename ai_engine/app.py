@@ -6,7 +6,8 @@ from preprocessing.cleaner import clean_data
 from preprocessing.aggregator import aggregate_hourly
 from forecasting.trainer import train_prophet
 from forecasting.predictor import forecast
-from forecasting.evaluator import evaluate_prophet
+from forecasting.evaluator import evaluate_hourly
+from forecasting.evaluator import evaluate_daily
 
 
 app = FastAPI(title="ZeroBite ML Service")
@@ -89,8 +90,8 @@ def daily_forecast(item_name: str):
 # ================================
 # Model Evaluation (MAE / MAPE)
 # ================================
-@app.get("/evaluate/{item_name}")
-def evaluate_model(item_name: str, path: str):
+@app.get("/evaluate/hourly/{item_name}")
+def evaluate_hourly_model(item_name: str, path: str):
     df = load_data(path)
     df = clean_data(df)
     df = aggregate_hourly(df)
@@ -98,15 +99,20 @@ def evaluate_model(item_name: str, path: str):
     item_df = df[df["item_name"] == item_name]
 
     if len(item_df) < MIN_HOURS:
-        raise HTTPException(
-            status_code=400,
-            detail="Not enough data to evaluate model"
-        )
+        raise HTTPException(400, "Not enough data")
 
-    metrics = evaluate_prophet(item_df)
+    return evaluate_hourly(item_df)
 
-    return {
-        "item_name": item_name,
-        "mae": metrics["mae"],
-        "mape": metrics["mape"]
-    }
+
+@app.get("/evaluate/daily/{item_name}")
+def evaluate_daily_model(item_name: str, path: str):
+    df = load_data(path)
+    df = clean_data(df)
+    df = aggregate_hourly(df)
+
+    item_df = df[df["item_name"] == item_name]
+
+    if len(item_df) < MIN_HOURS:
+        raise HTTPException(400, "Not enough data")
+
+    return evaluate_daily(item_df)
