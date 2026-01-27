@@ -25,7 +25,7 @@ def _train_and_predict(train_df, test_df):
 # =========================
 # HOURLY EVALUATION
 # =========================
-def evaluate_hourly(df: pd.DataFrame):
+def evaluate_hourly(df: pd.DataFrame, return_details: bool = False):
     df = df.rename(columns={"quantity": "y"}).copy()
 
     test_hours = 7 * 24
@@ -42,17 +42,30 @@ def evaluate_hourly(df: pd.DataFrame):
         np.abs((y_true - y_pred) / np.where(y_true == 0, 1, y_true))
     ) * 100
 
-    return {
+    response = {
         "granularity": "hourly",
         "mae": round(mae, 2),
         "mape": round(mape, 2)
     }
 
+    if return_details:
+        response["details"] = (
+            pd.DataFrame({
+                "ds": test_df["ds"].values,
+                "actual": y_true,
+                "predicted": y_pred
+            })
+            .to_dict(orient="records")
+        )
+
+    return response
+
+
 
 # =========================
 # DAILY EVALUATION
 # =========================
-def evaluate_daily(df: pd.DataFrame):
+def evaluate_daily(df: pd.DataFrame, return_details: bool = False):
     df = df.rename(columns={"quantity": "y"}).copy()
 
     test_hours = 7 * 24
@@ -61,14 +74,10 @@ def evaluate_daily(df: pd.DataFrame):
 
     forecast = _train_and_predict(train_df, test_df)
 
-    # Aggregate to daily
     test_df["date"] = test_df["ds"].dt.date
     forecast["date"] = forecast["ds"].dt.date
 
-    daily_true = (
-        test_df.groupby("date")["y"].sum()
-    )
-
+    daily_true = test_df.groupby("date")["y"].sum()
     daily_pred = (
         forecast.groupby("date")["yhat"]
         .sum()
@@ -81,8 +90,21 @@ def evaluate_daily(df: pd.DataFrame):
         np.abs((daily_true - daily_pred) / np.where(daily_true == 0, 1, daily_true))
     ) * 100
 
-    return {
+    response = {
         "granularity": "daily",
         "mae": round(mae, 2),
         "mape": round(mape, 2)
     }
+
+    if return_details:
+        response["details"] = (
+            pd.DataFrame({
+                "date": daily_true.index.astype(str),
+                "actual": daily_true.values,
+                "predicted": daily_pred.values
+            })
+            .to_dict(orient="records")
+        )
+
+    return response
+
