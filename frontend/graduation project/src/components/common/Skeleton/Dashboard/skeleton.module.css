@@ -1,0 +1,196 @@
+/* ======================================================
+   Skeleton Animation
+====================================================== */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-grey-300);
+  border-radius: var(--spacing-2);
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.65),
+    transparent
+  );
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ======================================================
+   Skeleton Shapes
+====================================================== */
+.skTitle {
+  height: 14px;
+  width: 40%;
+  margin-bottom: var(--spacing-3);
+}
+
+.skLine {
+  height: 12px;
+  margin-bottom: var(--spacing-2);
+}
+
+.skCircle {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  margin: var(--spacing-3) auto;
+}
+
+.chartBox {
+  height: 200px;
+  border-radius: 10px; /* No direct mapping, keeping it specific */
+}
+
+.listImg {
+  width: var(--spacing-9);
+  height: var(--spacing-9);
+  border-radius: var(--spacing-2);
+}
+
+/* Width helpers */
+.w40 {
+  width: 40%;
+}
+.w60 {
+  width: 60%;
+}
+.w70 {
+  width: 70%;
+}
+
+/* ======================================================
+   Dashboard Layout
+====================================================== */
+.dashboardSkeleton {
+  padding: var(--spacing-6);
+  background-color: var(--color-background-default);
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  gap: var(--spacing-6);
+}
+
+/* Left sidebar */
+.leftNav {
+  width: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+/* Right content */
+.rightNav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 15px; /* No direct mapping, keeping it specific */
+  min-width: 0; /* VERY IMPORTANT for grid */
+  max-height: 100vh;
+}
+
+/* ======================================================
+   Top Navigation
+====================================================== */
+.topNavRow .section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 60px;
+}
+
+.topNavRow .skTitle {
+  width: 200px;
+  margin: 0;
+}
+
+.topNavRow .chartBox {
+  height: var(--spacing-9);
+  width: 320px;
+  margin: 0;
+}
+
+/* ======================================================
+   Grid Sections
+====================================================== */
+.topRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--spacing-6);
+}
+
+.bottomRow {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr;
+  gap: var(--spacing-6);
+}
+
+/* ======================================================
+   Card Style
+====================================================== */
+.section {
+  background: var(--color-background-paper);
+  border-radius: var(--spacing-4);
+  padding: var(--spacing-6);
+  min-width: 0;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.08),
+    0 12px 24px rgba(0, 0, 0, 0.06);
+}
+
+/* ======================================================
+   List
+====================================================== */
+.listRow {
+  display: flex;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-4);
+}
+
+.listContent {
+  flex: 1;
+}
+
+/* ======================================================
+   Responsive Fixes
+====================================================== */
+@media (max-width: 768px) {
+  .topNavRow .chartBox {
+    width: 220px;
+  }
+
+  .skCircle {
+    width: 90px;
+    height: 90px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboardSkeleton {
+    padding: var(--spacing-4);
+  }
+
+  .topNavRow .section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-3);
+  }
+
+  .topNavRow .chartBox {
+    width: 100%;
+  }
+}
