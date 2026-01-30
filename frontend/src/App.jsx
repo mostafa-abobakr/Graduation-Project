@@ -10,6 +10,8 @@ import Analytics from "./pages/Analytics/index";
 import Customers from "./pages/Customers/index";
 import Settings from "./pages/Settings/index";
 import Notification from "./pages/Notification/index";
+import Toast from "./utils/Toast";
+import { ToastProvider } from "@/context/ToastContext";
 import { ROUTES } from "./routes"; // Import from routes
 import "./styles/global/reset.css";
 import "./styles/global/base.css";
@@ -35,7 +37,10 @@ const router = createBrowserRouter([
 function App() {
   return (
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <ToastProvider>
+        <Toast />
+        <RouterProvider router={router} />
+      </ToastProvider>
     </ThemeProvider>
   );
 }

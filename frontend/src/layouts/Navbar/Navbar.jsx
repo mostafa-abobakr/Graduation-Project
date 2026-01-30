@@ -2,8 +2,17 @@ import { NavLink } from "react-router-dom";
 import styles from "./Navbar.module.css";
 import { ROUTES } from "@/routes";
 import ThemeToggleButton from "@/components/common/ThemeToggleButton";
-
+import { useToast } from "@/hooks/useToast";
 function Navbar() {
+  const toast = useToast();
+    const handleClick = () => {
+      toast({
+        title: "Success!",
+        description: "Your action was successful!",
+        duration: 3000,
+      });
+    };
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}></div>
@@ -23,6 +32,7 @@ function Navbar() {
             viewBox="0 0 45 45"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            onClick={handleClick}
           >
             <path
               d="M22.4996 26.19C20.4582 26.19 18.8033 27.8459 18.8033 29.8886V37.2857H26.1958V29.8886C26.1958 27.8459 24.5409 26.19 22.4996 26.19Z"
