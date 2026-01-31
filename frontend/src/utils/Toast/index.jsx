@@ -1,4 +1,3 @@
-// src/components/common/Toast/Toast.jsx
 import styles from "./Toast.module.css";
 import { useToastContext } from "@/context/ToastContext";
 
@@ -13,17 +12,9 @@ import { useToastContext } from "@/context/ToastContext";
         <div key={toast.id} className={styles.toast}>
           <div className={styles.content}>
             {toast.title && <h4 className={styles.title}>{toast.title}</h4>}
-            {toast.description && (
-              <p className={styles.description}>{toast.description}</p>
-            )}
+            {toast.description && ( <p className={styles.description}>{toast.description}</p> )}
           </div>
-          <button
-            onClick={() => removeToast(toast.id)}
-            className={styles.closeButton}
-            aria-label="Close toast"
-          >
-            &times;
-          </button>
+          <button onClick={() => removeToast(toast.id)} className={styles.closeButton} aria-label="Close toast" > &times; </button>
         </div>
       ))}
     </div>

@@ -9,10 +9,7 @@ export const ToastProvider = ({ children }) => {
 
   const addToast = useCallback(({ title, description, duration = 3000 }) => {
     const id = Date.now().toString();
-    dispatch({
-      type: "ADD_TOAST",
-      payload: { id, title, description },
-    });
+    dispatch({ type: "ADD_TOAST", payload: { id, title, description }, });
 
     if (duration > 0) {
       setTimeout(() => {
