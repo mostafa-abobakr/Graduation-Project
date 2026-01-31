@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\Restaurant_Graduation_Backend.props" />
+</Project>
