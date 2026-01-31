@@ -6,12 +6,13 @@ function MainLayout() {
   return (
     <div className={styles.layout}>
       <Navbar />
-      <div className={styles.content}>
+      {/* <div className={styles.content}> */}
         <ErrorBoundary>
           <Outlet />
         </ErrorBoundary>
-      </div>
+      {/* </div> */}
     </div>
   );
 }
+
 export default MainLayout;

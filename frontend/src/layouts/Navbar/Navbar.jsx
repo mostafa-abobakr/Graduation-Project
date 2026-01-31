@@ -151,7 +151,7 @@ function Navbar() {
 
         {/*==== CUSTOMER link ====  */}
         <NavLink
-          to={ROUTES.CUSTOMERS}
+          to={ROUTES.LOGIN}
           className={({ isActive }) =>
             isActive ? `${styles.link} ${styles.active}` : styles.link
           }

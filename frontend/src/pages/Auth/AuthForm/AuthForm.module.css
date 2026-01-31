@@ -1,0 +1,39 @@
+﻿
+.container {
+ width: 60%;
+}
+.paper {
+  background: var(--color-background-paper);
+  width: 100%;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 400px;  
+}
+
+.avatar {
+  margin: 8px;
+  background-color: #1976d2;
+}
+
+.form {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.submitButton {
+  margin: 24px 0 16px;
+  padding: 12px;
+}
+
+/* Add responsive styles if needed */
+@media (max-width: 600px) {
+  .loginContainer {
+    padding: 16px;
+  }
+
+  .paper {
+    padding: 24px;
+  }
+}
