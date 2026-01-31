@@ -99,13 +99,13 @@ function AuthSocialSection({
 
     
       <div className={styles.footer}>
-        <span>{footerText}</span>
+        <span >{footerText}</span>
         <Link to={footerLinkHref} className={styles.link}>
           {footerLinkText}
         </Link>
       </div>
     </div>
-  );
+  );  
 }
 
 export default AuthSocialSection;

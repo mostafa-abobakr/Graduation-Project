@@ -10,8 +10,8 @@ const AuthForm = () => {
   return (
     <div className="container">
       <div className={styles.paper}>
-        <Typography component="h1" variant="h5" gutterBottom alignSelf="left">
-          Welcome back!
+        <Typography component="h1" variant="h5" gutterBottom alignItems="start">
+          Welcome Back!
         </Typography>
         <Box
           component="form"
@@ -39,14 +39,12 @@ const AuthForm = () => {
             id="password"
             autoComplete="current-password"
           />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            className={styles.submitButton}
-          >
-            Sign In
-          </Button>
+          <button type="submit" className={styles.submitButton}>
+            Login
+          </button>
+          <button className={styles.forgotPassword}>
+            forgot password?
+          </button>
           <AuthFooter
             footerText="Don't have an account?"
             footerLinkText="Sign Up"

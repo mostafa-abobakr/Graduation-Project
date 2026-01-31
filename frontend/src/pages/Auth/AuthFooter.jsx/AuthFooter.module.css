@@ -58,11 +58,15 @@ font-weight: bold;
   font-size: 14px;
   color: var(--color-text-secondary);
 }
-
+.footer span{
+  font-weight: bold;
+  color: var(--color-grey-900);
+  margin-right: 2px; 
+}
 .link {
   margin-left: var(--spacing-1);
-  color: var(--color-primary-main);
-  font-weight: 500;
+  color: var(--color-primary-light);
+  font-weight: 700;
   text-decoration: none;
 }
 
