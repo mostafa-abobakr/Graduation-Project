@@ -10,7 +10,8 @@ import Analytics from "./pages/Analytics/index";
 import Customers from "./pages/Customers/index";
 import Settings from "./pages/Settings/index";
 import Notification from "./pages/Notification/index";
-import Toast from "./utils/Toast";
+import Login from "./pages/Auth/Login";
+import Toast from "./components/Toast";
 import { ToastProvider } from "@/context/ToastContext";
 import { ROUTES } from "./routes"; // Import from routes
 import "./styles/global/reset.css";
@@ -30,8 +31,10 @@ const router = createBrowserRouter([
       { path: ROUTES.CUSTOMERS, element: <Customers /> },
       { path: ROUTES.SETTINGS, element: <Settings /> },
       { path: ROUTES.NOTIFICATION, element: <Notification /> },
+      { path: ROUTES.LOGIN, element: <Login /> },
     ],
   },
+  {}
 ]);
 
 function App() {
