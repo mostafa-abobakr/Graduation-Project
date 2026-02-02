@@ -2,7 +2,7 @@
   width: 100%;
   height: 100vh;
 
-    background:var(--color-background-default);
+  background: var(--color-background-default);
 
   display: flex;
   align-items: center;
@@ -12,26 +12,40 @@
 
 .card {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    background: var(--color-background-paper);
+  background: var(--color-background-paper);
 
   border-radius: 10px;
   display: flex;
   justify-content: space-evenly;
   align-items: center;
   padding: 32px;
-  width: 70%;
+  width: 80%;
   height: 80%;
-}
-.img {
-  width: 45%;
-    filter: drop-shadow(0 20px 40px rgb(231, 243, 254,.3));
+}@keyframes ImgAnimation {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.8;
+    filter: drop-shadow(0 20px 40px rgba(231, 243, 254, 0.1));
+  }
+  50% {
+    transform: translateY(-40px);
+    filter: drop-shadow(0 20px 40px rgba(231, 243, 254, 0.6));
+    filter: drop-shadow(0 20px 40px rgba(51, 141, 225, 0.6));
+    opacity: 1;
+  }
 }
 
+.img {
+  width: 45%;
+  animation: ImgAnimation 6s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
 .divider {
   width: 1px;
   height: 100%;
   background: var(--color-grey-400);
   margin: 0 20px;
   align-self: stretch;
-
 }

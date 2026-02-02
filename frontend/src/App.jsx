@@ -6,7 +6,7 @@ import About from "./pages/About/index";
 import Orders from "./pages/Orders/index";
 import Products from "./pages/Products/index";
 import Dashboard from "./pages/Dashboard/index";
-import Analytics from "./pages/Analytics/index";
+import Forcast from "./pages/Forecast/index";
 import Customers from "./pages/Customers/index";
 import Settings from "./pages/Settings/index";
 import Notification from "./pages/Notification/index";
@@ -31,21 +31,25 @@ const router = createBrowserRouter([
       { path: ROUTES.ORDERS, element: <Orders /> },
       { path: ROUTES.PRODUCTS, element: <Products /> },
       { path: ROUTES.DASHBOARD, element: <Dashboard /> },
-      { path: ROUTES.ANALYTICS, element: <Analytics /> },
+      { path: ROUTES.ANALYTICS, element: <Forcast /> },
       { path: ROUTES.CUSTOMERS, element: <Customers /> },
       { path: ROUTES.SETTINGS, element: <Settings /> },
       { path: ROUTES.NOTIFICATION, element: <Notification /> },
 
-      { path: ROUTES.LOGIN,element:<AuthLayout/> ,children:[
-        {index:true , element: <Login />},
-        {path:ROUTES.FORGET_PASSWORD,element:<ForgetPassword/>},
-        {path:ROUTES.RESET_PASSWORD,element:<ResetPassword/>}
-    ]} ,
-      {path:ROUTES.VERIFY_EMAIL,element:<EmailVerification/>},
-      {path:ROUTES.PasswordChanged,element:<PasswordChanged/>}
+      {
+        path: ROUTES.LOGIN,
+        element: <AuthLayout />,
+        children: [
+          { index: true, element: <Login /> },
+          { path: ROUTES.FORGET_PASSWORD, element: <ForgetPassword /> },
+          { path: ROUTES.RESET_PASSWORD, element: <ResetPassword /> },
+        ],
+      },
+      { path: ROUTES.VERIFY_EMAIL, element: <EmailVerification /> },
+      { path: ROUTES.PasswordChanged, element: <PasswordChanged /> },
     ],
   },
-  {}
+  {},
 ]);
 
 function App() {
