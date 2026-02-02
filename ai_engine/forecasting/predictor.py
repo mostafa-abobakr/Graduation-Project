@@ -3,24 +3,29 @@ import joblib
 from datetime import timedelta
 import os
 
-MODEL_DIR = "models"
+
+def get_model_path(restaurant_id: str, item_name: str):
+    return f"../backend/models/{restaurant_id}/{item_name}.pkl"
 
 
-def forecast(item_name: str, future_weather: list[int], future_events: list[int]):
-    model_path = os.path.join(MODEL_DIR, f"{item_name}.pkl")
+def forecast(
+    restaurant_id: str,
+    item_name: str,
+    future_weather: list[int],
+    future_events: list[int]
+):
+    model_path = get_model_path(restaurant_id, item_name)
 
     if not os.path.exists(model_path):
-        raise FileNotFoundError(f"Model for item '{item_name}' not found")
+        raise FileNotFoundError("Model not found")
 
     model = joblib.load(model_path)
 
-    # 🔹 Last timestamp from training data
     last_ds = model.history["ds"].max()
 
-    # 🔹 Build next 168 hours ONLY
     future_dates = pd.date_range(
         start=last_ds + timedelta(hours=1),
-        periods=168,
+        periods=len(future_weather),
         freq="h"
     )
 
@@ -32,18 +37,8 @@ def forecast(item_name: str, future_weather: list[int], future_events: list[int]
 
     forecast = model.predict(future_df)
 
-    # =========================
-    # ✅ POST-PROCESSING STEP
-    # =========================
-
-    # 1️⃣ Clip negatives
-    forecast["yhat"] = forecast["yhat"].clip(lower=0)
-    forecast["yhat_lower"] = forecast["yhat_lower"].clip(lower=0)
-    forecast["yhat_upper"] = forecast["yhat_upper"].clip(lower=0)
-
-    # 2️⃣ Round to integers
-    forecast["yhat"] = forecast["yhat"].round().astype(int)
-    forecast["yhat_lower"] = forecast["yhat_lower"].round().astype(int)
-    forecast["yhat_upper"] = forecast["yhat_upper"].round().astype(int)
+    forecast["yhat"] = forecast["yhat"].clip(lower=0).round().astype(int)
+    forecast["yhat_lower"] = forecast["yhat_lower"].clip(lower=0).round().astype(int)
+    forecast["yhat_upper"] = forecast["yhat_upper"].clip(lower=0).round().astype(int)
 
     return forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]]

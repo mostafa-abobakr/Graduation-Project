@@ -2,10 +2,14 @@ from prophet import Prophet
 import joblib
 import os
 
-MODEL_DIR = "models"
-os.makedirs(MODEL_DIR, exist_ok=True)
 
-def train_prophet(df, item_name: str):
+def get_model_dir(restaurant_id: str):
+    path = f"../backend/models/{restaurant_id}"
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def train_prophet(df, item_name: str, restaurant_id: str):
     model = Prophet(
         weekly_seasonality=True,
         daily_seasonality=True,
@@ -17,4 +21,9 @@ def train_prophet(df, item_name: str):
 
     model.fit(df[["ds", "y", "weather_good", "event_day"]])
 
-    joblib.dump(model, f"{MODEL_DIR}/{item_name}.pkl")
+    model_path = os.path.join(
+        get_model_dir(restaurant_id),
+        f"{item_name}.pkl"
+    )
+
+    joblib.dump(model, model_path)
