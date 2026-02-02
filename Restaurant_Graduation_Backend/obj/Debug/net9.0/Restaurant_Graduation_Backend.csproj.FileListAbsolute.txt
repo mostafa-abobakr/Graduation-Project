@@ -136,3 +136,8 @@ D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Bac
 D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Backend\obj\Debug\net9.0\Restaurant_Graduation_Backend.pdb
 D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Backend\obj\Debug\net9.0\Restaurant_Graduation_Backend.genruntimeconfig.cache
 D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Backend\obj\Debug\net9.0\ref\Restaurant_Graduation_Backend.dll
+D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Backend\obj\Debug\net9.0\Restaurant_Graduation_Backend.sourcelink.json
+D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Backend\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
+D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+D:\مواد الكليه\Restaurant_Graduation_Backend\Restaurant_Graduation_Backend\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
