@@ -37,7 +37,7 @@
   padding: var(--spacing-2);
   border: 1px solid var(--color-grey-300);
   border-radius: 6px;
-  background: var(--color-background-default);
+  background: var(--color--background-paper);
   cursor: pointer;
   font-weight: 700;
   font-size: 15px;
@@ -48,6 +48,7 @@
 .google {
 font-size: 15px;
 font-weight: bold;
+color: var(--color-secondary-contrast);
 
 
 

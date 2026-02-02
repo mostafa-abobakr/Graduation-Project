@@ -12,7 +12,6 @@ export const ThemeProvider = ({ children }) => {
   });
 
   useEffect(() => { localStorage.setItem("theme", mode); }, [mode]);
-
   const toggleTheme = () => { setMode((prev) => (prev === "light" ? "dark" : "light")); };
 
   const theme = useMemo(

@@ -1,0 +1,71 @@
+.input {
+  width: 100%;
+}
+
+.inputBase {
+  color: var(--color-text-primary) !important;
+}
+
+.inputBase .MuiOutlinedInput-root {
+  color: var(--color-text-primary);
+  background-color: var(--color-background-paper);
+  border-radius: 8px;
+}
+
+.inputBase .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-grey-500);
+  transition: border-color 0.3s ease;
+}
+
+.inputBase:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-primary-light);
+}
+
+.inputBase.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-primary-main);
+  box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.2);
+}
+
+.label {
+  color: var(--color-text-secondary) !important;
+  font-size: 14px !important;
+  transform: translate(14px, 16px) scale(1) !important;
+}
+
+.label.Mui-focused {
+  color: var(--color-primary-main);
+  transform: translate(14px, -9px) scale(0.75);
+}
+
+.label.MuiInputLabel-shrink {
+  transform: translate(14px, -9px) scale(0.75);
+}
+
+.input .MuiOutlinedInput-input {
+  padding: 14px;
+  color: var(--color-text-primary);
+}
+
+.input .MuiInputAdornment-root {
+  color: var(--color-text-secondary);
+}
+
+/* Focus state for the input */
+.input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-width: 1px;
+}
+
+/* Error state */
+.input .Mui-error .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-error-main);
+}
+
+.input .MuiFormHelperText-root {
+  margin-left: 0;
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+}
+
+.input .Mui-error {
+  color: var(--color-error-main);
+}

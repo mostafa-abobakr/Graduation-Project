@@ -12,8 +12,10 @@ const data = [
 ];
 const PieChartCard = () => {
 
-    const theme = useTheme();
-    const isSmall = useMediaQuery(theme.breakpoints.down("md"));
+    //  Cors
+
+    const theme = useTheme(); // Dark & Light & useMediaQuery
+    const isSmall = useMediaQuery(theme.breakpoints.down("md")); // under 900px
 
     return (
         <Card sx={{ width: isSmall ? "100%" : '50%', borderRadius: 3 }}>
