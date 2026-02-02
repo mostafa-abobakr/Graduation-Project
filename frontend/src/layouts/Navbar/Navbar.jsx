@@ -5,13 +5,7 @@ import ThemeToggleButton from "@/components/common/ThemeToggleButton";
 import { useToast } from "@/hooks/useToast";
 function Navbar() {
   const toast = useToast();
-    const handleClick = () => {
-      toast({
-        title: "Success!",
-        description: "Your action was successful!",
-        duration: 3000,
-      });
-    };
+    const handleClick = () => { toast({ title: "Success!", description: "Your action was successful!", duration: 3000, }); };
 
   return (
     <aside className={styles.sidebar}>
@@ -211,6 +205,7 @@ function Navbar() {
             />
           </svg>
         </NavLink>
+
         <ThemeToggleButton />
       </nav>
     </aside>

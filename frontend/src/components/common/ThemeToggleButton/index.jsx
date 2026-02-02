@@ -1,16 +1,17 @@
-import { useTheme } from "@/hooks/useTheme";
+
+import { useTheme } from "../../../context/ThemeContext";
 import styles from "./ThemeToggleButton.module.css";
 
 function ThemeToggleButton() {
-  const { theme, toggleTheme } = useTheme();
+  const { mode, toggleTheme } = useTheme();
 
   return (
     <button
       className={styles.toggleButton}
       onClick={toggleTheme}
-      aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+      aria-label={`Switch to ${mode === "light" ? "dark" : "light"} mode`}
     >
-      {theme === "light" ? (
+      {mode === "light" ? (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"

@@ -17,6 +17,7 @@ import { ROUTES } from "./routes"; // Import from routes
 import "./styles/global/reset.css";
 import "./styles/global/base.css";
 
+
 const router = createBrowserRouter([
   {
     path: ROUTES.HOME,
@@ -37,14 +38,18 @@ const router = createBrowserRouter([
   {}
 ]);
 
+
 function App() {
   return (
+    // <MuiThemeProvider theme={theme}>
+    // <CssBaseline />
     <ThemeProvider>
       <ToastProvider>
         <Toast />
         <RouterProvider router={router} />
       </ToastProvider>
     </ThemeProvider>
+    // </MuiThemeProvider >
   );
 }
 
