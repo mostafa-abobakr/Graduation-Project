@@ -1,10 +1,16 @@
 import styles from "./AuthLayout.module.css";
-
-function AuthLayout({ img, children }) {
+import Lottie from "lottie-react";
+function AuthLayout({ img, children ,isLottie=false}) {
   return (
     <div className={styles.authWrapper}>
       <div className={styles.card}>
-        <img src={img} alt="" className={styles.img} />
+        {isLottie ? (
+          <Lottie animationData={img} />
+        ) : (
+          <img src={img} alt="" className={styles.img} />
+        )}
+       
+
         <div className={styles.divider}></div>
         {children}
       </div>

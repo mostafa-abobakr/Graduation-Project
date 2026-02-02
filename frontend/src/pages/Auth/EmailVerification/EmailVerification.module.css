@@ -1,0 +1,9 @@
+.p {
+    font-weight: bold;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+.span {
+    color: var(--color-primary-light);
+    
+}
