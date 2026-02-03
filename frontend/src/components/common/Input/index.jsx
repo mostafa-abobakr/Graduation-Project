@@ -1,81 +1,58 @@
 import React from "react";
-import { TextField } from "@mui/material";
+import { TextField, Box } from "@mui/material";
+import { styled } from "@mui/material/styles";
+
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  width: "100%",
+  "& .MuiOutlinedInput-root": {
+    color: theme.palette.text.primary,
+    backgroundColor: theme.palette.background.paper,
+    borderRadius: "8px",
+    "& fieldset": {
+      borderColor: theme.palette.grey[500],
+      transition: theme.transitions.create("border-color", {
+        duration: theme.transitions.duration.shorter,
+      }),
+    },
+    "&:hover fieldset": {
+      borderColor: theme.palette.primary.light,
+    },
+    "&.Mui-focused fieldset": {
+      borderColor: theme.palette.primary.main,
+      boxShadow: `0 0 0 2px ${theme.palette.primary.main}40`, // 40 = 25% opacity in hex
+    },
+  },
+  "& .MuiInputLabel-root": {
+    color: theme.palette.text.secondary,
+    "&.Mui-focused": {
+      color: theme.palette.primary.main,
+    },
+  },
+}));
 
 const Input = ({
-  type = "text",
   label,
-  autoComplete,
-  InputProps,
+  type = "text",
+  value,
+  onChange,
+  error,
+  helperText,
   ...props
 }) => {
-  const getAutoComplete = (type) => {
-    if (type === "email") return "email";
-    if (type === "password") return "current-password";
-    return undefined;
-  };
-
   return (
-    <TextField
-      margin="normal"
-      required
-      fullWidth
-      id={type}
-      label={label}
-      name={type}
-      type={type}
-      autoComplete={autoComplete ?? getAutoComplete(type)}
-      InputProps={{
-        ...InputProps,
-        sx: {
-          color: "var(--color-text-primary)",
-          backgroundColor: "var(--color-background-paper)",
-          borderRadius: "8px",
-          transition: "all 0.3s ease",
-          "& .MuiOutlinedInput-notchedOutline": {
-            borderColor: "var(--color-grey-500)",
-            transition: "border-color 0.3s ease",
-          },
-          "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: "var(--color-primary-light)",
-          },
-          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "var(--color-primary-main)",
-            boxShadow: "0 0 0 2px rgba(0, 82, 204, 0.2)",
-          },
-          "&.Mui-error .MuiOutlinedInput-notchedOutline": {
-            borderColor: "var(--color-error-main)",
-          },
-        },
-      }}
-      InputLabelProps={{
-        sx: {
-          color: "var(--color-text-secondary)",
-          "&.Mui-focused": {
-            color: "var(--color-primary-main)",
-          },
-          "&.Mui-error": {
-            color: "var(--color-error-main)",
-          },
-        },
-      }}
-      sx={{
-        "& .MuiInputBase-input": {
-          color: "var(--color-text-primary)",
-          padding: "14px",
-          "&::placeholder": {
-            color: "var(--color-text-secondary)",
-            opacity: 0.7,
-          },
-        },
-        "& .MuiFormHelperText-root": {
-          color: "var(--color-text-secondary)",
-          "&.Mui-error": {
-            color: "var(--color-error-main)",
-          },
-        },
-      }}
-      {...props}
-    />
+    <Box sx={{ width: "100%", mb: 2 }}>
+      <StyledTextField
+        label={label}
+        type={type}
+        value={value}
+        onChange={onChange}
+        error={error}
+        helperText={helperText}
+        variant="outlined"
+        fullWidth
+        {...props}
+      />
+    </Box>
   );
 };
 

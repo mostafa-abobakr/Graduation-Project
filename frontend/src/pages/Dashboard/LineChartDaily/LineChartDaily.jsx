@@ -2,7 +2,6 @@ import React from 'react'
 import { useMediaQuery, useTheme, Card, CardContent, } from "@mui/material";
 
 import { LineChart } from "@mui/x-charts/LineChart";
-
 import Title from "../../../components/common/Title/Title";
 
 

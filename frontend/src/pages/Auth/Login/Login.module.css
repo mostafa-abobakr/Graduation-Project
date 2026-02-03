@@ -46,13 +46,3 @@
   text-decoration: underline;
 }
 
-/* Add responsive styles */
-@media (max-width: 600px) {
-  .container {
-    padding: 16px;
-  }
-
-  .paper {
-    padding: 24px;
-  }
-}

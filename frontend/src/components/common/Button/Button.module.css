@@ -10,8 +10,15 @@
   text-transform: none;
   cursor: pointer;
   transition: all 0.2s ease;
+  color: white;
 }
 .button a {
   color: inherit;
   text-decoration: none;
+}
+
+.active {
+  background: var(--color-primary-light);
+  cursor: pointer;
+  
 }

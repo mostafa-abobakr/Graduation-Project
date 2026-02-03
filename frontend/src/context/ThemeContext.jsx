@@ -24,6 +24,13 @@ export const ThemeProvider = ({ children }) => {
             WhiteText: mode === "dark" ? "#000000" : "#ffffff",
             DarkText: mode === "dark" ? "#ffffff" : "#000000",
           },
+          divider:
+            mode === "dark"
+              ? "rgba(255, 255, 255, 0.12)"
+              : "rgba(0, 0, 0, 0.12)",
+          icon: {
+            active: mode === "dark" ? "#90caf9" : "#1976d2", // Using primary color for active icons
+          },
           background: {
             default: mode === "dark" ? "#090e1a" : "#f9fafb",
             paper: mode === "dark" ? "#020617" : "#ffffff",
@@ -31,7 +38,7 @@ export const ThemeProvider = ({ children }) => {
         },
         // shape: { borderRadius: 10, },
       }),
-    [mode]
+    [mode],
   );
 
   return (

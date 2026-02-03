@@ -2,22 +2,24 @@ import { Link } from "react-router-dom";
 import GoogleIcon from "@mui/icons-material/Google";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import styles from "./AuthFooter.module.css";
+import { useTheme } from "@emotion/react";
 
-function AuthSocialSection({
-  footerText,
-  footerLinkText,
-  footerLinkHref,
-}) {
+function AuthSocialSection({ footerText, footerLinkText, footerLinkHref }) {
+  const theme = useTheme();
+
+
   return (
     <div className={styles.wrapper}>
-     
       <div className={styles.divider}>
         <span>Or</span>
       </div>
 
-  
       <div className={styles.buttons}>
-        <button type="button" className={styles.google}>
+        <button
+          type="button"
+          className={styles.google}
+          style={{ color: theme.palette.primary.DarkText }}
+        >
           <svg
             width="20 "
             height="30"
@@ -91,21 +93,27 @@ function AuthSocialSection({
           Google
         </button>
 
-        <button type="button" className={styles.facebook}>
-          <FacebookIcon fontSize="small" />
+        <button
+          type="button"
+          className={styles.facebook}
+          style={{ color: theme.palette.primary.DarkText }}
+        >
+          <FacebookIcon
+            fontSize="small"
+            style={{ color: "rgb(0, 136, 255)" }}
+          />
           Facebook
         </button>
       </div>
 
-    
       <div className={styles.footer}>
-        <span >{footerText}</span>
+        <span>{footerText}</span>
         <Link to={footerLinkHref} className={styles.link}>
           {footerLinkText}
         </Link>
       </div>
     </div>
-  );  
+  );
 }
 
 export default AuthSocialSection;

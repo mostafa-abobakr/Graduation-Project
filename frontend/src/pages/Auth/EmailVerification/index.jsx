@@ -1,62 +1,88 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import img from "@/assets/Auth/Authentication.png";
-import AuthLayout from "@/components/AuthLayout/index";
+import AuthLayout from "@/components/AuthLayout";
 import AuthForm from "../AuthForm";
 import styles from "./EmailVerification.module.css";
 import Button from "@/components/common/Button";
 import OtpInput from "@/components/common/OtpInput";
-const EmailVerification = () => {
-    const [otp , setOtp]= useState("");
-    const handleOtpComplete = (code) => {
-        setOtp(code)
-      console.log("OTP Code:", code);
 
-    };
+const EmailVerification = () => {
+  const [otp, setOtp] = useState("");
+  const [counter, setCounter] = useState(5);
+  const [isResending, setIsResending] = useState(false);
+
+  const handleOtpComplete = (code) => {
+    setOtp(code);
+  };
+
+  // Timer effect
+  useEffect(() => {
+    if (counter <= 0) return;
+
+    const timer = setInterval(() => {
+      setCounter((prev) => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [counter]);
+
+  const handleResendClick = async (e) => {
+    e.preventDefault();
+    if (counter > 0) return;
+
+   
+      setIsResending(true);
+      setCounter(5); 
+    
+  };
+
   return (
     <AuthLayout img={img}>
       <AuthForm header={"Verify Your Email"}>
         <p className={styles.p}>
-          We’ve sent a 6-digit verification code to your email
+          We've sent a 6-digit verification code to your email
           <br />
           <span className={styles.span}>admin22@gmail.com</span>
         </p>
-
-        <p className={styles.p}>Enter the code below to continue.</p>
-
-        <OtpInput length={5} onComplete={handleOtpComplete} />
+        <span className={styles.counter}>
+          Didn’t receive the code? {counter}s
+        </span>
+        <OtpInput
+          length={6}
+          onComplete={handleOtpComplete}
+          value={otp}
+          onChange={setOtp}
+        />
 
         <Button
-          text={"Reset Password"}
-          path={otp.length === 5 ? "/login/reset-password" : ""}
-          style={{
-            background:
-              otp.length === 5
-                ? "var(--color-primary-light)"
-                : "var(--color-text-disabled)",
-            color: "white",
-            cursor: otp.length === 5 ? "pointer" : "not-allowed",
-            opacity: otp.length === 5 ? 1 : 0.7,
+          text="Verify Email"
+          type="submit"
+          path={"/login/reset-password"}
+          className={otp.length === 6 ? styles.active : styles.disabled}
+          disabled={otp.length !== 6}
+          onClick={(e) => {
+            e.preventDefault();
+            // Add your verification logic here
+            console.log("Verifying OTP:", otp);
           }}
-          disabled={otp.length < 5}
-        ></Button>
-        {/* <Button
-          text={"Back To Login"}
-          path={"/login"}
-          style={{ background: "var(--color-primary-light)", color: "white" }}
-        ></Button> */}
+        />
         <Button
-          text={"Resend link"}
-          path={""}
-          style={{
-            background: "var(--color-text-disabled)",
-            color: "var(--color-text-secondary)",
-          }}
-        ></Button>
+          text={
+            isResending
+              ? "Sending..."
+              : counter > 0
+                ? `Resend in ${counter}s`
+                : "Resend code"
+          }
+          className={`${styles.resendBtn} ${
+            counter > 0 || isResending ? styles.disabled : styles.active
+          }`}
+          disabled={counter > 0 || isResending}
+          onClick={handleResendClick}
+        />
       </AuthForm>
     </AuthLayout>
   );
 };
 
 export default EmailVerification;
-

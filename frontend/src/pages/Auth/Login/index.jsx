@@ -1,6 +1,6 @@
 ﻿import AuthLayout from "@/components/AuthLayout";
 import img from "@/assets/Auth/login.png";
-import { TextField, Box } from "@mui/material";
+import { TextField, Box, useTheme } from "@mui/material";
 import InputAdornment from "@mui/material/InputAdornment";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import AuthFooter from "../AuthFooter.jsx/index";
@@ -11,6 +11,7 @@ import Input from "@/components/common/Input";
 
 import LoginImg from "@/assets/Auth/Login.json";
 function Login() {
+  const theme = useTheme()
   const handleSubmit = (event) => {
     event.preventDefault();
     // Handle login logic here
@@ -25,7 +26,6 @@ function Login() {
             noValidate
             className={styles.form}
           >
-            
             <Input
               type="email"
               label="Email Address"
@@ -71,9 +71,9 @@ function Login() {
               forgot password?
             </Link>
             <AuthFooter
-              footerText="Don't have an account?"
-              footerLinkText="Sign Up"
-              footerLinkHref="/signup"
+              text="Don't have an account?"
+              linkText="Sign up"
+              onLinkClick={() => navigate("/signup")}
             />
           </Box>
         </AuthForm>

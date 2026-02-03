@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BarChart, Bar, XAxis, ResponsiveContainer } from "recharts";
-import styles from "./Dashboard.module.css";
+import styles from "./forecast.module.css";
 
 // --- MOCK DATA ---
 const DAILY_DATA = [

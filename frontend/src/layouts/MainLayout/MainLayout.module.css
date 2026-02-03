@@ -2,16 +2,12 @@
   flex: 1;
   overflow-y: auto;
   height:100%;
-  width: 100%;
-
-  /* background-color: var(--color-grey-50);; Light gray background */
-/* background: red; */
-
-
+  width: 100vh;
+  margin-left: 60px;
 }
 
 .layout{
   display: flex;
-  /* background: var(--color-background-paper); */
+ 
 }
 
