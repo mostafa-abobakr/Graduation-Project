@@ -51,7 +51,7 @@ def evaluate_hourly(df: pd.DataFrame, return_details: bool = False):
     if return_details:
         response["details"] = (
             pd.DataFrame({
-                "ds": test_df["ds"].values,
+                "timestamp": test_df["ds"].values,
                 "actual": y_true,
                 "predicted": y_pred
             })

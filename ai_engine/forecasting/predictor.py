@@ -37,8 +37,23 @@ def forecast(
 
     forecast = model.predict(future_df)
 
-    forecast["yhat"] = forecast["yhat"].clip(lower=0).round().astype(int)
-    forecast["yhat_lower"] = forecast["yhat_lower"].clip(lower=0).round().astype(int)
-    forecast["yhat_upper"] = forecast["yhat_upper"].clip(lower=0).round().astype(int)
+    # Post-processing
+    forecast["predicted_demand"] = (
+        forecast["yhat"].clip(lower=0).round().astype(int)
+    )
+    forecast["min_expected_demand"] = (
+        forecast["yhat_lower"].clip(lower=0).round().astype(int)
+    )
+    forecast["max_expected_demand"] = (
+        forecast["yhat_upper"].clip(lower=0).round().astype(int)
+    )
 
-    return forecast[["ds", "yhat", "yhat_lower", "yhat_upper"]]
+    return (
+        forecast[[
+            "ds",
+            "predicted_demand",
+            "min_expected_demand",
+            "max_expected_demand"
+        ]]
+        .rename(columns={"ds": "timestamp"})
+    )

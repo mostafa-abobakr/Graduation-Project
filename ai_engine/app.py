@@ -84,18 +84,18 @@ def daily_forecast(restaurant_id: str, item_name: str):
     if hourly.empty:
         raise HTTPException(404, "No forecast data")
 
-    hourly["date"] = hourly["ds"].dt.date
+    # ⬅️ UPDATED COLUMN NAMES
+    hourly["date"] = hourly["timestamp"].dt.date
 
     daily = (
         hourly
-        .groupby("date", as_index=False)["yhat"]
+        .groupby("date", as_index=False)["predicted_demand"]
         .sum()
-        .rename(columns={"yhat": "daily_demand"})
+        .rename(columns={"predicted_demand": "daily_predicted_demand"})
     )
 
-    daily["daily_demand"] = daily["daily_demand"].clip(lower=0).astype(int)
-
     return daily.to_dict(orient="records")
+
 
 
 # =========================
