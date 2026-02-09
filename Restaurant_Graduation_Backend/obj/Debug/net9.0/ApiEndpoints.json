@@ -32,6 +32,22 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "Restaurant_Graduation_Backend.Controllers.ForecastController",
+    "Method": "GetForecast",
+    "RelativePath": "api/Forecast/{restId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "restId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Restaurant_Graduation_Backend.Controllers.RestaurantController",
     "Method": "GetAll",
     "RelativePath": "api/Restaurant",

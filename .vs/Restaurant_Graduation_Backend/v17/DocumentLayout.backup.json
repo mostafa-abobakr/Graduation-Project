@@ -3,32 +3,76 @@
   "WorkspaceRootPath": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\services\\restaurantservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\services\\restaurantservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\controllers\\restaurantcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\controllers\\restaurantcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\services\\forecastservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\services\\forecastservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\interfaces\\irestaurantservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\interfaces\\irestaurantservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\interfaces\\ijwtprovider.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\interfaces\\ijwtprovider.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\interfaces\\iforecastservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\interfaces\\iforecastservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\controllers\\forecastcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\controllers\\forecastcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\controllers\\restaurantcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\controllers\\restaurantcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\dtos\\forecastdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\dtos\\forecastdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\restaurant_graduation_backend.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\restaurant_graduation_backend.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\entites\\forecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\entites\\forecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\dbcontext\\dbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\dbcontext\\dbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\dtos\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\dtos\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\dtos\\restaurantdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\dtos\\restaurantdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\dtos\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\dtos\\logindto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\dtos\\registerdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -47,36 +91,12 @@
       "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\providers\\jwtprovider.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\interfaces\\iauthservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\interfaces\\ijwtprovider.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\interfaces\\ijwtprovider.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\dbcontext\\dbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\dbcontext\\dbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\helpers\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\helpers\\passwordhasher.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\restaurant_graduation_backend.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\restaurant_graduation_backend.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
     },
     {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\entites\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -173,10 +193,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\entites\\inventory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\entites\\inventory.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|d:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\restaurant_graduation_backend\\restaurant_graduation_backend\\entites\\forecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{C1CAEDED-7B9C-4929-80B4-C614D7041EF5}|Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj|solutionrelative:restaurant_graduation_backend\\entites\\forecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -186,63 +202,37 @@
       "DocumentGroups": [
         {
           "DockedHeight": 287,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "RestaurantController.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Controllers\\RestaurantController.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Controllers\\RestaurantController.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Controllers\\RestaurantController.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Controllers\\RestaurantController.cs",
-              "ViewState": "AgIAACIAAAAAAAAAAAAkwDIAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T02:36:44.605Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "RestaurantService.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Services\\RestaurantService.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Services\\RestaurantService.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Services\\RestaurantService.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Services\\RestaurantService.cs",
-              "ViewState": "AgIAAFUAAAAAAAAAAAAwwHAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T02:35:36.651Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 2,
-              "Title": "IRestaurantService.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IRestaurantService.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Interfaces\\IRestaurantService.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IRestaurantService.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Interfaces\\IRestaurantService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Title": "ForecastService.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Services\\ForecastService.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Services\\ForecastService.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Services\\ForecastService.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Services\\ForecastService.cs",
+              "ViewState": "AgIAAEwAAAAAAAAAAAAwwCQAAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T02:34:46.001Z",
+              "WhenOpened": "2026-02-09T02:42:38.288Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "IForecastService.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IForecastService.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Interfaces\\IForecastService.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IForecastService.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Interfaces\\IForecastService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-09T02:41:45.109Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 5,
-              "Title": "RestaurantDto.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\RestaurantDto.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Dtos\\RestaurantDto.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\RestaurantDto.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Dtos\\RestaurantDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T02:33:39.531Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
               "Title": "IJwtProvider.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IJwtProvider.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Interfaces\\IJwtProvider.cs",
@@ -256,175 +246,110 @@
             {
               "$type": "Document",
               "DocumentIndex": 4,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\appsettings.json",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\appsettings.json",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\appsettings.json",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\appsettings.json",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAwAAABBAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-31T13:36:44.937Z",
+              "Title": "IRestaurantService.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IRestaurantService.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Interfaces\\IRestaurantService.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IRestaurantService.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Interfaces\\IRestaurantService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-02T02:34:46.001Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Program.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Program.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Program.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Program.cs",
-              "ViewState": "AgIAABMAAAAAAAAAAAAwwCYAAABQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:37:24.697Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 13,
               "Title": "AuthService.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Services\\AuthService.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Services\\AuthService.cs",
               "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Services\\AuthService.cs",
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Services\\AuthService.cs",
-              "ViewState": "AgIAAAsAAAAAAAAAAAAAwBYAAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAEYAAAAAAAAAAAAAABYAAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-02T01:16:15.266Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "IAuthService.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IAuthService.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Interfaces\\IAuthService.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IAuthService.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Interfaces\\IAuthService.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAhAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "RestaurantService.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Services\\RestaurantService.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Services\\RestaurantService.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Services\\RestaurantService.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Services\\RestaurantService.cs",
+              "ViewState": "AgIAAF0AAAAAAAAAAAAowAoAAAAsAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T01:15:23.053Z",
+              "WhenOpened": "2026-02-02T02:35:36.651Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "JwtProvider.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Providers\\JwtProvider.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Providers\\JwtProvider.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Providers\\JwtProvider.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Providers\\JwtProvider.cs",
-              "ViewState": "AgIAAB4AAAAAAAAAAAAYwCsAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T01:02:28.716Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "RegisterDto.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\RegisterDto.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Dtos\\RegisterDto.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\RegisterDto.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Dtos\\RegisterDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T00:53:50.79Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "LoginDto.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\LoginDto.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Dtos\\LoginDto.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\LoginDto.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Dtos\\LoginDto.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAsAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T00:54:18.105Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 14,
-              "Title": "appsettings.Development.json",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\appsettings.Development.json",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\appsettings.Development.json",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\appsettings.Development.json",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\appsettings.Development.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-01-31T13:36:48.898Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "20260131134405_InitialCreate.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Migrations\\20260131134405_InitialCreate.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Migrations\\20260131134405_InitialCreate.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Migrations\\20260131134405_InitialCreate.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Migrations\\20260131134405_InitialCreate.cs",
-              "ViewState": "AgIAAIQBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:44:05.783Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "Restaurant.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Restaurant.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\Restaurant.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Restaurant.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\Restaurant.cs",
-              "ViewState": "AgIAABAAAAAAAAAAAAAAACMAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:30:54.932Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 0,
               "Title": "AuthController.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Controllers\\AuthController.cs",
               "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Controllers\\AuthController.cs",
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Controllers\\AuthController.cs",
-              "ViewState": "AgIAAAgAAAAAAAAAAAAAwCYAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAqwCYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-02T00:47:00.816Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
-              "Title": "DbContext.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\DbContext\\DbContext.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\DbContext\\DbContext.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\DbContext\\DbContext.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\DbContext\\DbContext.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAA+wBkAAAA8AAAAAAAAAA==",
+              "DocumentIndex": 9,
+              "Title": "RestaurantController.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Controllers\\RestaurantController.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Controllers\\RestaurantController.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Controllers\\RestaurantController.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Controllers\\RestaurantController.cs",
+              "ViewState": "AgIAACIAAAAAAAAAAAAkwDIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:46.536Z",
+              "WhenOpened": "2026-02-02T02:36:44.605Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
-              "Title": "PasswordHasher.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Helpers\\PasswordHasher.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Helpers\\PasswordHasher.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Helpers\\PasswordHasher.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Helpers\\PasswordHasher.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAJAAAAAAAAAA==",
+              "DocumentIndex": 7,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Program.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Program.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Program.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Program.cs",
+              "ViewState": "AgIAABwAAAAAAAAAAAAnwCwAAABLAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-02T01:18:04.172Z",
+              "WhenOpened": "2026-01-31T13:37:24.697Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 8,
+              "Title": "ForecastController.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Controllers\\ForecastController.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Controllers\\ForecastController.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Controllers\\ForecastController.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Controllers\\ForecastController.cs",
+              "ViewState": "AgIAAAgAAAAAAAAAAAAAwBgAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-09T02:43:10.936Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "ForecastDtos.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\ForecastDtos.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Dtos\\ForecastDtos.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\ForecastDtos.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Dtos\\ForecastDtos.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAIwBkAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-09T02:44:14.885Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
               "Title": "Restaurant_Graduation_Backend.csproj",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend.csproj",
@@ -437,7 +362,156 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "IAuthService.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IAuthService.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Interfaces\\IAuthService.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Interfaces\\IAuthService.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Interfaces\\IAuthService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-02T01:15:23.053Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "Forecast.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Forecast.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\Forecast.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Forecast.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\Forecast.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAQwAwAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T13:30:25.634Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "DbContext.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\DbContext\\DbContext.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\DbContext\\DbContext.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\DbContext\\DbContext.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\DbContext\\DbContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T13:32:46.536Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "RestaurantDto.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\RestaurantDto.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Dtos\\RestaurantDto.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\RestaurantDto.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Dtos\\RestaurantDto.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAYwB0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-02T02:33:39.531Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\appsettings.json",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\appsettings.json",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\appsettings.json",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\appsettings.json",
+              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAwAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-01-31T13:36:44.937Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "LoginDto.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\LoginDto.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Dtos\\LoginDto.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\LoginDto.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Dtos\\LoginDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-02T00:54:18.105Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 21,
+              "Title": "JwtProvider.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Providers\\JwtProvider.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Providers\\JwtProvider.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Providers\\JwtProvider.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Providers\\JwtProvider.cs",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAYwCsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-02T01:02:28.716Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "RegisterDto.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\RegisterDto.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Dtos\\RegisterDto.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Dtos\\RegisterDto.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Dtos\\RegisterDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAoAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-02T00:53:50.79Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "appsettings.Development.json",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\appsettings.Development.json",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\appsettings.Development.json",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\appsettings.Development.json",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\appsettings.Development.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-01-31T13:36:48.898Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "20260131134405_InitialCreate.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Migrations\\20260131134405_InitialCreate.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Migrations\\20260131134405_InitialCreate.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Migrations\\20260131134405_InitialCreate.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Migrations\\20260131134405_InitialCreate.cs",
+              "ViewState": "AgIAAIQBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T13:44:05.783Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "Restaurant.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Restaurant.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\Restaurant.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Restaurant.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\Restaurant.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAAACMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-31T13:30:54.932Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "PasswordHasher.cs",
+              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Helpers\\PasswordHasher.cs",
+              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Helpers\\PasswordHasher.cs",
+              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Helpers\\PasswordHasher.cs",
+              "RelativeToolTip": "Restaurant_Graduation_Backend\\Helpers\\PasswordHasher.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-02T01:18:04.172Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
               "Title": "EventDateConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\EventDateConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\EventDateConfiguration.cs",
@@ -445,12 +519,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\EventDateConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:31:31.839Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:31:31.839Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 24,
               "Title": "User.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\User.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\User.cs",
@@ -458,12 +531,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\User.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:31:03.93Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:31:03.93Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 25,
               "Title": "Employee.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Employee.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\Employee.cs",
@@ -471,12 +543,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\Employee.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:26:56.179Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:26:56.179Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 28,
               "Title": "20260131133914_InitialCreate_v2.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Migrations\\20260131133914_InitialCreate_v2.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Migrations\\20260131133914_InitialCreate_v2.cs",
@@ -487,7 +558,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 27,
               "Title": "EventDate.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\EventDate.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\EventDate.cs",
@@ -495,12 +566,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\EventDate.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:29:07.181Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:29:07.181Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 30,
               "Title": "DesignTimeDbContextFactory.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\DbContext\\DesignTimeDbContextFactory.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\DbContext\\DesignTimeDbContextFactory.cs",
@@ -508,12 +578,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\DbContext\\DesignTimeDbContextFactory.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:33:15.979Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:33:15.979Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 31,
               "Title": "WeatherDataConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\WeatherDataConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\WeatherDataConfiguration.cs",
@@ -521,12 +590,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\WeatherDataConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:40.235Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:40.235Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 32,
               "Title": "UserConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\UserConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\UserConfiguration.cs",
@@ -534,12 +602,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\UserConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:36.156Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:36.156Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 29,
               "Title": "InventoryMenuItem.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\InventoryMenuItem.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\InventoryMenuItem.cs",
@@ -547,12 +614,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\InventoryMenuItem.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:30:36.001Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:30:36.001Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 33,
               "Title": "ScheduleConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\ScheduleConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\ScheduleConfiguration.cs",
@@ -560,12 +626,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\ScheduleConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:32.091Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:32.091Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 34,
               "Title": "RestaurantConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\RestaurantConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\RestaurantConfiguration.cs",
@@ -573,12 +638,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\RestaurantConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:27.187Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:27.187Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 35,
               "Title": "OrderDetailConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\OrderDetailConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\OrderDetailConfiguration.cs",
@@ -586,12 +650,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\OrderDetailConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:23.414Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:23.414Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 36,
               "Title": "OrderConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\OrderConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\OrderConfiguration.cs",
@@ -599,12 +662,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\OrderConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:17.452Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:17.452Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 37,
               "Title": "MenuItemConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\MenuItemConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\MenuItemConfiguration.cs",
@@ -612,12 +674,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\MenuItemConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:13.423Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:13.423Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 38,
               "Title": "InventoryMenuItemConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\InventoryMenuItemConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\InventoryMenuItemConfiguration.cs",
@@ -625,12 +686,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\InventoryMenuItemConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:09.108Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:09.108Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 39,
               "Title": "InventoryConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\InventoryConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\InventoryConfiguration.cs",
@@ -638,12 +698,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\InventoryConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:32:03.4Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:32:03.4Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 40,
               "Title": "ForecastConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\ForecastConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\ForecastConfiguration.cs",
@@ -651,12 +710,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\ForecastConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:31:44.873Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:31:44.873Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 41,
               "Title": "EmployeeConfiguration.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Configuration\\EmployeeConfiguration.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Configuration\\EmployeeConfiguration.cs",
@@ -664,12 +722,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Configuration\\EmployeeConfiguration.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:31:18.526Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:31:18.526Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 42,
               "Title": "WeatherData.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\WeatherData.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\WeatherData.cs",
@@ -677,12 +734,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\WeatherData.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:31:08.092Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:31:08.092Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 43,
               "Title": "Schedule.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Schedule.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\Schedule.cs",
@@ -690,12 +746,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\Schedule.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:31:00.188Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:31:00.188Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 44,
               "Title": "OrderDetail.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\OrderDetail.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\OrderDetail.cs",
@@ -703,12 +758,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\OrderDetail.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:30:48.664Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:30:48.664Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 45,
               "Title": "Order.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Order.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\Order.cs",
@@ -716,12 +770,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\Order.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:30:44.854Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:30:44.854Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 46,
               "Title": "MenuItem.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\MenuItem.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\MenuItem.cs",
@@ -729,12 +782,11 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\MenuItem.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:30:40.868Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:30:40.868Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 47,
               "Title": "Inventory.cs",
               "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Inventory.cs",
               "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\Inventory.cs",
@@ -742,21 +794,7 @@
               "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\Inventory.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:30:29.551Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 43,
-              "Title": "Forecast.cs",
-              "DocumentMoniker": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Forecast.cs",
-              "RelativeDocumentMoniker": "Restaurant_Graduation_Backend\\Entites\\Forecast.cs",
-              "ToolTip": "D:\\\u0645\u0648\u0627\u062F \u0627\u0644\u0643\u0644\u064A\u0647\\Restaurant_Graduation_Backend\\Restaurant_Graduation_Backend\\Entites\\Forecast.cs",
-              "RelativeToolTip": "Restaurant_Graduation_Backend\\Entites\\Forecast.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAvAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-31T13:30:25.634Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-01-31T13:30:29.551Z"
             }
           ]
         }

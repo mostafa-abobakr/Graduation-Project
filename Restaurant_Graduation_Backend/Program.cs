@@ -11,6 +11,7 @@ using Restaurant_Graduation_Backend.Providers;
 using System.Reflection;
 using Restaurant_Graduation_Backend.Services.Interfaces;
 
+
 namespace Restaurant_Graduation_Backend
 {
     public class Program
@@ -33,10 +34,17 @@ namespace Restaurant_Graduation_Backend
             builder.Services.AddDbContext<RestaurantDbContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
             // Auth & JWT
             builder.Services.AddScoped<IJwtProvider, JwtProvider>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+
+            // Rest 
             builder.Services.AddScoped<IRestaurantService, RestaurantService>();
+            // Forcast
+            builder.Services.AddScoped<IForecastService,ForecastService>();
+
+
 
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(options =>
@@ -55,8 +63,19 @@ namespace Restaurant_Graduation_Backend
                     };
                 });
 
-            var app = builder.Build();
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    policy =>
+                    {
+                        policy.AllowAnyOrigin()
+                              .AllowAnyHeader()
+                              .AllowAnyMethod();
+                    });
+            });
 
+            var app = builder.Build();
+            app.UseCors("AllowAll");
             // ----------------------------
             // Configure the HTTP request pipeline
             // ----------------------------
