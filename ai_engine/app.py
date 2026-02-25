@@ -2,20 +2,36 @@
 app.py
 ZeroBite ML Service — FastAPI Application Entry Point.
 
-All existing endpoint signatures, request bodies, and response shapes are preserved.
-New endpoints added per spec:
-    GET  /metrics/item/{restaurant_id}/{item_name}
-    GET  /metrics/overall/{restaurant_id}
-    GET  /metrics/temperature_sanity/{restaurant_id}/{item_name}
+Endpoints
+─────────────────────────────────────────────────────────────────────
+Health
+  GET  /
 
-Internal data loading has been rewired to use the normalized SQL schema:
-    Orders → OrderItems → MenuItems
+Train / Forecast  (API contract locked — do not change signatures)
+  POST /train/{restaurant_id}
+  POST /forecast/hourly/{restaurant_id}/{item_name}
+  POST /forecast/daily/{restaurant_id}/{item_name}
+
+Metrics / Evaluation
+  GET  /metrics/mae/{restaurant_id}/{item_name}       ← legacy (backward-compat)
+  GET  /metrics/mae/{restaurant_id}                   ← legacy (backward-compat)
+  GET  /metrics/summary/{restaurant_id}/{item_name}   ← MAE + RMSE diagnostics
+  GET  /metrics/item/{restaurant_id}/{item_name}      ?granularity=hourly|daily
+  GET  /metrics/overall/{restaurant_id}               ?granularity=hourly|daily
+  GET  /metrics/temperature_sanity/{restaurant_id}/{item_name}
+
+Analytics  (pure SQL — no ML)
+  GET  /analytics/revenue/{restaurant_id}
+  GET  /analytics/revenue/trend/{restaurant_id}       ?granularity=hour|day
+  GET  /analytics/menu/performance/{restaurant_id}
+  GET  /analytics/peaks/{restaurant_id}
+  GET  /analytics/alerts/{restaurant_id}
 """
 from contextlib import asynccontextmanager
+from typing import Literal
 
 import numpy as np
-from fastapi import FastAPI, HTTPException
-import joblib
+from fastapi import FastAPI, HTTPException, Query
 import json
 import os
 
@@ -31,31 +47,37 @@ from forecasting.evaluator import (
     evaluate_daily,
     evaluate_overall_items,
     evaluate_temperature_sanity,
+    _train_and_predict,
 )
 from schemas.forecast_requests import HourlyForecastRequest, DailyForecastRequest
+
+from analytics.queries import (
+    get_revenue_summary,
+    get_revenue_trend,
+    get_menu_performance,
+    get_peak_hours,
+    get_alerts,
+    get_latest_day_actuals,
+)
 
 
 # ---------------------------------------------------------------------------
 # Application lifespan — validate config at startup
 # ---------------------------------------------------------------------------
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    validate_required()   # raises EnvironmentError if DATABASE_URL missing
+    validate_required()
     yield
 
 
 app = FastAPI(title="ZeroBite ML Service", lifespan=lifespan)
 
-# System constants — do not expose to callers
-FORECAST_HOURS = 7 * 24
-MIN_HOURS      = 336   # 2 weeks of hourly data, enforced per item
+MIN_HOURS = 336   # 2 weeks of hourly data, enforced per item
 
 
 # ---------------------------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------------------------
-
 @app.get("/")
 def root():
     return {"status": "ZeroBite ML service running"}
@@ -64,16 +86,12 @@ def root():
 # ---------------------------------------------------------------------------
 # TRAIN
 # ---------------------------------------------------------------------------
-
 @app.post("/train/{restaurant_id}")
 def train_model(restaurant_id: str):
     """
     Load full history for the restaurant from SQL Server, aggregate to
     hourly item-level demand, and train one Prophet model per item.
-
-    - Enforces MIN_HOURS (336) per item — items below threshold are skipped.
-    - Idempotent: re-running overwrites existing models.
-    - Stores models on disk at MODEL_ROOT/{restaurant_id}/{item_name}.pkl
+    Idempotent — re-running overwrites existing models.
     """
     try:
         df = load_data(restaurant_id)
@@ -93,38 +111,30 @@ def train_model(restaurant_id: str):
 
     for item in df["item_name"].unique():
         item_df = df[df["item_name"] == item]
-
         if len(item_df) < MIN_HOURS:
             skipped.append(item)
             continue
-
         train_prophet(item_df, item, restaurant_id)
         trained.append(item)
-
-    status = "success" if trained else "no_models_trained"
 
     return {
         "restaurant_id": restaurant_id,
         "trained_items": trained,
         "skipped_items": skipped,
-        "status":        status,
+        "status":        "success" if trained else "no_models_trained",
     }
 
 
 # ---------------------------------------------------------------------------
 # HOURLY FORECAST
 # ---------------------------------------------------------------------------
-
 @app.post("/forecast/hourly/{restaurant_id}/{item_name}")
 def hourly_forecast(
     restaurant_id: str,
     item_name: str,
     request: HourlyForecastRequest,
 ):
-    """
-    Return 24 hourly demand predictions.
-    The same temperature and event flag are repeated for all 24 hours.
-    """
+    """Return 24 hourly demand predictions for a single temperature/event."""
     future_temp   = [request.temperature_celsius] * 24
     future_events = [request.event_day] * 24
 
@@ -141,17 +151,13 @@ def hourly_forecast(
 # ---------------------------------------------------------------------------
 # DAILY FORECAST
 # ---------------------------------------------------------------------------
-
 @app.post("/forecast/daily/{restaurant_id}/{item_name}")
 def daily_forecast(
     restaurant_id: str,
     item_name: str,
     request: DailyForecastRequest,
 ):
-    """
-    Return 7 daily demand totals.
-    Each day is internally expanded to 24 hours; aggregation happens server-side.
-    """
+    """Return 7 daily demand totals from weekly temperature/event inputs."""
     if len(request.weekly_temperatures) != 7 or len(request.weekly_events) != 7:
         raise HTTPException(
             status_code=400,
@@ -160,7 +166,6 @@ def daily_forecast(
 
     future_temp: list[float] = []
     future_events: list[int] = []
-
     for t, e in zip(request.weekly_temperatures, request.weekly_events):
         future_temp.extend([t] * 24)
         future_events.extend([e] * 24)
@@ -176,23 +181,21 @@ def daily_forecast(
         raise HTTPException(status_code=404, detail="No forecast data")
 
     hourly["date"] = hourly["timestamp"].dt.date
-
     daily = (
         hourly
         .groupby("date", as_index=False)["predicted_demand"]
         .sum()
         .rename(columns={"predicted_demand": "daily_predicted_demand"})
     )
-
     return daily.to_dict(orient="records")
 
 
 # ---------------------------------------------------------------------------
-# EVALUATION — Legacy endpoints (locked API contract — do not change)
+# EVALUATION — Legacy endpoints (backward-compatible, unchanged signatures)
 # ---------------------------------------------------------------------------
-
 @app.get("/metrics/mae/{restaurant_id}/{item_name}")
 def get_item_mae(restaurant_id: str, item_name: str):
+    """Legacy: daily MAE for one item."""
     try:
         df = load_data(restaurant_id)
     except Exception as e:
@@ -210,13 +213,19 @@ def get_item_mae(restaurant_id: str, item_name: str):
 
     try:
         res = evaluate_daily(item_df)
-        return {"restaurant_id": restaurant_id, "item_name": item_name, "mae": res["mae"]}
+        return {
+            "restaurant_id": restaurant_id,
+            "item_name":     item_name,
+            "mae":           res["mae"],
+            "mape":          res["mape"],
+        }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/metrics/mae/{restaurant_id}")
 def get_overall_mae(restaurant_id: str):
+    """Legacy: overall daily MAE across all items."""
     try:
         res = evaluate_overall_items(restaurant_id)
         return {
@@ -232,8 +241,7 @@ def get_overall_mae(restaurant_id: str):
 @app.get("/metrics/summary/{restaurant_id}/{item_name}")
 def get_model_diagnostics(restaurant_id: str, item_name: str):
     """
-    Return MAE, RMSE, training row count, and last training timestamp
-    for a specific item model.
+    Full model diagnostics: MAE + RMSE + training row count + last_ds.
     """
     from sklearn.metrics import mean_absolute_error, mean_squared_error
 
@@ -258,20 +266,14 @@ def get_model_diagnostics(restaurant_id: str, item_name: str):
     item_df = df[df["item_name"] == item_name]
 
     if item_df.empty:
-        raise HTTPException(
-            status_code=400, detail="Data not available for evaluation"
-        )
+        raise HTTPException(status_code=400, detail="Data not available for evaluation")
 
     test_hours = 7 * 24
     if len(item_df) <= test_hours * 2:
-        raise HTTPException(
-            status_code=400, detail="Not enough data to calculate errors"
-        )
+        raise HTTPException(status_code=400, detail="Not enough data to calculate errors")
 
-    train_df = item_df.iloc[:-test_hours].copy()
-    test_df  = item_df.iloc[-test_hours:].copy()
-
-    from forecasting.evaluator import _train_and_predict
+    train_df    = item_df.iloc[:-test_hours].copy()
+    test_df     = item_df.iloc[-test_hours:].copy()
     forecast_df = _train_and_predict(train_df, test_df)
 
     test_df["date"]     = test_df["ds"].dt.date
@@ -294,14 +296,18 @@ def get_model_diagnostics(restaurant_id: str, item_name: str):
 
 
 # ---------------------------------------------------------------------------
-# EVALUATION — New endpoints (spec §8)
+# EVALUATION — New endpoints with granularity switch
 # ---------------------------------------------------------------------------
-
 @app.get("/metrics/item/{restaurant_id}/{item_name}")
-def get_item_metrics(restaurant_id: str, item_name: str):
+def get_item_metrics(
+    restaurant_id: str,
+    item_name: str,
+    granularity: Literal["hourly", "daily"] = Query(default="daily"),
+):
     """
-    Daily MAE & MAPE for a single item.
-    Uses last 7 days as hold-out; skips if insufficient data.
+    MAE + MAPE for a single item.
+    hourly  → evaluate_hourly() with last 168-hour hold-out
+    daily   → evaluate_daily()  with last 7-day hold-out  (default)
     """
     try:
         df = load_data(restaurant_id)
@@ -319,34 +325,255 @@ def get_item_metrics(restaurant_id: str, item_name: str):
         raise HTTPException(status_code=404, detail=f"No data for item: {item_name}")
 
     try:
-        return evaluate_daily(item_df, return_details=False)
+        evaluator = evaluate_hourly if granularity == "hourly" else evaluate_daily
+        return evaluator(item_df, return_details=False)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.get("/metrics/overall/{restaurant_id}")
-def get_overall_metrics(restaurant_id: str):
+def get_overall_metrics(
+    restaurant_id: str,
+    granularity: Literal["hourly", "daily"] = Query(default="daily"),
+):
     """
     Evaluate all items for a restaurant.
+    hourly|daily (default: daily)
+
     Returns overall stats (mean_mae, best_item, worst_item) and
-    per-item breakdown (mae, mape). Skips items with insufficient data.
+    per-item breakdown (mae, mape). Items with insufficient data are skipped.
     """
     try:
-        res = evaluate_overall_items(restaurant_id)
-        return res
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        df = load_data(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if df.empty:
+        raise HTTPException(status_code=400, detail="No data found")
+
+    df    = clean_data(df)
+    df    = aggregate_hourly(df)
+    items = df["item_name"].unique()
+
+    evaluator    = evaluate_hourly if granularity == "hourly" else evaluate_daily
+    item_metrics = {}
+    mae_list     = []
+
+    for item in items:
+        item_df = df[df["item_name"] == item]
+        try:
+            res = evaluator(item_df, return_details=False)
+            item_metrics[item] = {"mae": res["mae"], "mape": res["mape"]}
+            mae_list.append((item, res["mae"]))
+        except ValueError:
+            pass
+
+    if not mae_list:
+        raise HTTPException(
+            status_code=400,
+            detail="No items had enough continuous data to evaluate.",
+        )
+
+    mae_list.sort(key=lambda x: x[1])
+    mean_mae = sum(x[1] for x in mae_list) / len(mae_list)
+
+    return {
+        "granularity": granularity,
+        "overall_stats": {
+            "mean_mae":   round(mean_mae, 2),
+            "best_item":  mae_list[0][0],
+            "worst_item": mae_list[-1][0],
+        },
+        "item_breakdown": item_metrics,
+    }
 
 
 @app.get("/metrics/temperature_sanity/{restaurant_id}/{item_name}")
 def get_temperature_sanity(restaurant_id: str, item_name: str):
     """
-    Sweep temperatures from -10°C to +45°C (step=5) to validate
-    that the model's demand response is physically plausible.
-    Requires a trained model; returns peak and trough temperatures with
-    per-temperature daily demand totals.
+    Sweep -10°C → 45°C to validate that the model's demand response
+    is physically plausible. Requires a trained model.
     """
     try:
         return evaluate_temperature_sanity(restaurant_id, item_name)
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# ANALYTICS — Pure SQL, no ML
+# ---------------------------------------------------------------------------
+@app.get("/analytics/revenue/{restaurant_id}")
+def analytics_revenue(restaurant_id: str):
+    """
+    Aggregate revenue KPIs for a restaurant.
+    Returns: total_revenue, total_orders, avg_order_value, total_items_sold
+    """
+    try:
+        return get_revenue_summary(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/analytics/revenue/trend/{restaurant_id}")
+def analytics_revenue_trend(
+    restaurant_id: str,
+    granularity: Literal["hour", "day"] = Query(default="day"),
+):
+    """
+    Time-series revenue trend.
+    hour  → bucketed by hour
+    day   → bucketed by calendar day (default)
+
+    Returns list of: { timestamp, revenue, order_count }
+    """
+    try:
+        return get_revenue_trend(restaurant_id, granularity)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/analytics/menu/performance/{restaurant_id}")
+def analytics_menu_performance(restaurant_id: str):
+    """
+    Per-item menu performance.
+    Returns list of: { item_name, orders, revenue, profit, margin_percentage }
+    Sorted by revenue descending.
+    """
+    try:
+        return get_menu_performance(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/analytics/peaks/{restaurant_id}")
+def analytics_peaks(restaurant_id: str):
+    """
+    Top 3 peak hours and top 3 peak days by order count.
+    Returns: { peak_hours: [...], peak_days: [...] }
+    """
+    try:
+        return get_peak_hours(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/analytics/alerts/{restaurant_id}")
+def analytics_alerts(restaurant_id: str):
+    """
+    Rule-based business alerts. No ML — deterministic SQL aggregations only.
+    Alert types:
+      - revenue_drop        (>20% day-over-day decline)
+      - cold_item_underperformance  (hot day + low cold-drink sales)
+      - low_margin_high_volume      (high-volume item with <10% margin)
+
+    Returns list of: { type, severity, message }
+    """
+    try:
+        alerts = get_alerts(restaurant_id)
+        return {"restaurant_id": restaurant_id, "alerts": alerts}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/analytics/alerts/forecast/{restaurant_id}")
+def analytics_forecast_alerts(
+    restaurant_id: str,
+    future_temp: float = Query(22.0, description="Assumed temperature °C for tomorrow"),
+    future_event: int = Query(0, description="Assumed event flag (0/1) for tomorrow"),
+):
+    """
+    Predictive alerts comparing tomorrow's ML forecast against the most recent
+    actual day's data in the database.
+    """
+    actuals = get_latest_day_actuals(restaurant_id)
+    baseline_date = actuals.get("baseline_date")
+    if not baseline_date:
+        return {"restaurant_id": restaurant_id, "alerts": [], "message": "No historical data found"}
+
+    actual_items = actuals.get("items", {})
+    if not actual_items:
+        return {"restaurant_id": restaurant_id, "alerts": [], "message": "No sales found on baseline date"}
+
+    alerts = []
+    total_actual_revenue = sum(data["revenue"] for data in actual_items.values())
+    total_predicted_revenue = 0.0
+
+    temps = [future_temp] * 24
+    events = [future_event] * 24
+
+    for item_name, actual_data in actual_items.items():
+        try:
+            # 24 hour forecast gives us exactly 1 full day for "tomorrow"
+            # It starts from wherever the training data ended
+            hourly_pred = forecast(restaurant_id, item_name, temps, events)
+            if hourly_pred.empty:
+                continue
+                
+            pred_qty = hourly_pred["predicted_demand"].sum()
+            pred_revenue = float(pred_qty) * actual_data["price"]
+            total_predicted_revenue += pred_revenue
+
+            # Evaluate item-level changes (-10% to +10% is considered normal variance)
+            act_qty = float(actual_data["qty"])
+            if act_qty >= 5: # Only alert on items with meaningful volume
+                change_pct = (pred_qty - act_qty) / act_qty
+                
+                if change_pct <= -0.20:
+                    alerts.append({
+                        "type": "item_decrease",
+                        "severity": "warning",
+                        "message": (
+                            f"Forecast indicates '{item_name}' orders will drop by "
+                            f"{abs(change_pct * 100):.1f}% tomorrow vs {baseline_date} "
+                            f"({int(act_qty)} → {int(pred_qty)} units)"
+                        )
+                    })
+                elif change_pct >= 0.25:
+                    alerts.append({
+                        "type": "item_surge",
+                        "severity": "info",
+                        "message": (
+                            f"Forecast indicates a surge in '{item_name}' orders by "
+                            f"{change_pct * 100:.1f}% tomorrow vs {baseline_date} "
+                            f"({int(act_qty)} → {int(pred_qty)} units). "
+                            "Ensure sufficient stock."
+                        )
+                    })
+
+        except (FileNotFoundError, ValueError):
+            # Model doesn't exist for this item, or couldn't forecast. Skip it.
+            pass
+
+    # Evaluate total revenue change
+    if total_actual_revenue > 0 and total_predicted_revenue > 0:
+        rev_change = (total_predicted_revenue - total_actual_revenue) / total_actual_revenue
+        if rev_change <= -0.15:
+            alerts.append({
+                "type": "forecast_revenue_drop",
+                "severity": "warning",
+                "message": (
+                    f"Forecasted revenue for tomorrow is expected to drop {abs(rev_change * 100):.1f}% "
+                    f"vs {baseline_date} (${total_actual_revenue:.2f} → ${total_predicted_revenue:.2f})"
+                )
+            })
+        elif rev_change >= 0.20:
+             alerts.append({
+                "type": "forecast_revenue_spike",
+                "severity": "info",
+                "message": (
+                    f"Forecasted revenue for tomorrow is expected to surge {rev_change * 100:.1f}% "
+                    f"vs {baseline_date} (${total_actual_revenue:.2f} → ${total_predicted_revenue:.2f})"
+                )
+            })
+
+    # Sort alerts: warnings first, then info
+    alerts.sort(key=lambda x: 0 if x["severity"] == "warning" else 1)
+
+    return {
+        "restaurant_id": restaurant_id,
+        "baseline_date": baseline_date,
+        "total_actual_revenue": round(total_actual_revenue, 2),
+        "total_predicted_revenue": round(total_predicted_revenue, 2),
+        "alerts": alerts
+    }
