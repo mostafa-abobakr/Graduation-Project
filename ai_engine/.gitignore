@@ -5,7 +5,10 @@ __pycache__/
 
 # Virtual environments
 venv/
-.env/
+
+# Local secrets — never commit
+.env
+.env.local
 
 # ML models (generated artifacts)
 models/
@@ -14,3 +17,8 @@ models/
 # OS junk
 .DS_Store
 Thumbs.db
+
+# folders
+scripts/
+data/
+sql code/
