@@ -31,9 +31,11 @@ from contextlib import asynccontextmanager
 from typing import Literal
 
 import numpy as np
+import pandas as pd
 from fastapi import FastAPI, HTTPException, Query
 import json
 import os
+import shutil
 
 from config.settings import validate_required
 from preprocessing.loader import load_data
@@ -125,6 +127,41 @@ def train_model(restaurant_id: str):
     }
 
 
+@app.post("/train/{restaurant_id}/{item_name}")
+def train_single_model(restaurant_id: str, item_name: str):
+    """
+    Train a Prophet model for a single menu item.
+    This bypasses 60-second HTTP timeouts on cloud host load balancers.
+    """
+    try:
+        df = load_data(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    if df.empty:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No data found for restaurant_id={restaurant_id}",
+        )
+
+    df = clean_data(df)
+    df = aggregate_hourly(df)
+
+    item_df = df[df["item_name"] == item_name]
+    if len(item_df) < MIN_HOURS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Not enough data for {item_name}. Found {len(item_df)}, need {MIN_HOURS}."
+        )
+
+    train_prophet(item_df, item_name, restaurant_id)
+    return {
+        "restaurant_id": restaurant_id,
+        "item_name": item_name,
+        "status": "success"
+    }
+
+
 # ---------------------------------------------------------------------------
 # HOURLY FORECAST
 # ---------------------------------------------------------------------------
@@ -188,6 +225,182 @@ def daily_forecast(
         .rename(columns={"predicted_demand": "daily_predicted_demand"})
     )
     return daily.to_dict(orient="records")
+
+
+# ---------------------------------------------------------------------------
+# HOURLY FORECAST ALL
+# ---------------------------------------------------------------------------
+@app.post("/forecast/all/hourly/{restaurant_id}")
+def hourly_forecast_all(
+    restaurant_id: str,
+    request: HourlyForecastRequest,
+):
+    """Return 24 hourly demand predictions for all trained items in a single response."""
+    model_dir = os.path.dirname(get_model_path(restaurant_id, "dummy"))
+    if not os.path.exists(model_dir):
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+        
+    items = [f[:-4] for f in os.listdir(model_dir) if f.endswith(".pkl")]
+    if not items:
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+
+    future_temp   = [request.temperature_celsius] * 24
+    future_events = [request.event_day] * 24
+
+    response = {}
+    for item_name in items:
+        try:
+            result = forecast(restaurant_id, item_name, future_temp, future_events)
+            response[item_name] = result.to_dict(orient="records")
+        except (FileNotFoundError, ValueError):
+            continue
+
+    if not response:
+        raise HTTPException(status_code=400, detail="Could not generate forecast for any items")
+
+    return response
+
+
+# ---------------------------------------------------------------------------
+# DAILY FORECAST ALL
+# ---------------------------------------------------------------------------
+@app.post("/forecast/all/daily/{restaurant_id}")
+def daily_forecast_all(
+    restaurant_id: str,
+    request: DailyForecastRequest,
+):
+    """Return 7 daily demand totals for all trained items in a single response."""
+    if len(request.weekly_temperatures) != 7 or len(request.weekly_events) != 7:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide exactly 7 values for weekly temps/events.",
+        )
+
+    model_dir = os.path.dirname(get_model_path(restaurant_id, "dummy"))
+    if not os.path.exists(model_dir):
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+        
+    items = [f[:-4] for f in os.listdir(model_dir) if f.endswith(".pkl")]
+    if not items:
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+
+    future_temp: list[float] = []
+    future_events: list[int] = []
+    for t, e in zip(request.weekly_temperatures, request.weekly_events):
+        future_temp.extend([t] * 24)
+        future_events.extend([e] * 24)
+
+    response = {}
+    for item_name in items:
+        try:
+            hourly = forecast(restaurant_id, item_name, future_temp, future_events)
+            if hourly.empty:
+                continue
+            hourly["date"] = hourly["timestamp"].dt.date
+            daily = (
+                hourly
+                .groupby("date", as_index=False)["predicted_demand"]
+                .sum()
+                .rename(columns={"predicted_demand": "daily_predicted_demand"})
+            )
+            response[item_name] = daily.to_dict(orient="records")
+        except (FileNotFoundError, ValueError):
+            continue
+
+    if not response:
+        raise HTTPException(status_code=400, detail="Could not generate forecast for any items")
+
+    return response
+
+
+# ---------------------------------------------------------------------------
+# PEAK FORECAST ALL
+# ---------------------------------------------------------------------------
+@app.post("/forecast/all/peaks/{restaurant_id}")
+def forecast_all_peaks(
+    restaurant_id: str,
+    request: DailyForecastRequest,
+):
+    """Return top 3 peak hours and peak days from a 7-day forecast across all items."""
+    if len(request.weekly_temperatures) != 7 or len(request.weekly_events) != 7:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide exactly 7 values for weekly temps/events.",
+        )
+
+    model_dir = os.path.dirname(get_model_path(restaurant_id, "dummy"))
+    if not os.path.exists(model_dir):
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+        
+    items = [f[:-4] for f in os.listdir(model_dir) if f.endswith(".pkl")]
+    if not items:
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+
+    future_temp: list[float] = []
+    future_events: list[int] = []
+    for t, e in zip(request.weekly_temperatures, request.weekly_events):
+        future_temp.extend([t] * 24)
+        future_events.extend([e] * 24)
+
+    actuals = get_latest_day_actuals(restaurant_id)
+    actual_items = actuals.get("items", {})
+
+    all_forecasts = []
+    for item_name in items:
+        try:
+            hourly = forecast(restaurant_id, item_name, future_temp, future_events)
+            if hourly.empty:
+                continue
+            
+            price = actual_items.get(item_name, {}).get("price", 0.0)
+            hourly["revenue"] = hourly["predicted_demand"] * price
+            all_forecasts.append(hourly)
+        except (FileNotFoundError, ValueError):
+            continue
+
+    if not all_forecasts:
+        raise HTTPException(status_code=400, detail="Could not generate forecast for any items")
+
+    combined = pd.concat(all_forecasts, ignore_index=True)
+
+    # 1. Peak Hours (aggregate across all days and items by hour of day)
+    combined["hour"] = combined["timestamp"].dt.hour
+    hourly_agg = (
+        combined.groupby("hour", as_index=False)
+        .agg({"predicted_demand": "sum", "revenue": "sum"})
+        .sort_values("predicted_demand", ascending=False)
+        .head(3)
+    )
+
+    peak_hours = []
+    for _, r in hourly_agg.iterrows():
+        h = int(r["hour"])
+        peak_hours.append({
+            "hour": f"{h:02d}:00",
+            "order_count": int(r["predicted_demand"]),
+            "revenue": round(float(r["revenue"]), 2)
+        })
+
+    # 2. Peak Days (aggregate across all hours and items by day date/name)
+    combined["date"] = combined["timestamp"].dt.date
+    combined["day_name"] = combined["timestamp"].dt.day_name()
+    
+    daily_agg = (
+        combined.groupby(["date", "day_name"], as_index=False)
+        .agg({"predicted_demand": "sum", "revenue": "sum"})
+        .sort_values("predicted_demand", ascending=False)
+        .head(3)
+    )
+
+    peak_days = []
+    for _, r in daily_agg.iterrows():
+        peak_days.append({
+            "day": r["day_name"],
+            "order_count": int(r["predicted_demand"]),
+            "revenue": round(float(r["revenue"]), 2)
+        })
+
+    return {"peak_hours": peak_hours, "peak_days": peak_days}
 
 
 # ---------------------------------------------------------------------------
@@ -577,3 +790,28 @@ def analytics_forecast_alerts(
         "total_predicted_revenue": round(total_predicted_revenue, 2),
         "alerts": alerts
     }
+
+
+# ---------------------------------------------------------------------------
+# MODELS MANAGEMENT
+# ---------------------------------------------------------------------------
+@app.delete("/models/{restaurant_id}")
+def delete_all_models(restaurant_id: str):
+    """
+    Clear all saved models and metadata for a specific restaurant.
+    """
+    model_dir = os.path.dirname(get_model_path(restaurant_id, "dummy"))
+    
+    if not os.path.exists(model_dir):
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+        
+    try:
+        shutil.rmtree(model_dir)
+        return {
+            "restaurant_id": restaurant_id,
+            "status": "success",
+            "message": "All models deleted successfully."
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete models: {str(e)}")
+

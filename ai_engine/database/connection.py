@@ -29,11 +29,24 @@ def get_engine() -> Engine:
                 "Example: mssql+pyodbc://user:password@host/db?"
                 "driver=ODBC+Driver+18+for+SQL+Server&Encrypt=no"
             )
+        # SQLAlchemy coerces 'Encrypt=no' into the integer 0.
+        # On Windows this is fine, but on Linux (Docker), ODBC Driver 18 strictly
+        # expects the literal string "no" or "yes" and crashes with:
+        # "Invalid value specified for connection string attribute 'Encrypt' (0)"
+        # FIX: We strip it from the URL and explicitly pass string values in connect_args.
+        safe_url = DATABASE_URL.replace("Encrypt=no", "").replace("Encrypt=yes", "")
+        if safe_url.endswith("&"):
+            safe_url = safe_url[:-1]
+
         _engine = create_engine(
-            DATABASE_URL,
+            safe_url,
             pool_pre_ping=True,
             pool_size=5,
             max_overflow=10,
             pool_recycle=1800,
+            connect_args={
+                "Encrypt": "no",
+                "TrustServerCertificate": "yes"
+            }
         )
     return _engine

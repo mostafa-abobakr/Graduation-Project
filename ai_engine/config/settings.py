@@ -36,7 +36,7 @@ are written and read back.  On Render, use a persistent disk mounted here.
 # ---------------------------------------------------------------------------
 # Server
 # ---------------------------------------------------------------------------
-PORT: int = int(os.getenv("PORT", "8000"))
+PORT: int = int(os.getenv("PORT", "7860"))
 """Listening port — Render injects $PORT automatically."""
 
 # ---------------------------------------------------------------------------
