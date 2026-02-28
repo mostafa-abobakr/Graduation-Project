@@ -22,6 +22,8 @@ Metrics / Evaluation
 
 Analytics  (pure SQL — no ML)
   GET  /analytics/revenue/{restaurant_id}
+  GET  /analytics/cost-reduction/{restaurant_id}
+  GET  /analytics/sales-profit-chart/{restaurant_id}
   GET  /analytics/revenue/trend/{restaurant_id}       ?granularity=hour|day
   GET  /analytics/menu/performance/{restaurant_id}
   GET  /analytics/peaks/{restaurant_id}
@@ -60,6 +62,8 @@ from analytics.queries import (
     get_peak_hours,
     get_alerts,
     get_latest_day_actuals,
+    get_cost_percentage_kpi,
+    get_sales_profit_chart,
 )
 
 
@@ -616,11 +620,35 @@ def get_temperature_sanity(restaurant_id: str, item_name: str):
 # ---------------------------------------------------------------------------
 # ANALYTICS — Pure SQL, no ML
 # ---------------------------------------------------------------------------
+@app.get("/analytics/cost-reduction/{restaurant_id}")
+def analytics_cost_reduction(restaurant_id: str):
+    """
+    Cost Reduction KPI comparing this week to last week.
+    Returns: { costPercentage, vsLastWeek, target }
+    """
+    try:
+        return get_cost_percentage_kpi(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/analytics/sales-profit-chart/{restaurant_id}")
+def analytics_sales_profit_chart(restaurant_id: str):
+    """
+    Sales & Profit Trend chart data across hourly, weekly, and monthly scales.
+    Returns: { hourly: [...], weekly: [...], monthly: [...] }
+    """
+    try:
+        return get_sales_profit_chart(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/analytics/revenue/{restaurant_id}")
 def analytics_revenue(restaurant_id: str):
     """
     Aggregate revenue KPIs for a restaurant.
-    Returns: total_revenue, total_orders, avg_order_value, total_items_sold
+    Returns: total_revenue, total_orders, avg_order_value, total_items_sold, total_profit, margin_percentage
     """
     try:
         return get_revenue_summary(restaurant_id)

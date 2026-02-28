@@ -18,14 +18,31 @@ from database.connection import get_engine
 # 1. Revenue Summary
 # ---------------------------------------------------------------------------
 _REVENUE_SUMMARY_SQL = text("""
+    WITH OrderStats AS (
+        SELECT
+            COUNT(OrderId) AS total_orders,
+            SUM(TotalOrderValue) AS total_revenue,
+            AVG(TotalOrderValue) AS avg_order_value
+        FROM Orders
+        WHERE RestaurantId = :restaurant_id
+    ),
+    ItemStats AS (
+        SELECT
+            SUM(oi.Quantity) AS total_items_sold,
+            SUM(oi.LineTotal - (mi.Cost * oi.Quantity)) AS total_profit
+        FROM Orders o
+        JOIN OrderItems oi ON oi.OrderId = o.OrderId
+        JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+        WHERE o.RestaurantId = :restaurant_id
+    )
     SELECT
-        SUM(o.TotalOrderValue)  AS total_revenue,
-        COUNT(DISTINCT o.OrderId) AS total_orders,
-        AVG(o.TotalOrderValue)  AS avg_order_value,
-        SUM(oi.Quantity)        AS total_items_sold
-    FROM Orders o
-    JOIN OrderItems oi ON oi.OrderId = o.OrderId
-    WHERE o.RestaurantId = :restaurant_id
+        o.total_revenue,
+        o.total_orders,
+        o.avg_order_value,
+        i.total_items_sold,
+        i.total_profit
+    FROM OrderStats o
+    CROSS JOIN ItemStats i
 """)
 
 
@@ -38,17 +55,25 @@ def get_revenue_summary(restaurant_id: str) -> dict:
 
     if row is None or row[1] == 0:
         return {
-            "total_revenue":    0.0,
-            "total_orders":     0,
-            "avg_order_value":  0.0,
-            "total_items_sold": 0,
+            "total_revenue":     0.0,
+            "total_orders":      0,
+            "avg_order_value":   0.0,
+            "total_items_sold":  0,
+            "total_profit":      0.0,
+            "margin_percentage": 0.0,
         }
 
+    total_revenue = float(row[0] or 0)
+    total_profit  = float(row[4] or 0)
+    margin_pct    = round((total_profit / total_revenue) * 100, 2) if total_revenue > 0 else 0.0
+
     return {
-        "total_revenue":    round(float(row[0] or 0), 2),
-        "total_orders":     int(row[1] or 0),
-        "avg_order_value":  round(float(row[2] or 0), 2),
-        "total_items_sold": int(row[3] or 0),
+        "total_revenue":     round(total_revenue, 2),
+        "total_orders":      int(row[1] or 0),
+        "avg_order_value":   round(float(row[2] or 0), 2),
+        "total_items_sold":  int(row[3] or 0),
+        "total_profit":      round(total_profit, 2),
+        "margin_percentage": margin_pct,
     }
 
 
@@ -102,7 +127,7 @@ _MENU_PERFORMANCE_SQL = text("""
         mi.ItemName                   AS item_name,
         COUNT(DISTINCT oi.OrderId)    AS orders,
         SUM(oi.LineTotal)             AS revenue,
-        SUM(mi.Price * oi.Quantity)   AS profit,
+        SUM(oi.LineTotal - (mi.Cost * oi.Quantity)) AS profit,
         AVG(mi.Price)                 AS avg_price
     FROM OrderItems oi
     JOIN Orders    o  ON oi.OrderId    = o.OrderId
@@ -388,4 +413,190 @@ def get_latest_day_actuals(restaurant_id: str) -> dict:
     return {
         "baseline_date": str(baseline_date) if baseline_date else None,
         "items": items_dict,
+    }
+
+
+# ---------------------------------------------------------------------------
+# 7. Cost Reduction KPI
+# ---------------------------------------------------------------------------
+_COST_REDUCTION_SQL = text("""
+    WITH LatestDate AS (
+        SELECT MAX(CAST(OrderTimestamp AS DATE)) AS max_date
+        FROM Orders
+        WHERE RestaurantId = :restaurant_id
+    ),
+    DateRanges AS (
+        SELECT
+            max_date,
+            DATEADD(day, -7, max_date) AS one_week_ago,
+            DATEADD(day, -14, max_date) AS two_weeks_ago
+        FROM LatestDate
+    ),
+    CurrentWeek AS (
+        SELECT
+            SUM(oi.LineTotal) AS revenue,
+            SUM(mi.Cost * oi.Quantity) AS cost
+        FROM Orders o
+        JOIN OrderItems oi ON oi.OrderId = o.OrderId
+        JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+        CROSS JOIN DateRanges dr
+        WHERE o.RestaurantId = :restaurant_id
+          AND CAST(o.OrderTimestamp AS DATE) > dr.one_week_ago
+          AND CAST(o.OrderTimestamp AS DATE) <= dr.max_date
+    ),
+    PreviousWeek AS (
+        SELECT
+            SUM(oi.LineTotal) AS revenue,
+            SUM(mi.Cost * oi.Quantity) AS cost
+        FROM Orders o
+        JOIN OrderItems oi ON oi.OrderId = o.OrderId
+        JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+        CROSS JOIN DateRanges dr
+        WHERE o.RestaurantId = :restaurant_id
+          AND CAST(o.OrderTimestamp AS DATE) > dr.two_weeks_ago
+          AND CAST(o.OrderTimestamp AS DATE) <= dr.one_week_ago
+    )
+    SELECT
+        cw.revenue AS cw_rev,
+        cw.cost AS cw_cost,
+        pw.revenue AS pw_rev,
+        pw.cost AS pw_cost
+    FROM CurrentWeek cw
+    CROSS JOIN PreviousWeek pw
+""")
+
+def get_cost_percentage_kpi(restaurant_id: str) -> dict:
+    engine = get_engine()
+    with engine.connect() as conn:
+        row = conn.execute(
+            _COST_REDUCTION_SQL, {"restaurant_id": restaurant_id}
+        ).fetchone()
+
+    if row is None or row[0] is None:
+        return {"costPercentage": 0, "vsLastWeek": 0, "target": 30.0}
+
+    cw_rev, cw_cost, pw_rev, pw_cost = row
+    
+    cw_pct = (cw_cost / cw_rev * 100) if (cw_rev and cw_cost) else 0.0
+    pw_pct = (pw_cost / pw_rev * 100) if (pw_rev and pw_cost) else 0.0
+    
+    vs_last_week = cw_pct - pw_pct
+
+    return {
+        "costPercentage": round(float(cw_pct), 0),
+        "vsLastWeek": round(float(vs_last_week), 0),
+        "target": 30.0
+    }
+
+
+# ---------------------------------------------------------------------------
+# 8. Sales & Profit Chart
+# ---------------------------------------------------------------------------
+_CHART_HOURLY_SQL = text("""
+    WITH LatestDate AS (
+        SELECT MAX(CAST(OrderTimestamp AS DATE)) AS max_date 
+        FROM Orders 
+        WHERE RestaurantId = :restaurant_id
+    )
+    SELECT
+        DATEPART(hour, o.OrderTimestamp) AS bucket,
+        SUM(oi.LineTotal) AS revenue,
+        SUM(oi.LineTotal - (mi.Cost * oi.Quantity)) AS profit
+    FROM Orders o
+    JOIN OrderItems oi ON oi.OrderId = o.OrderId
+    JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+    CROSS JOIN LatestDate ld
+    WHERE o.RestaurantId = :restaurant_id
+      AND CAST(o.OrderTimestamp AS DATE) = ld.max_date
+    GROUP BY DATEPART(hour, o.OrderTimestamp)
+    ORDER BY bucket
+""")
+
+_CHART_WEEKLY_SQL = text("""
+    WITH LatestDate AS (
+        SELECT MAX(CAST(OrderTimestamp AS DATE)) AS max_date 
+        FROM Orders 
+        WHERE RestaurantId = :restaurant_id
+    )
+    SELECT
+        DATENAME(weekday, o.OrderTimestamp) AS bucket_label,
+        DATEPART(weekday, o.OrderTimestamp) AS bucket_sort,
+        SUM(oi.LineTotal) AS revenue,
+        SUM(oi.LineTotal - (mi.Cost * oi.Quantity)) AS profit
+    FROM Orders o
+    JOIN OrderItems oi ON oi.OrderId = o.OrderId
+    JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+    CROSS JOIN LatestDate ld
+    WHERE o.RestaurantId = :restaurant_id
+      AND CAST(o.OrderTimestamp AS DATE) > DATEADD(day, -7, ld.max_date)
+      AND CAST(o.OrderTimestamp AS DATE) <= ld.max_date
+    GROUP BY DATENAME(weekday, o.OrderTimestamp), DATEPART(weekday, o.OrderTimestamp)
+    ORDER BY bucket_sort
+""")
+
+_CHART_MONTHLY_SQL = text("""
+    WITH LatestDate AS (
+        SELECT MAX(CAST(OrderTimestamp AS DATE)) AS max_date 
+        FROM Orders 
+        WHERE RestaurantId = :restaurant_id
+    )
+    SELECT
+        (DATEDIFF(day, CAST(o.OrderTimestamp AS DATE), ld.max_date) / 7) AS weeks_ago,
+        SUM(oi.LineTotal) AS revenue,
+        SUM(oi.LineTotal - (mi.Cost * oi.Quantity)) AS profit
+    FROM Orders o
+    JOIN OrderItems oi ON oi.OrderId = o.OrderId
+    JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+    CROSS JOIN LatestDate ld
+    WHERE o.RestaurantId = :restaurant_id
+      AND CAST(o.OrderTimestamp AS DATE) > DATEADD(day, -28, ld.max_date)
+      AND CAST(o.OrderTimestamp AS DATE) <= ld.max_date
+    GROUP BY (DATEDIFF(day, CAST(o.OrderTimestamp AS DATE), ld.max_date) / 7)
+    ORDER BY weeks_ago DESC
+""")
+
+def get_sales_profit_chart(restaurant_id: str) -> dict:
+    engine = get_engine()
+    
+    with engine.connect() as conn:
+        hourly_df = pd.read_sql(_CHART_HOURLY_SQL, conn, params={"restaurant_id": restaurant_id})
+        weekly_df = pd.read_sql(_CHART_WEEKLY_SQL, conn, params={"restaurant_id": restaurant_id})
+        monthly_df = pd.read_sql(_CHART_MONTHLY_SQL, conn, params={"restaurant_id": restaurant_id})
+
+    def ampm(hour):
+        if hour == 0: return "12 AM"
+        if hour < 12: return f"{hour} AM"
+        if hour == 12: return "12 PM"
+        return f"{hour-12} PM"
+
+    hourly_list = []
+    for _, r in hourly_df.iterrows():
+        hourly_list.append({
+            "label": ampm(int(r['bucket'])),
+            "revenue": round(float(r['revenue']), 2),
+            "profit": round(float(r['profit']), 2)
+        })
+
+    weekly_list = []
+    for _, r in weekly_df.iterrows():
+        weekly_list.append({
+            "label": str(r['bucket_label'])[:3],
+            "revenue": round(float(r['revenue']), 2),
+            "profit": round(float(r['profit']), 2)
+        })
+
+    monthly_list = []
+    week_idx = 1
+    for _, r in monthly_df.iterrows():
+        monthly_list.append({
+            "label": f"Week {week_idx}",
+            "revenue": round(float(r['revenue']), 2),
+            "profit": round(float(r['profit']), 2)
+        })
+        week_idx += 1
+
+    return {
+        "hourly": hourly_list,
+        "weekly": weekly_list,
+        "monthly": monthly_list
     }
