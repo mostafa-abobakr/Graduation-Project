@@ -626,3 +626,76 @@ def get_menu_items_pricing(restaurant_id: str) -> dict:
             "cost": float(r["Cost"] or 0.0)
         }
     return prices
+
+
+# ---------------------------------------------------------------------------
+# 10. Previous Period Dashboard KPIs
+# ---------------------------------------------------------------------------
+_PREVIOUS_DAY_KPIS_SQL = text("""
+    WITH LatestDate AS (
+        SELECT MAX(CAST(OrderTimestamp AS DATE)) AS max_date 
+        FROM Orders 
+        WHERE RestaurantId = :restaurant_id
+    )
+    SELECT
+        SUM(oi.LineTotal) AS revenue,
+        SUM(oi.LineTotal - (mi.Cost * oi.Quantity)) AS profit,
+        COUNT(DISTINCT o.OrderId) AS orders
+    FROM Orders o
+    JOIN OrderItems oi ON oi.OrderId = o.OrderId
+    JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+    CROSS JOIN LatestDate ld
+    WHERE o.RestaurantId = :restaurant_id
+      AND CAST(o.OrderTimestamp AS DATE) = ld.max_date
+""")
+
+_PREVIOUS_WEEK_KPIS_SQL = text("""
+    WITH LatestDate AS (
+        SELECT MAX(CAST(OrderTimestamp AS DATE)) AS max_date 
+        FROM Orders 
+        WHERE RestaurantId = :restaurant_id
+    )
+    SELECT
+        SUM(oi.LineTotal) AS revenue,
+        SUM(oi.LineTotal - (mi.Cost * oi.Quantity)) AS profit,
+        COUNT(DISTINCT o.OrderId) AS orders
+    FROM Orders o
+    JOIN OrderItems oi ON oi.OrderId = o.OrderId
+    JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+    CROSS JOIN LatestDate ld
+    WHERE o.RestaurantId = :restaurant_id
+      AND CAST(o.OrderTimestamp AS DATE) > DATEADD(day, -7, ld.max_date)
+      AND CAST(o.OrderTimestamp AS DATE) <= ld.max_date
+""")
+
+def get_previous_day_kpis(restaurant_id: str) -> dict:
+    engine = get_engine()
+    with engine.connect() as conn:
+        row = conn.execute(
+            _PREVIOUS_DAY_KPIS_SQL, {"restaurant_id": restaurant_id}
+        ).fetchone()
+
+    if row is None or row[0] is None:
+        return {"revenue": 0.0, "profit": 0.0, "orders": 0}
+
+    return {
+        "revenue": float(row[0]),
+        "profit": float(row[1]),
+        "orders": int(row[2])
+    }
+
+def get_previous_week_kpis(restaurant_id: str) -> dict:
+    engine = get_engine()
+    with engine.connect() as conn:
+        row = conn.execute(
+            _PREVIOUS_WEEK_KPIS_SQL, {"restaurant_id": restaurant_id}
+        ).fetchone()
+
+    if row is None or row[0] is None:
+        return {"revenue": 0.0, "profit": 0.0, "orders": 0}
+
+    return {
+        "revenue": float(row[0]),
+        "profit": float(row[1]),
+        "orders": int(row[2])
+    }

@@ -65,6 +65,8 @@ from analytics.queries import (
     get_cost_percentage_kpi,
     get_sales_profit_chart,
     get_menu_items_pricing,
+    get_previous_day_kpis,
+    get_previous_week_kpis,
 )
 
 
@@ -510,11 +512,22 @@ def forecast_dashboard_day(
     # Sort items by revenue descending
     dashboard_items.sort(key=lambda x: x["revenue"], reverse=True)
 
+    previous = get_previous_day_kpis(restaurant_id)
+    def format_pct(current, prev):
+        if prev > 0:
+            pct = ((current - prev) / prev) * 100
+            sign = "+" if pct > 0 else ""
+            return f"{sign}{pct:.1f}%"
+        return "0.0%"
+
     return {
         "overall_accuracy": overall_accuracy,
         "total_revenue": round(total_revenue, 2),
+        "revenue_change_pct": format_pct(total_revenue, previous["revenue"]),
         "total_profit": round(total_profit, 2),
+        "profit_change_pct": format_pct(total_profit, previous["profit"]),
         "total_orders": total_orders,
+        "orders_change_pct": format_pct(total_orders, previous["orders"]),
         "items": dashboard_items
     }
 
@@ -630,11 +643,22 @@ def forecast_dashboard_week(
     # Sort items by revenue descending
     dashboard_items.sort(key=lambda x: x["revenue"], reverse=True)
 
+    previous = get_previous_week_kpis(restaurant_id)
+    def format_pct(current, prev):
+        if prev > 0:
+            pct = ((current - prev) / prev) * 100
+            sign = "+" if pct > 0 else ""
+            return f"{sign}{pct:.1f}%"
+        return "0.0%"
+
     return {
         "overall_accuracy": overall_accuracy,
         "total_revenue": round(total_revenue, 2),
+        "revenue_change_pct": format_pct(total_revenue, previous["revenue"]),
         "total_profit": round(total_profit, 2),
+        "profit_change_pct": format_pct(total_profit, previous["profit"]),
         "total_orders": total_orders,
+        "orders_change_pct": format_pct(total_orders, previous["orders"]),
         "items": dashboard_items
     }
 
