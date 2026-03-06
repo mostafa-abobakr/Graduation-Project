@@ -64,6 +64,7 @@ from analytics.queries import (
     get_latest_day_actuals,
     get_cost_percentage_kpi,
     get_sales_profit_chart,
+    get_menu_items_pricing,
 )
 
 
@@ -408,6 +409,237 @@ def forecast_all_peaks(
 
 
 # ---------------------------------------------------------------------------
+# DASHBOARD FORECASTS
+# ---------------------------------------------------------------------------
+@app.post("/forecast/dashboard/day/{restaurant_id}")
+def forecast_dashboard_day(
+    restaurant_id: str,
+    request: HourlyForecastRequest,
+):
+    """
+    Day view for the Sales Dashboard.
+    Provides total expected revenue, profit, and orders,
+    item-level details, and hourly sales chart data for tomorrow.
+    """
+    model_dir = os.path.dirname(get_model_path(restaurant_id, "dummy"))
+    if not os.path.exists(model_dir):
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+        
+    items = [f[:-4] for f in os.listdir(model_dir) if f.endswith(".pkl")]
+    if not items:
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+
+    future_temp   = [request.temperature_celsius] * 24
+    future_events = [request.event_day] * 24
+
+    pricing = get_menu_items_pricing(restaurant_id)
+    
+    # Fetch accuracy metrics dynamically
+    try:
+        metrics_data = get_overall_metrics(restaurant_id, granularity="daily")
+        overall_accuracy = metrics_data["overall_stats"]["mean_accuracy"]
+        item_accuracy_map = {item: data["accuracy"] for item, data in metrics_data["item_breakdown"].items()}
+    except Exception:
+        overall_accuracy = 0.0
+        item_accuracy_map = {}
+
+    total_revenue = 0.0
+    total_profit = 0.0
+    total_orders = 0
+
+    dashboard_items = []
+
+    for item_name in items:
+        try:
+            hourly = forecast(restaurant_id, item_name, future_temp, future_events)
+            if hourly.empty:
+                continue
+            
+            p_data = pricing.get(item_name, {"price": 0.0, "cost": 0.0})
+            price = p_data["price"]
+            cost = p_data["cost"]
+            
+            orders = float(hourly["predicted_demand"].sum())
+            revenue = orders * price
+            profit = orders * (price - cost)
+
+            total_orders += int(round(orders))
+            total_revenue += revenue
+            total_profit += profit
+
+            chart_data = []
+            max_orders = -1
+            peak_hour = "00:00"
+
+            for _, row in hourly.iterrows():
+                h_orders = float(row["predicted_demand"])
+                h_rev = h_orders * price
+                h_prof = h_orders * (price - cost)
+                h_str = row["timestamp"].strftime("%H:00")
+                
+                chart_data.append({
+                    "hour": h_str,
+                    "orders": int(round(h_orders)),
+                    "revenue": round(h_rev, 2),
+                    "profit": round(h_prof, 2)
+                })
+
+                if h_orders > max_orders:
+                    max_orders = h_orders
+                    peak_hour = h_str
+
+            dashboard_items.append({
+                "item_name": item_name,
+                "expected_orders": int(round(orders)),
+                "revenue": round(revenue, 2),
+                "profit": round(profit, 2),
+                "accuracy": item_accuracy_map.get(item_name, 0.0),
+                "peak_hour": {
+                    "hour": peak_hour,
+                    "orders": int(round(max_orders)) if max_orders > 0 else 0
+                },
+                "chart_data": chart_data
+            })
+            
+        except (FileNotFoundError, ValueError):
+            continue
+
+    if not dashboard_items:
+        raise HTTPException(status_code=400, detail="Could not generate forecast for any items")
+
+    # Sort items by revenue descending
+    dashboard_items.sort(key=lambda x: x["revenue"], reverse=True)
+
+    return {
+        "overall_accuracy": overall_accuracy,
+        "total_revenue": round(total_revenue, 2),
+        "total_profit": round(total_profit, 2),
+        "total_orders": total_orders,
+        "items": dashboard_items
+    }
+
+
+@app.post("/forecast/dashboard/week/{restaurant_id}")
+def forecast_dashboard_week(
+    restaurant_id: str,
+    request: DailyForecastRequest,
+):
+    """
+    Week view for the Sales Dashboard.
+    Provides total expected revenue, profit, and orders,
+    item-level details, and daily sales chart data for the next 7 days.
+    """
+    if len(request.weekly_temperatures) != 7 or len(request.weekly_events) != 7:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide exactly 7 values for weekly temps/events.",
+        )
+
+    model_dir = os.path.dirname(get_model_path(restaurant_id, "dummy"))
+    if not os.path.exists(model_dir):
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+        
+    items = [f[:-4] for f in os.listdir(model_dir) if f.endswith(".pkl")]
+    if not items:
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+
+    future_temp: list[float] = []
+    future_events: list[int] = []
+    for t, e in zip(request.weekly_temperatures, request.weekly_events):
+        future_temp.extend([t] * 24)
+        future_events.extend([e] * 24)
+
+    pricing = get_menu_items_pricing(restaurant_id)
+
+    # Fetch accuracy metrics dynamically
+    try:
+        metrics_data = get_overall_metrics(restaurant_id, granularity="daily")
+        overall_accuracy = metrics_data["overall_stats"]["mean_accuracy"]
+        item_accuracy_map = {item: data["accuracy"] for item, data in metrics_data["item_breakdown"].items()}
+    except Exception:
+        overall_accuracy = 0.0
+        item_accuracy_map = {}
+
+    total_revenue = 0.0
+    total_profit = 0.0
+    total_orders = 0
+
+    dashboard_items = []
+
+    for item_name in items:
+        try:
+            hourly = forecast(restaurant_id, item_name, future_temp, future_events)
+            if hourly.empty:
+                continue
+            
+            p_data = pricing.get(item_name, {"price": 0.0, "cost": 0.0})
+            price = p_data["price"]
+            cost = p_data["cost"]
+            
+            hourly["date"] = hourly["timestamp"].dt.date
+            daily = hourly.groupby("date", as_index=False)["predicted_demand"].sum()
+            
+            orders = float(daily["predicted_demand"].sum())
+            revenue = orders * price
+            profit = orders * (price - cost)
+
+            total_orders += int(round(orders))
+            total_revenue += revenue
+            total_profit += profit
+
+            chart_data = []
+            max_orders = -1
+            peak_date = ""
+
+            for _, row in daily.iterrows():
+                d_orders = float(row["predicted_demand"])
+                d_rev = d_orders * price
+                d_prof = d_orders * (price - cost)
+                d_str = row["date"].strftime("%Y-%m-%d")
+                
+                chart_data.append({
+                    "date": d_str,
+                    "orders": int(round(d_orders)),
+                    "revenue": round(d_rev, 2),
+                    "profit": round(d_prof, 2)
+                })
+
+                if d_orders > max_orders:
+                    max_orders = d_orders
+                    peak_date = d_str
+
+            dashboard_items.append({
+                "item_name": item_name,
+                "expected_orders": int(round(orders)),
+                "revenue": round(revenue, 2),
+                "profit": round(profit, 2),
+                "accuracy": item_accuracy_map.get(item_name, 0.0),
+                "peak_day": {
+                    "date": peak_date,
+                    "orders": int(round(max_orders)) if max_orders > 0 else 0
+                },
+                "chart_data": chart_data
+            })
+            
+        except (FileNotFoundError, ValueError):
+            continue
+
+    if not dashboard_items:
+        raise HTTPException(status_code=400, detail="Could not generate forecast for any items")
+
+    # Sort items by revenue descending
+    dashboard_items.sort(key=lambda x: x["revenue"], reverse=True)
+
+    return {
+        "overall_accuracy": overall_accuracy,
+        "total_revenue": round(total_revenue, 2),
+        "total_profit": round(total_profit, 2),
+        "total_orders": total_orders,
+        "items": dashboard_items
+    }
+
+
+# ---------------------------------------------------------------------------
 # EVALUATION — Legacy endpoints (backward-compatible, unchanged signatures)
 # ---------------------------------------------------------------------------
 @app.get("/metrics/mae/{restaurant_id}/{item_name}")
@@ -575,13 +807,20 @@ def get_overall_metrics(
     evaluator    = evaluate_hourly if granularity == "hourly" else evaluate_daily
     item_metrics = {}
     mae_list     = []
+    accuracy_list = []
 
     for item in items:
         item_df = df[df["item_name"] == item]
         try:
             res = evaluator(item_df, return_details=False)
-            item_metrics[item] = {"mae": res["mae"], "mape": res["mape"]}
+            acc = max(0.0, 100.0 - res["mape"])
+            item_metrics[item] = {
+                "mae": res["mae"], 
+                "mape": res["mape"],
+                "accuracy": round(acc, 2)
+            }
             mae_list.append((item, res["mae"]))
+            accuracy_list.append(acc)
         except ValueError:
             pass
 
@@ -593,15 +832,33 @@ def get_overall_metrics(
 
     mae_list.sort(key=lambda x: x[1])
     mean_mae = sum(x[1] for x in mae_list) / len(mae_list)
+    mean_accuracy = sum(accuracy_list) / len(accuracy_list)
 
     return {
         "granularity": granularity,
         "overall_stats": {
             "mean_mae":   round(mean_mae, 2),
+            "mean_accuracy": round(mean_accuracy, 2),
             "best_item":  mae_list[0][0],
             "worst_item": mae_list[-1][0],
         },
         "item_breakdown": item_metrics,
+    }
+
+
+@app.get("/metrics/accuracy/{restaurant_id}")
+def get_overall_accuracy(
+    restaurant_id: str,
+    granularity: Literal["hourly", "daily"] = Query(default="daily"),
+):
+    """
+    Returns the overall accuracy metric (derived from MAPE) for a restaurant.
+    """
+    overall = get_overall_metrics(restaurant_id, granularity)
+    return {
+        "restaurant_id": restaurant_id,
+        "granularity": granularity,
+        "overall_accuracy": overall["overall_stats"]["mean_accuracy"]
     }
 
 

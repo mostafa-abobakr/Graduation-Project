@@ -600,3 +600,29 @@ def get_sales_profit_chart(restaurant_id: str) -> dict:
         "weekly": weekly_list,
         "monthly": monthly_list
     }
+
+
+# ---------------------------------------------------------------------------
+# 9. Menu Items Pricing
+# ---------------------------------------------------------------------------
+_MENU_PRICING_SQL = text("""
+    SELECT ItemName, Price, Cost
+    FROM MenuItems
+    WHERE RestaurantId = :restaurant_id
+""")
+
+def get_menu_items_pricing(restaurant_id: str) -> dict:
+    engine = get_engine()
+    with engine.connect() as conn:
+        df = pd.read_sql(_MENU_PRICING_SQL, conn, params={"restaurant_id": restaurant_id})
+    
+    if df.empty:
+        return {}
+        
+    prices = {}
+    for _, r in df.iterrows():
+        prices[r["ItemName"]] = {
+            "price": float(r["Price"] or 0.0),
+            "cost": float(r["Cost"] or 0.0)
+        }
+    return prices
