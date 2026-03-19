@@ -28,6 +28,9 @@ Analytics  (pure SQL — no ML)
   GET  /analytics/menu/performance/{restaurant_id}
   GET  /analytics/peaks/{restaurant_id}
   GET  /analytics/alerts/{restaurant_id}
+
+Seed / Data Generation
+  POST /seed/{restaurant_id}
 """
 from contextlib import asynccontextmanager
 from typing import Literal
@@ -68,6 +71,8 @@ from analytics.queries import (
     get_previous_day_kpis,
     get_previous_week_kpis,
 )
+
+from database.seeder import seed_restaurant_data
 
 
 # ---------------------------------------------------------------------------
@@ -1123,4 +1128,34 @@ def delete_all_models(restaurant_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete models: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# SEED DATA
+# ---------------------------------------------------------------------------
+@app.post("/seed/{restaurant_id}")
+def seed_dummy_data(restaurant_id: str):
+    """
+    Generate and insert 3-12 months of realistic POS dummy data for a restaurant.
+    """
+    try:
+        from database.seeder import seed_restaurant_data
+        return seed_restaurant_data(restaurant_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to seed data: {str(e)}")
+
+
+@app.post("/seedAll")
+def seed_all_dummy_data():
+    """
+    Go through all restaurants and seed dummy data for those that don't have any menu items.
+    """
+    try:
+        from database.seeder import seed_all_restaurants
+        return seed_all_restaurants()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to run batch seed: {str(e)}")
+
 
