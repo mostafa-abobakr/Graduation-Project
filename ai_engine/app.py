@@ -56,7 +56,7 @@ from forecasting.evaluator import (
     evaluate_temperature_sanity,
     _train_and_predict,
 )
-from schemas.forecast_requests import HourlyForecastRequest, DailyForecastRequest
+from schemas.forecast_requests import HourlyForecastRequest, DailyForecastRequest, WeeklyDashboardRequest
 
 from analytics.queries import (
     get_revenue_summary,
@@ -65,6 +65,7 @@ from analytics.queries import (
     get_peak_hours,
     get_alerts,
     get_latest_day_actuals,
+    get_latest_week_actuals,
     get_cost_percentage_kpi,
     get_sales_profit_chart,
     get_menu_items_pricing,
@@ -95,6 +96,35 @@ MIN_HOURS = 336   # 2 weeks of hourly data, enforced per item
 @app.get("/")
 def root():
     return {"status": "ZeroBite ML service running"}
+
+
+# ---------------------------------------------------------------------------
+# SEED DATA
+# ---------------------------------------------------------------------------
+@app.post("/seed/{restaurant_id}")
+def seed_dummy_data(restaurant_id: str):
+    """
+    Generate and insert 3-12 months of realistic POS dummy data for a restaurant.
+    """
+    try:
+        from database.seeder import seed_restaurant_data
+        return seed_restaurant_data(restaurant_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to seed data: {str(e)}")
+
+
+@app.post("/seedAll")
+def seed_all_dummy_data():
+    """
+    Go through all restaurants and seed dummy data for those that don't have any menu items.
+    """
+    try:
+        from database.seeder import seed_all_restaurants
+        return seed_all_restaurants()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to run batch seed: {str(e)}")
 
 
 # ---------------------------------------------------------------------------
@@ -540,7 +570,7 @@ def forecast_dashboard_day(
 @app.post("/forecast/dashboard/week/{restaurant_id}")
 def forecast_dashboard_week(
     restaurant_id: str,
-    request: DailyForecastRequest,
+    request: WeeklyDashboardRequest,
 ):
     """
     Week view for the Sales Dashboard.
@@ -909,11 +939,14 @@ def get_temperature_sanity(restaurant_id: str, item_name: str):
 @app.get("/analytics/cost-reduction/{restaurant_id}")
 def analytics_cost_reduction(restaurant_id: str):
     """
-    Cost Reduction KPI comparing this week to last week.
-    Returns: { costPercentage, vsLastWeek, target }
+    Cost Reduction KPI comparing periods.
+    Divided by timeframes: day, week, month, all.
     """
     try:
-        return get_cost_percentage_kpi(restaurant_id)
+        response_data = {}
+        for timeframe in ["day", "week", "month", "all"]:
+            response_data[timeframe] = get_cost_percentage_kpi(restaurant_id, timeframe)
+        return {"restaurant_id": restaurant_id, "data": response_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -921,11 +954,15 @@ def analytics_cost_reduction(restaurant_id: str):
 @app.get("/analytics/sales-profit-chart/{restaurant_id}")
 def analytics_sales_profit_chart(restaurant_id: str):
     """
-    Sales & Profit Trend chart data across hourly, weekly, and monthly scales.
-    Returns: { hourly: [...], weekly: [...], monthly: [...] }
+    Sales & Profit Trend chart data.
+    Divided by timeframes: day, week, month, all.
     """
     try:
-        return get_sales_profit_chart(restaurant_id)
+        chart_data = get_sales_profit_chart(restaurant_id)
+        response_data = {}
+        for timeframe in ["day", "week", "month", "all"]:
+            response_data[timeframe] = chart_data
+        return {"restaurant_id": restaurant_id, "data": response_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -934,10 +971,13 @@ def analytics_sales_profit_chart(restaurant_id: str):
 def analytics_revenue(restaurant_id: str):
     """
     Aggregate revenue KPIs for a restaurant.
-    Returns: total_revenue, total_orders, avg_order_value, total_items_sold, total_profit, margin_percentage
+    Divided by timeframes: day, week, month, all.
     """
     try:
-        return get_revenue_summary(restaurant_id)
+        response_data = {}
+        for timeframe in ["day", "week", "month", "all"]:
+            response_data[timeframe] = get_revenue_summary(restaurant_id, timeframe)
+        return {"restaurant_id": restaurant_id, "data": response_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -949,13 +989,13 @@ def analytics_revenue_trend(
 ):
     """
     Time-series revenue trend.
-    hour  → bucketed by hour
-    day   → bucketed by calendar day (default)
-
-    Returns list of: { timestamp, revenue, order_count }
+    Divided by timeframes: day, week, month, all.
     """
     try:
-        return get_revenue_trend(restaurant_id, granularity)
+        response_data = {}
+        for timeframe in ["day", "week", "month", "all"]:
+            response_data[timeframe] = get_revenue_trend(restaurant_id, granularity, timeframe)
+        return {"restaurant_id": restaurant_id, "data": response_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -964,11 +1004,13 @@ def analytics_revenue_trend(
 def analytics_menu_performance(restaurant_id: str):
     """
     Per-item menu performance.
-    Returns list of: { item_name, orders, revenue, profit, margin_percentage }
-    Sorted by revenue descending.
+    Divided by timeframes: day, week, month, all.
     """
     try:
-        return get_menu_performance(restaurant_id)
+        response_data = {}
+        for timeframe in ["day", "week", "month", "all"]:
+            response_data[timeframe] = get_menu_performance(restaurant_id, timeframe)
+        return {"restaurant_id": restaurant_id, "data": response_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -977,10 +1019,13 @@ def analytics_menu_performance(restaurant_id: str):
 def analytics_peaks(restaurant_id: str):
     """
     Top 3 peak hours and top 3 peak days by order count.
-    Returns: { peak_hours: [...], peak_days: [...] }
+    Divided by timeframes: day, week, month, all.
     """
     try:
-        return get_peak_hours(restaurant_id)
+        response_data = {}
+        for timeframe in ["day", "week", "month", "all"]:
+            response_data[timeframe] = get_peak_hours(restaurant_id, timeframe)
+        return {"restaurant_id": restaurant_id, "data": response_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -988,122 +1033,218 @@ def analytics_peaks(restaurant_id: str):
 @app.get("/analytics/alerts/{restaurant_id}")
 def analytics_alerts(restaurant_id: str):
     """
-    Rule-based business alerts. No ML — deterministic SQL aggregations only.
-    Alert types:
-      - revenue_drop        (>20% day-over-day decline)
-      - cold_item_underperformance  (hot day + low cold-drink sales)
-      - low_margin_high_volume      (high-volume item with <10% margin)
-
-    Returns list of: { type, severity, message }
+    Rule-based business alerts.
+    Divided by timeframes: day, week, month, all.
     """
     try:
-        alerts = get_alerts(restaurant_id)
-        return {"restaurant_id": restaurant_id, "alerts": alerts}
+        response_data = {}
+        for timeframe in ["day", "week", "month", "all"]:
+            response_data[timeframe] = get_alerts(restaurant_id, timeframe)
+        return {"restaurant_id": restaurant_id, "data": response_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics/alerts/forecast/{restaurant_id}")
+@app.post("/analytics/alerts/forecast/{restaurant_id}")
 def analytics_forecast_alerts(
     restaurant_id: str,
-    future_temp: float = Query(22.0, description="Assumed temperature °C for tomorrow"),
-    future_event: int = Query(0, description="Assumed event flag (0/1) for tomorrow"),
+    request: WeeklyDashboardRequest
 ):
     """
-    Predictive alerts comparing tomorrow's ML forecast against the most recent
-    actual day's data in the database.
+    Predictive alerts comparing tomorrow's and next week's ML forecast against
+    the most recent actual day/week data in the database.
+    Accepts 7 days of temperatures and events.
     """
-    actuals = get_latest_day_actuals(restaurant_id)
-    baseline_date = actuals.get("baseline_date")
-    if not baseline_date:
-        return {"restaurant_id": restaurant_id, "alerts": [], "message": "No historical data found"}
+    day_actuals = get_latest_day_actuals(restaurant_id)
+    week_actuals = get_latest_week_actuals(restaurant_id)
+    
+    day_baseline = day_actuals.get("baseline_date")
+    week_baseline = week_actuals.get("baseline_date")
+    
+    day_items = day_actuals.get("items", {})
+    week_items = week_actuals.get("items", {})
 
-    actual_items = actuals.get("items", {})
-    if not actual_items:
-        return {"restaurant_id": restaurant_id, "alerts": [], "message": "No sales found on baseline date"}
+    if len(request.weekly_temperatures) != 7 or len(request.weekly_events) != 7:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide exactly 7 values for weekly temps/events."
+        )
 
-    alerts = []
-    total_actual_revenue = sum(data["revenue"] for data in actual_items.values())
-    total_predicted_revenue = 0.0
+    temps: list[float] = []
+    events: list[int] = []
+    
+    for t, e in zip(request.weekly_temperatures, request.weekly_events):
+        temps.extend([t] * 24)
+        events.extend([e] * 24)
 
-    temps = [future_temp] * 24
-    events = [future_event] * 24
+    # We only forecast items that exist in our historical data baselines
+    all_items = set(day_items.keys()).union(set(week_items.keys()))
 
-    for item_name, actual_data in actual_items.items():
+    day_alerts = []
+    week_alerts = []
+    
+    day_total_actual_rev = sum(d["revenue"] for d in day_items.values())
+    week_total_actual_rev = sum(d["revenue"] for d in week_items.values())
+    
+    day_total_pred_rev = 0.0
+    week_total_pred_rev = 0.0
+
+    for item_name in all_items:
         try:
-            # 24 hour forecast gives us exactly 1 full day for "tomorrow"
-            # It starts from wherever the training data ended
             hourly_pred = forecast(restaurant_id, item_name, temps, events)
             if hourly_pred.empty:
                 continue
-                
-            pred_qty = hourly_pred["predicted_demand"].sum()
-            pred_revenue = float(pred_qty) * actual_data["price"]
-            total_predicted_revenue += pred_revenue
 
-            # Evaluate item-level changes (-10% to +10% is considered normal variance)
-            act_qty = float(actual_data["qty"])
-            if act_qty >= 5: # Only alert on items with meaningful volume
-                change_pct = (pred_qty - act_qty) / act_qty
-                
-                if change_pct <= -0.20:
-                    alerts.append({
-                        "type": "item_decrease",
-                        "severity": "warning",
-                        "message": (
-                            f"Forecast indicates '{item_name}' orders will drop by "
-                            f"{abs(change_pct * 100):.1f}% tomorrow vs {baseline_date} "
-                            f"({int(act_qty)} → {int(pred_qty)} units)"
-                        )
-                    })
-                elif change_pct >= 0.25:
-                    alerts.append({
-                        "type": "item_surge",
-                        "severity": "info",
-                        "message": (
-                            f"Forecast indicates a surge in '{item_name}' orders by "
-                            f"{change_pct * 100:.1f}% tomorrow vs {baseline_date} "
-                            f"({int(act_qty)} → {int(pred_qty)} units). "
-                            "Ensure sufficient stock."
-                        )
-                    })
+            day_pred_qty = float(hourly_pred["predicted_demand"].iloc[:24].sum())
+            week_pred_qty = float(hourly_pred["predicted_demand"].sum())
+
+            # Evaluate Day Alerts
+            if item_name in day_items:
+                act_day = day_items[item_name]
+                act_qty = float(act_day["qty"])
+                pred_revenue = day_pred_qty * act_day["price"]
+                day_total_pred_rev += pred_revenue
+
+                if act_qty >= 5:
+                    change_pct = (day_pred_qty - act_qty) / act_qty
+                    cost = act_day.get("cost", 0)
+                    margin_pct = (act_day["price"] - cost) / act_day["price"] if act_day["price"] > 0 else 0
+                    
+                    if change_pct <= -0.20:
+                        day_alerts.append({
+                            "type": "item_decrease", "severity": "warning",
+                            "message": f"Forecast indicates '{item_name}' orders will drop by {abs(change_pct * 100):.1f}% tomorrow vs {day_baseline} ({int(act_qty)} → {int(day_pred_qty)} units)"
+                        })
+                    elif change_pct >= 0.25:
+                        if margin_pct < 0.15:
+                            day_alerts.append({
+                                "type": "low_margin_surge", "severity": "warning",
+                                "message": f"Forecast indicates a surge in '{item_name}' orders by {change_pct * 100:.1f}% tomorrow vs {day_baseline} ({int(act_qty)} → {int(day_pred_qty)} units), but margin is low ({margin_pct * 100:.1f}%)."
+                            })
+                        elif margin_pct > 0.50:
+                            day_alerts.append({
+                                "type": "high_margin_surge", "severity": "info",
+                                "message": f"Forecast indicates a highly profitable surge in '{item_name}' orders by {change_pct * 100:.1f}% tomorrow vs {day_baseline} ({int(act_qty)} → {int(day_pred_qty)} units). Margin is excellent ({margin_pct * 100:.1f}%)."
+                            })
+                        else:
+                            day_alerts.append({
+                                "type": "item_surge", "severity": "info",
+                                "message": f"Forecast indicates a surge in '{item_name}' orders by {change_pct * 100:.1f}% tomorrow vs {day_baseline} ({int(act_qty)} → {int(day_pred_qty)} units)."
+                            })
+
+            # Evaluate Week Alerts
+            if item_name in week_items:
+                act_week = week_items[item_name]
+                act_qty = float(act_week["qty"])
+                pred_revenue = week_pred_qty * act_week["price"]
+                week_total_pred_rev += pred_revenue
+
+                if act_qty >= 15: # slightly higher threshold for weekly volume
+                    change_pct = (week_pred_qty - act_qty) / act_qty
+                    cost = act_week.get("cost", 0)
+                    margin_pct = (act_week["price"] - cost) / act_week["price"] if act_week["price"] > 0 else 0
+                    
+                    freq_word = "next week"
+                    
+                    if change_pct <= -0.20:
+                        week_alerts.append({
+                            "type": "item_decrease", "severity": "warning",
+                            "message": f"Forecast indicates '{item_name}' orders will drop by {abs(change_pct * 100):.1f}% {freq_word} ({int(act_qty)} → {int(week_pred_qty)} units)"
+                        })
+                    elif change_pct >= 0.25:
+                        if margin_pct < 0.15:
+                            week_alerts.append({
+                                "type": "low_margin_surge", "severity": "warning",
+                                "message": f"Forecast indicates a surge in '{item_name}' orders by {change_pct * 100:.1f}% {freq_word} ({int(act_qty)} → {int(week_pred_qty)} units), but margin is low ({margin_pct * 100:.1f}%)."
+                            })
+                        elif margin_pct > 0.50:
+                            week_alerts.append({
+                                "type": "high_margin_surge", "severity": "info",
+                                "message": f"Forecast indicates a highly profitable surge in '{item_name}' orders by {change_pct * 100:.1f}% {freq_word} ({int(act_qty)} → {int(week_pred_qty)} units). Margin is excellent ({margin_pct * 100:.1f}%)."
+                            })
+                        else:
+                            week_alerts.append({
+                                "type": "item_surge", "severity": "info",
+                                "message": f"Forecast indicates a surge in '{item_name}' orders by {change_pct * 100:.1f}% {freq_word} ({int(act_qty)} → {int(week_pred_qty)} units)."
+                            })
 
         except (FileNotFoundError, ValueError):
-            # Model doesn't exist for this item, or couldn't forecast. Skip it.
             pass
 
-    # Evaluate total revenue change
-    if total_actual_revenue > 0 and total_predicted_revenue > 0:
-        rev_change = (total_predicted_revenue - total_actual_revenue) / total_actual_revenue
+    # Evaluate Day Revenue
+    if day_total_actual_rev > 0 and day_total_pred_rev > 0:
+        rev_change = (day_total_pred_rev - day_total_actual_rev) / day_total_actual_rev
         if rev_change <= -0.15:
-            alerts.append({
-                "type": "forecast_revenue_drop",
-                "severity": "warning",
-                "message": (
-                    f"Forecasted revenue for tomorrow is expected to drop {abs(rev_change * 100):.1f}% "
-                    f"vs {baseline_date} (${total_actual_revenue:.2f} → ${total_predicted_revenue:.2f})"
-                )
+            day_alerts.append({
+                "type": "forecast_revenue_drop", "severity": "warning",
+                "message": f"Forecasted revenue for tomorrow is expected to drop {abs(rev_change * 100):.1f}% vs {day_baseline} (${day_total_actual_rev:.2f} → ${day_total_pred_rev:.2f})"
             })
         elif rev_change >= 0.20:
-             alerts.append({
-                "type": "forecast_revenue_spike",
-                "severity": "info",
-                "message": (
-                    f"Forecasted revenue for tomorrow is expected to surge {rev_change * 100:.1f}% "
-                    f"vs {baseline_date} (${total_actual_revenue:.2f} → ${total_predicted_revenue:.2f})"
-                )
+            day_alerts.append({
+                "type": "forecast_revenue_spike", "severity": "info",
+                "message": f"Forecasted revenue for tomorrow is expected to surge {rev_change * 100:.1f}% vs {day_baseline} (${day_total_actual_rev:.2f} → ${day_total_pred_rev:.2f})"
             })
 
-    # Sort alerts: warnings first, then info
-    alerts.sort(key=lambda x: 0 if x["severity"] == "warning" else 1)
+    # Evaluate Week Revenue
+    if week_total_actual_rev > 0 and week_total_pred_rev > 0:
+        rev_change = (week_total_pred_rev - week_total_actual_rev) / week_total_actual_rev
+        if rev_change <= -0.15:
+            week_alerts.append({
+                "type": "forecast_revenue_drop", "severity": "warning",
+                "message": f"Forecasted revenue for next week is expected to drop {abs(rev_change * 100):.1f}% vs last week (${week_total_actual_rev:.2f} → ${week_total_pred_rev:.2f})"
+            })
+        elif rev_change >= 0.20:
+            week_alerts.append({
+                "type": "forecast_revenue_spike", "severity": "info",
+                "message": f"Forecasted revenue for next week is expected to surge {rev_change * 100:.1f}% vs last week (${week_total_actual_rev:.2f} → ${week_total_pred_rev:.2f})"
+            })
+
+    day_alerts.sort(key=lambda x: 0 if x["severity"] == "warning" else 1)
+    week_alerts.sort(key=lambda x: 0 if x["severity"] == "warning" else 1)
 
     return {
         "restaurant_id": restaurant_id,
-        "baseline_date": baseline_date,
-        "total_actual_revenue": round(total_actual_revenue, 2),
-        "total_predicted_revenue": round(total_predicted_revenue, 2),
-        "alerts": alerts
+        "day": {
+            "baseline_date": day_baseline,
+            "total_actual_revenue": round(day_total_actual_rev, 2),
+            "total_predicted_revenue": round(day_total_pred_rev, 2),
+            "alerts": day_alerts
+        },
+        "week": {
+            "baseline_date": week_baseline,
+            "total_actual_revenue": round(week_total_actual_rev, 2),
+            "total_predicted_revenue": round(week_total_pred_rev, 2),
+            "alerts": week_alerts
+        }
     }
+
+
+@app.get("/analytics/dashboard/{restaurant_id}")
+def analytics_dashboard(restaurant_id: str):
+    """
+    Combined endpoint for the overall analytics dashboard.
+    Returns data from revenue, cost-reduction, sales-profit-chart, peaks, and alerts.
+    Data is divided by timeframes: day, week, month, and all.
+    """
+    try:
+        chart_data = get_sales_profit_chart(restaurant_id)
+        response_data = {}
+        
+        for timeframe in ["day", "week", "month", "all"]:
+            response_data[timeframe] = {
+                "revenue": get_revenue_summary(restaurant_id, timeframe),
+                "cost_reduction": get_cost_percentage_kpi(restaurant_id, timeframe),
+                "sales_profit_chart": chart_data,
+                "peaks": get_peak_hours(restaurant_id, timeframe),
+                "alerts": get_alerts(restaurant_id, timeframe)
+            }
+
+        return {
+            "restaurant_id": restaurant_id,
+            "data": response_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ---------------------------------------------------------------------------
@@ -1128,34 +1269,5 @@ def delete_all_models(restaurant_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete models: {str(e)}")
-
-
-# ---------------------------------------------------------------------------
-# SEED DATA
-# ---------------------------------------------------------------------------
-@app.post("/seed/{restaurant_id}")
-def seed_dummy_data(restaurant_id: str):
-    """
-    Generate and insert 3-12 months of realistic POS dummy data for a restaurant.
-    """
-    try:
-        from database.seeder import seed_restaurant_data
-        return seed_restaurant_data(restaurant_id)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to seed data: {str(e)}")
-
-
-@app.post("/seedAll")
-def seed_all_dummy_data():
-    """
-    Go through all restaurants and seed dummy data for those that don't have any menu items.
-    """
-    try:
-        from database.seeder import seed_all_restaurants
-        return seed_all_restaurants()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to run batch seed: {str(e)}")
 
 

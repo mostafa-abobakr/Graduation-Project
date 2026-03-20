@@ -10,3 +10,7 @@ class HourlyForecastRequest(BaseModel):
 class DailyForecastRequest(BaseModel):
     weekly_temperatures: List[float]
     weekly_events: List[int]
+
+class WeeklyDashboardRequest(BaseModel):
+    weekly_temperatures: List[float] = [25.0] * 7
+    weekly_events: List[int] = [0] * 7

@@ -13,18 +13,23 @@ from sqlalchemy import text
 
 from database.connection import get_engine
 
+def _get_timeframe_clause(timeframe: str, table_alias: str = "o") -> str:
+    if timeframe == "all" or not timeframe:
+        return ""
+    days = {"day": 0, "week": 6, "month": 29}.get(timeframe, 0)
+    return f" AND CAST({table_alias}.OrderTimestamp AS DATE) >= DATEADD(day, -{days}, (SELECT MAX(CAST(OrderTimestamp AS DATE)) FROM Orders WHERE RestaurantId = :restaurant_id))"
 
 # ---------------------------------------------------------------------------
 # 1. Revenue Summary
 # ---------------------------------------------------------------------------
-_REVENUE_SUMMARY_SQL = text("""
+_REVENUE_SUMMARY_SQL = """
     WITH OrderStats AS (
         SELECT
             COUNT(OrderId) AS total_orders,
             SUM(TotalOrderValue) AS total_revenue,
             AVG(TotalOrderValue) AS avg_order_value
-        FROM Orders
-        WHERE RestaurantId = :restaurant_id
+        FROM Orders o
+        WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     ),
     ItemStats AS (
         SELECT
@@ -33,7 +38,7 @@ _REVENUE_SUMMARY_SQL = text("""
         FROM Orders o
         JOIN OrderItems oi ON oi.OrderId = o.OrderId
         JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
-        WHERE o.RestaurantId = :restaurant_id
+        WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     )
     SELECT
         o.total_revenue,
@@ -43,14 +48,16 @@ _REVENUE_SUMMARY_SQL = text("""
         i.total_profit
     FROM OrderStats o
     CROSS JOIN ItemStats i
-""")
+"""
 
 
-def get_revenue_summary(restaurant_id: str) -> dict:
+def get_revenue_summary(restaurant_id: str, timeframe: str = "all") -> dict:
     engine = get_engine()
+    clause = _get_timeframe_clause(timeframe, "o")
     with engine.connect() as conn:
         row = conn.execute(
-            _REVENUE_SUMMARY_SQL, {"restaurant_id": restaurant_id}
+            text(_REVENUE_SUMMARY_SQL.format(timeframe_clause=clause)), 
+            {"restaurant_id": restaurant_id}
         ).fetchone()
 
     if row is None or row[1] == 0:
@@ -80,31 +87,34 @@ def get_revenue_summary(restaurant_id: str) -> dict:
 # ---------------------------------------------------------------------------
 # 2. Revenue Trend  (hour | day granularity)
 # ---------------------------------------------------------------------------
-_REVENUE_TREND_HOUR_SQL = text("""
+_REVENUE_TREND_HOUR_SQL = """
     SELECT
         DATEADD(hour, DATEDIFF(hour, 0, o.OrderTimestamp), 0) AS bucket,
         SUM(o.TotalOrderValue)    AS revenue,
         COUNT(DISTINCT o.OrderId) AS order_count
     FROM Orders o
-    WHERE o.RestaurantId = :restaurant_id
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     GROUP BY DATEADD(hour, DATEDIFF(hour, 0, o.OrderTimestamp), 0)
     ORDER BY bucket
-""")
+"""
 
-_REVENUE_TREND_DAY_SQL = text("""
+_REVENUE_TREND_DAY_SQL = """
     SELECT
         CAST(o.OrderTimestamp AS DATE) AS bucket,
         SUM(o.TotalOrderValue)    AS revenue,
         COUNT(DISTINCT o.OrderId) AS order_count
     FROM Orders o
-    WHERE o.RestaurantId = :restaurant_id
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     GROUP BY CAST(o.OrderTimestamp AS DATE)
     ORDER BY bucket
-""")
+"""
 
 
-def get_revenue_trend(restaurant_id: str, granularity: str) -> list[dict]:
-    sql = _REVENUE_TREND_HOUR_SQL if granularity == "hour" else _REVENUE_TREND_DAY_SQL
+def get_revenue_trend(restaurant_id: str, granularity: str, timeframe: str = "all") -> list[dict]:
+    sql_template = _REVENUE_TREND_HOUR_SQL if granularity == "hour" else _REVENUE_TREND_DAY_SQL
+    clause = _get_timeframe_clause(timeframe, "o")
+    sql = text(sql_template.format(timeframe_clause=clause))
+    
     engine = get_engine()
     with engine.connect() as conn:
         df = pd.read_sql(sql, conn, params={"restaurant_id": restaurant_id})
@@ -122,7 +132,7 @@ def get_revenue_trend(restaurant_id: str, granularity: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 # 3. Menu Performance
 # ---------------------------------------------------------------------------
-_MENU_PERFORMANCE_SQL = text("""
+_MENU_PERFORMANCE_SQL = """
     SELECT
         mi.ItemName                   AS item_name,
         COUNT(DISTINCT oi.OrderId)    AS orders,
@@ -132,17 +142,18 @@ _MENU_PERFORMANCE_SQL = text("""
     FROM OrderItems oi
     JOIN Orders    o  ON oi.OrderId    = o.OrderId
     JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
-    WHERE o.RestaurantId = :restaurant_id
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     GROUP BY mi.ItemName, mi.Price
     ORDER BY revenue DESC
-""")
+"""
 
 
-def get_menu_performance(restaurant_id: str) -> list[dict]:
+def get_menu_performance(restaurant_id: str, timeframe: str = "all") -> list[dict]:
     engine = get_engine()
+    clause = _get_timeframe_clause(timeframe, "o")
     with engine.connect() as conn:
         df = pd.read_sql(
-            _MENU_PERFORMANCE_SQL, conn,
+            text(_MENU_PERFORMANCE_SQL.format(timeframe_clause=clause)), conn,
             params={"restaurant_id": restaurant_id}
         )
 
@@ -172,39 +183,40 @@ def get_menu_performance(restaurant_id: str) -> list[dict]:
 # ---------------------------------------------------------------------------
 # 4. Peak Hours & Days
 # ---------------------------------------------------------------------------
-_PEAK_HOURS_SQL = text("""
+_PEAK_HOURS_SQL = """
     SELECT TOP 3
         DATEPART(hour, o.OrderTimestamp) AS hour,
         COUNT(DISTINCT o.OrderId)        AS order_count,
         SUM(o.TotalOrderValue)           AS revenue
     FROM Orders o
-    WHERE o.RestaurantId = :restaurant_id
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     GROUP BY DATEPART(hour, o.OrderTimestamp)
     ORDER BY order_count DESC
-""")
+"""
 
-_PEAK_DAYS_SQL = text("""
+_PEAK_DAYS_SQL = """
     SELECT TOP 3
         DATENAME(weekday, o.OrderTimestamp) AS day_name,
         DATEPART(weekday, o.OrderTimestamp) AS day_num,
         COUNT(DISTINCT o.OrderId)           AS order_count,
         SUM(o.TotalOrderValue)              AS revenue
     FROM Orders o
-    WHERE o.RestaurantId = :restaurant_id
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     GROUP BY DATENAME(weekday, o.OrderTimestamp),
              DATEPART(weekday, o.OrderTimestamp)
     ORDER BY order_count DESC
-""")
+"""
 
 
-def get_peak_hours(restaurant_id: str) -> dict:
+def get_peak_hours(restaurant_id: str, timeframe: str = "all") -> dict:
     engine = get_engine()
+    clause = _get_timeframe_clause(timeframe, "o")
     with engine.connect() as conn:
         hours_df = pd.read_sql(
-            _PEAK_HOURS_SQL, conn, params={"restaurant_id": restaurant_id}
+            text(_PEAK_HOURS_SQL.format(timeframe_clause=clause)), conn, params={"restaurant_id": restaurant_id}
         )
         days_df = pd.read_sql(
-            _PEAK_DAYS_SQL, conn, params={"restaurant_id": restaurant_id}
+            text(_PEAK_DAYS_SQL.format(timeframe_clause=clause)), conn, params={"restaurant_id": restaurant_id}
         )
 
     peak_hours = []
@@ -232,18 +244,18 @@ def get_peak_hours(restaurant_id: str) -> dict:
 # ---------------------------------------------------------------------------
 # 5. Alerts — rule-based, no ML
 # ---------------------------------------------------------------------------
-_DAILY_REVENUE_SQL = text("""
+_DAILY_REVENUE_SQL = """
     SELECT
         CAST(o.OrderTimestamp AS DATE)    AS day,
         SUM(o.TotalOrderValue)            AS revenue,
         COUNT(DISTINCT o.OrderId)         AS orders
     FROM Orders o
-    WHERE o.RestaurantId = :restaurant_id
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     GROUP BY CAST(o.OrderTimestamp AS DATE)
     ORDER BY day DESC
-""")
+"""
 
-_COLD_DRINK_SALES_SQL = text("""
+_COLD_DRINK_SALES_SQL = """
     SELECT
         CAST(o.OrderTimestamp AS DATE) AS day,
         AVG(o.TemperatureCelsius)      AS avg_temp,
@@ -251,7 +263,7 @@ _COLD_DRINK_SALES_SQL = text("""
     FROM Orders o
     JOIN OrderItems oi ON oi.OrderId    = o.OrderId
     JOIN MenuItems  mi ON oi.MenuItemId = mi.MenuItemId
-    WHERE o.RestaurantId = :restaurant_id
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
       AND (
         mi.ItemName LIKE '%Ice Cream%'
         OR mi.ItemName LIKE '%Cold%'
@@ -261,37 +273,64 @@ _COLD_DRINK_SALES_SQL = text("""
       )
     GROUP BY CAST(o.OrderTimestamp AS DATE)
     ORDER BY day DESC
-""")
+"""
 
-_MARGIN_SQL = text("""
+_HOT_ITEM_SALES_SQL = """
+    SELECT
+        CAST(o.OrderTimestamp AS DATE) AS day,
+        AVG(o.TemperatureCelsius)      AS avg_temp,
+        SUM(oi.Quantity)               AS hot_qty
+    FROM Orders o
+    JOIN OrderItems oi ON oi.OrderId    = o.OrderId
+    JOIN MenuItems  mi ON oi.MenuItemId = mi.MenuItemId
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
+      AND (
+        mi.ItemName LIKE '%Coffee%'
+        OR mi.ItemName LIKE '%Hot%'
+        OR mi.ItemName LIKE '%Soup%'
+        OR mi.ItemName LIKE '%Tea%'
+        OR mi.ItemName LIKE '%Warm%'
+      )
+    GROUP BY CAST(o.OrderTimestamp AS DATE)
+    ORDER BY day DESC
+"""
+
+_MARGIN_SQL = """
     SELECT
         mi.ItemName                    AS item_name,
         SUM(oi.LineTotal)              AS revenue,
-        SUM(mi.Price * oi.Quantity)    AS cost_estimate,
+        SUM(mi.Cost * oi.Quantity)     AS cost_estimate,
         COUNT(DISTINCT oi.OrderId)     AS orders
     FROM OrderItems oi
     JOIN Orders    o  ON oi.OrderId    = o.OrderId
     JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
-    WHERE o.RestaurantId = :restaurant_id
+    WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
     GROUP BY mi.ItemName, mi.Price
     ORDER BY revenue DESC
-""")
+"""
 
 
 _REVENUE_DROP_THRESHOLD  = 0.20   # 20% day-over-day revenue drop
+_REVENUE_SPIKE_THRESHOLD = 0.20   # 20% day-over-day revenue spike
 _HIGH_TEMP_THRESHOLD     = 28.0   # °C — "hot day"
+_LOW_TEMP_THRESHOLD      = 15.0   # °C — "cold day"
 _LOW_COLD_QTY_THRESHOLD  = 5      # fewer than this = suspicious
+_LOW_HOT_QTY_THRESHOLD   = 5      # fewer than this = suspicious
 _LOW_MARGIN_THRESHOLD    = 10.0   # margin % below this = alert
+_HIGH_MARGIN_THRESHOLD   = 60.0   # margin % above this = opportunity
 
 
-def get_alerts(restaurant_id: str) -> list[dict]:
+def get_alerts(restaurant_id: str, timeframe: str = "all") -> list[dict]:
     engine = get_engine()
     alerts: list[dict] = []
+    
+    clause = _get_timeframe_clause(timeframe, "o")
 
     with engine.connect() as conn:
-        daily_df     = pd.read_sql(_DAILY_REVENUE_SQL, conn, params={"restaurant_id": restaurant_id})
-        cold_df      = pd.read_sql(_COLD_DRINK_SALES_SQL, conn, params={"restaurant_id": restaurant_id})
-        margin_df    = pd.read_sql(_MARGIN_SQL, conn, params={"restaurant_id": restaurant_id})
+        daily_df     = pd.read_sql(text(_DAILY_REVENUE_SQL.format(timeframe_clause=clause)), conn, params={"restaurant_id": restaurant_id})
+        cold_df      = pd.read_sql(text(_COLD_DRINK_SALES_SQL.format(timeframe_clause=clause)), conn, params={"restaurant_id": restaurant_id})
+        hot_df       = pd.read_sql(text(_HOT_ITEM_SALES_SQL.format(timeframe_clause=clause)), conn, params={"restaurant_id": restaurant_id})
+        margin_df    = pd.read_sql(text(_MARGIN_SQL.format(timeframe_clause=clause)), conn, params={"restaurant_id": restaurant_id})
 
     # --- Alert 1: Revenue dropped > 20% day-over-day ---
     if len(daily_df) >= 2:
@@ -306,6 +345,18 @@ def get_alerts(restaurant_id: str) -> list[dict]:
                 "severity": "warning",
                 "message": (
                     f"Revenue dropped {abs(r['change'] * 100):.1f}% on "
+                    f"{r['day'].date()} vs previous day "
+                    f"(${r['prev']:.2f} → ${r['revenue']:.2f})"
+                ),
+            })
+            
+        spikes = daily_df[daily_df["change"] > _REVENUE_SPIKE_THRESHOLD]
+        for _, r in spikes.iterrows():
+            alerts.append({
+                "type":    "revenue_spike",
+                "severity": "info",
+                "message": (
+                    f"Revenue spiked {abs(r['change'] * 100):.1f}% on "
                     f"{r['day'].date()} vs previous day "
                     f"(${r['prev']:.2f} → ${r['revenue']:.2f})"
                 ),
@@ -329,7 +380,25 @@ def get_alerts(restaurant_id: str) -> list[dict]:
                 ),
             })
 
-    # --- Alert 3: High-volume items with low margin ---
+    # --- Alert 3: Low temperature + low hot-drink/soup sales ---
+    if not hot_df.empty:
+        hot_df["day"] = pd.to_datetime(hot_df["day"])
+        cold_low = hot_df[
+            (hot_df["avg_temp"] <= _LOW_TEMP_THRESHOLD) &
+            (hot_df["hot_qty"] <= _LOW_HOT_QTY_THRESHOLD)
+        ]
+        for _, r in cold_low.iterrows():
+            alerts.append({
+                "type":     "hot_item_underperformance",
+                "severity": "info",
+                "message": (
+                    f"Cold day ({r['avg_temp']:.1f}°C) on {r['day'].date()} "
+                    f"but hot-item sales were only {int(r['hot_qty'])} units. "
+                    "Consider promoting warm items."
+                ),
+            })
+
+    # --- Alert 4: High-volume items with low margin ---
     if not margin_df.empty:
         margin_df = margin_df.groupby("item_name", as_index=False).agg(
             {"revenue": "sum", "cost_estimate": "sum", "orders": "sum"}
@@ -354,6 +423,24 @@ def get_alerts(restaurant_id: str) -> list[dict]:
                 ),
             })
 
+    # --- Alert 5: Low-volume items with high margin ---
+    if not margin_df.empty:
+        low_vol_high_margin = margin_df[
+            (margin_df["orders"] < margin_df["orders"].median()) &
+            (margin_df["orders"] > 0) &
+            (margin_df["margin_pct"] > _HIGH_MARGIN_THRESHOLD)
+        ]
+        for _, r in low_vol_high_margin.iterrows():
+            alerts.append({
+                "type":     "high_margin_low_volume",
+                "severity": "info",
+                "message": (
+                    f"'{r['item_name']}' has a high margin ({r['margin_pct']:.1f}%) "
+                    f"but lower than average sales volume ({int(r['orders'])} orders). "
+                    "Consider featuring this item to boost profit."
+                ),
+            })
+
     return alerts
 
 
@@ -369,6 +456,7 @@ _LATEST_DAY_ACTUALS_SQL = text("""
     SELECT
         mi.ItemName                 AS item_name,
         mi.Price                    AS current_price,
+        mi.Cost                     AS current_cost,
         SUM(oi.Quantity)            AS total_qty,
         SUM(oi.LineTotal)           AS total_revenue,
         (SELECT max_date FROM LatestDate) AS baseline_date
@@ -377,7 +465,7 @@ _LATEST_DAY_ACTUALS_SQL = text("""
     JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
     WHERE o.RestaurantId = :restaurant_id
       AND CAST(o.OrderTimestamp AS DATE) = (SELECT max_date FROM LatestDate)
-    GROUP BY mi.ItemName, mi.Price
+    GROUP BY mi.ItemName, mi.Price, mi.Cost
 """)
 
 def get_latest_day_actuals(restaurant_id: str) -> dict:
@@ -395,11 +483,11 @@ def get_latest_day_actuals(restaurant_id: str) -> dict:
     # The baseline_date is the same for all rows, grab it from the first
     baseline_date = df["baseline_date"].iloc[0]
     
-    # Aggregate by item_name in case there are multiple menu entries for the same name
     agg = df.groupby("item_name", as_index=False).agg({
         "total_qty": "sum",
         "total_revenue": "sum",
-        "current_price": "mean"
+        "current_price": "mean",
+        "current_cost": "mean"
     })
     
     items_dict = {}
@@ -407,7 +495,64 @@ def get_latest_day_actuals(restaurant_id: str) -> dict:
         items_dict[r["item_name"]] = {
             "qty": int(r["total_qty"]),
             "revenue": round(float(r["total_revenue"]), 2),
-            "price": round(float(r["current_price"]), 2)
+            "price": round(float(r["current_price"]), 2),
+            "cost": round(float(r["current_cost"]), 2)
+        }
+        
+    return {
+        "baseline_date": str(baseline_date) if baseline_date else None,
+        "items": items_dict,
+    }
+
+# ---------------------------------------------------------------------------
+# 6.5 Latest Week Actuals (For Week Forecast Comparison)
+# ---------------------------------------------------------------------------
+_LATEST_WEEK_ACTUALS_SQL = text("""
+    WITH LatestDate AS (
+        SELECT MAX(CAST(OrderTimestamp AS DATE)) AS max_date
+        FROM Orders
+        WHERE RestaurantId = :restaurant_id
+    )
+    SELECT
+        mi.ItemName                 AS item_name,
+        mi.Price                    AS current_price,
+        mi.Cost                     AS current_cost,
+        SUM(oi.Quantity)            AS total_qty,
+        SUM(oi.LineTotal)           AS total_revenue,
+        (SELECT max_date FROM LatestDate) AS baseline_date
+    FROM OrderItems oi
+    JOIN Orders o    ON oi.OrderId = o.OrderId
+    JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
+    WHERE o.RestaurantId = :restaurant_id
+      AND CAST(o.OrderTimestamp AS DATE) > DATEADD(day, -7, (SELECT max_date FROM LatestDate))
+      AND CAST(o.OrderTimestamp AS DATE) <= (SELECT max_date FROM LatestDate)
+    GROUP BY mi.ItemName, mi.Price, mi.Cost
+""")
+
+def get_latest_week_actuals(restaurant_id: str) -> dict:
+    engine = get_engine()
+    with engine.connect() as conn:
+        df = pd.read_sql(_LATEST_WEEK_ACTUALS_SQL, conn, params={"restaurant_id": restaurant_id})
+
+    if df.empty:
+        return {"baseline_date": None, "items": {}}
+
+    baseline_date = df["baseline_date"].iloc[0]
+    
+    agg = df.groupby("item_name", as_index=False).agg({
+        "total_qty": "sum",
+        "total_revenue": "sum",
+        "current_price": "mean",
+        "current_cost": "mean"
+    })
+    
+    items_dict = {}
+    for _, r in agg.iterrows():
+        items_dict[r["item_name"]] = {
+            "qty": int(r["total_qty"]),
+            "revenue": round(float(r["total_revenue"]), 2),
+            "price": round(float(r["current_price"]), 2),
+            "cost": round(float(r["current_cost"]), 2)
         }
         
     return {
@@ -419,7 +564,7 @@ def get_latest_day_actuals(restaurant_id: str) -> dict:
 # ---------------------------------------------------------------------------
 # 7. Cost Reduction KPI
 # ---------------------------------------------------------------------------
-_COST_REDUCTION_SQL = text("""
+_COST_REDUCTION_SQL = """
     WITH LatestDate AS (
         SELECT MAX(CAST(OrderTimestamp AS DATE)) AS max_date
         FROM Orders
@@ -428,8 +573,8 @@ _COST_REDUCTION_SQL = text("""
     DateRanges AS (
         SELECT
             max_date,
-            DATEADD(day, -7, max_date) AS one_week_ago,
-            DATEADD(day, -14, max_date) AS two_weeks_ago
+            DATEADD(day, -{current_days}, max_date) AS current_start,
+            DATEADD(day, -{previous_days}, max_date) AS previous_start
         FROM LatestDate
     ),
     CurrentWeek AS (
@@ -441,7 +586,7 @@ _COST_REDUCTION_SQL = text("""
         JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
         CROSS JOIN DateRanges dr
         WHERE o.RestaurantId = :restaurant_id
-          AND CAST(o.OrderTimestamp AS DATE) > dr.one_week_ago
+          AND CAST(o.OrderTimestamp AS DATE) > dr.current_start
           AND CAST(o.OrderTimestamp AS DATE) <= dr.max_date
     ),
     PreviousWeek AS (
@@ -453,8 +598,8 @@ _COST_REDUCTION_SQL = text("""
         JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
         CROSS JOIN DateRanges dr
         WHERE o.RestaurantId = :restaurant_id
-          AND CAST(o.OrderTimestamp AS DATE) > dr.two_weeks_ago
-          AND CAST(o.OrderTimestamp AS DATE) <= dr.one_week_ago
+          AND CAST(o.OrderTimestamp AS DATE) > dr.previous_start
+          AND CAST(o.OrderTimestamp AS DATE) <= dr.current_start
     )
     SELECT
         cw.revenue AS cw_rev,
@@ -463,13 +608,23 @@ _COST_REDUCTION_SQL = text("""
         pw.cost AS pw_cost
     FROM CurrentWeek cw
     CROSS JOIN PreviousWeek pw
-""")
+"""
 
-def get_cost_percentage_kpi(restaurant_id: str) -> dict:
+def get_cost_percentage_kpi(restaurant_id: str, timeframe: str = "week") -> dict:
     engine = get_engine()
+    
+    if timeframe == "all" or not timeframe:
+        current_days = 36500
+        previous_days = 73000
+    else:
+        days_map = {"day": 1, "week": 7, "month": 30}
+        current_days = days_map.get(timeframe, 7)
+        previous_days = current_days * 2
+        
     with engine.connect() as conn:
         row = conn.execute(
-            _COST_REDUCTION_SQL, {"restaurant_id": restaurant_id}
+            text(_COST_REDUCTION_SQL.format(current_days=current_days, previous_days=previous_days)), 
+            {"restaurant_id": restaurant_id}
         ).fetchone()
 
     if row is None or row[0] is None:
