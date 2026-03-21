@@ -9,21 +9,33 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { BarChart3 } from "lucide-react";
 
 // --- CUSTOM TOOLTIP ---
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-popover p-3 rounded-lg shadow-xl border border-border animate-in fade-in zoom-in duration-200">
-        <p className="text-xs text-muted-foreground mb-1">{label}</p>
-        <div className="space-y-1">
-          <p className="text-sm font-bold text-[#2F80ED]">
-            Revenue: ${payload[0].value.toLocaleString()}
-          </p>
-          <p className="text-sm font-bold text-[#70ae95]">
-            Profit: ${payload[1].value.toLocaleString()}
-          </p>
+      <div className="bg-popover/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-border/50 animate-in fade-in zoom-in duration-200">
+        <p className="text-xs font-bold text-muted-foreground mb-3">{label}</p>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#3b82f6]" />
+              <span className="text-sm font-medium text-foreground">Revenue</span>
+            </div>
+            <span className="text-sm font-bold text-foreground">
+              ${payload[0].value.toLocaleString()}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-[#10b981]" />
+              <span className="text-sm font-medium text-foreground">Profit</span>
+            </div>
+            <span className="text-sm font-bold text-foreground">
+              ${payload[1].value.toLocaleString()}
+            </span>
+          </div>
         </div>
       </div>
     );
@@ -49,31 +61,38 @@ const SalesProfitDashboard = ({ data }) => {
   };
 
   const currentData = getChartData();
-  const revenueColor = "#2F80ED";
-  const profitColor = "#70ae95";
+  const revenueColor = "#3b82f6"; // Tailwind blue-500
+  const profitColor = "#10b981"; // Tailwind emerald-500
 
   return (
-    <Card className="lg:col-span-2 bg-card border-border/60 premium-shadow">
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 pb-6">
-        <CardTitle className="text-lg md:text-xl font-bold text-foreground">
-          Sales & Profit Trend
-        </CardTitle>
+    <Card className="lg:col-span-2 flex flex-col border-border/40 shadow-sm overflow-hidden bg-card/40 backdrop-blur-md transition-all">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-6 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
+            <BarChart3 className="w-4 h-4" />
+          </div>
+          <CardTitle className="text-base font-semibold text-foreground tracking-tight">
+            Sales & Profit Trend
+          </CardTitle>
+        </div>
 
         {/* Animated Segmented Picker (Glider) */}
-        <div className="relative flex bg-muted p-1 rounded-lg w-full sm:w-[300px] h-10">
+        <div className="relative flex bg-muted/60 p-1.5 rounded-xl w-full sm:w-[320px] shadow-inner border border-border/40">
           <div
-            className="absolute top-1 left-1 bottom-1 w-[calc(33.33%-4px)] bg-primary rounded-md shadow-sm transition-transform duration-300 ease-in-out"
+            className="absolute top-1.5 bottom-1.5 w-[calc(33.33%-4px)] bg-background rounded-lg shadow transition-transform duration-300 ease-spring"
             style={{
-              transform: `translateX(${viewMode === "today" ? "0%" : viewMode === "week" ? "100%" : "200%"})`,
+              transform: `translateX(calc(${
+                viewMode === "today" ? "0" : viewMode === "week" ? "100" : "200"
+              }% + ${viewMode === "today" ? "0px" : viewMode === "week" ? "6px" : "12px"}))`,
             }}
           />
           {["today", "week", "month"].map((mode) => (
             <button
               key={mode}
               onClick={() => setViewMode(mode)}
-              className={`relative z-10 flex-1 text-xs font-medium capitalize transition-colors duration-200 ${
+              className={`relative z-10 flex-1 py-1 text-[13px] font-bold tracking-wide capitalize transition-colors duration-200 ${
                 viewMode === mode
-                  ? "text-primary-foreground"
+                  ? "text-foreground"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -83,21 +102,21 @@ const SalesProfitDashboard = ({ data }) => {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
+      <CardContent className="p-6 pt-0 flex-1 flex flex-col">
         {/* Legend */}
-        <div className="flex gap-4 mb-6 text-xs text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-1.5 rounded-full bg-[#2F80ED]" />
+        <div className="flex gap-5 mb-6 text-sm font-semibold text-muted-foreground ml-2">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-[#3b82f6] shadow-sm shadow-[#3b82f6]/20" />
             <span>Revenue</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-3 h-1.5 rounded-full bg-[#70ae95]" />
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded bg-[#10b981] shadow-sm shadow-[#10b981]/20" />
             <span>Profit</span>
           </div>
         </div>
 
         {/* Chart Container */}
-        <div className="h-[250px] w-full">
+        <div className="flex-1 w-full min-h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={currentData}
@@ -105,51 +124,51 @@ const SalesProfitDashboard = ({ data }) => {
             >
               <defs>
                 <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                  <stop
-                    offset="5%"
-                    stopColor={revenueColor}
-                    stopOpacity={0.2}
-                  />
+                  <stop offset="5%" stopColor={revenueColor} stopOpacity={0.4} />
                   <stop offset="95%" stopColor={revenueColor} stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="colorProf" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={profitColor} stopOpacity={0.2} />
+                  <stop offset="5%" stopColor={profitColor} stopOpacity={0.4} />
                   <stop offset="95%" stopColor={profitColor} stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid
                 vertical={false}
-                strokeDasharray="3 3"
+                strokeDasharray="4 4"
                 stroke="hsl(var(--border))"
+                strokeOpacity={0.5}
               />
               <XAxis
                 dataKey="label"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-                dy={10}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 500 }}
+                dy={15}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 500 }}
+                tickFormatter={(value) => `$${value >= 1000 ? (value / 1000).toFixed(1) + 'k' : value}`}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'hsl(var(--muted))', strokeWidth: 2, strokeDasharray: '4 4' }} />
               <Area
                 type="monotone"
                 dataKey="revenue"
                 stroke={revenueColor}
-                strokeWidth={2.5}
+                strokeWidth={3}
                 fill="url(#colorRev)"
-                animationDuration={800}
+                animationDuration={1200}
+                animationEasing="ease-out"
               />
               <Area
                 type="monotone"
                 dataKey="profit"
                 stroke={profitColor}
-                strokeWidth={2.5}
+                strokeWidth={3}
                 fill="url(#colorProf)"
-                animationDuration={800}
+                animationDuration={1200}
+                animationEasing="ease-out"
               />
             </AreaChart>
           </ResponsiveContainer>
