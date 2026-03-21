@@ -35,7 +35,7 @@ export default function ForecastPage() {
           : { temperature_celsius: dailyData[0], event_day: dailyData[1] };
 
       const response = await axios.post(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/forecast/dashboard/day/2`,
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/forecast/dashboard/${alignment}/2`,
         payload,
         { headers: { Accept: "application/json" } }
       );

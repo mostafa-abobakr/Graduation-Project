@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Brain, Leaf, TrendingDown, TrendingUp, Users, Zap, Check, Star } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
+import { ROUTES } from "@/routes/ROUTES";
 const stats = [
   { label: "Food Waste Reduced", value: "32%", icon: TrendingDown },
   { label: "Revenue Increase", value: "18%", icon: TrendingUp },
@@ -26,7 +26,7 @@ const steps = [
 ];
 
 const testimonials = [
-  { name: "Sarah Chen", role: "Owner, The Green Kitchen", quote: "ZeroWaste AI cut our food waste by 35% in the first month. The predictions are incredibly accurate.", rating: 5 },
+  { name: "Sarah Chen", role: "Owner, The Green Kitchen", quote: "zeroBite AI cut our food waste by 35% in the first month. The predictions are incredibly accurate.", rating: 5 },
   { name: "Marco Rossi", role: "Head Chef, Bella Italia", quote: "I know exactly how much to prep each morning. No more guessing, no more throwing away food.", rating: 5 },
   { name: "James Wright", role: "Operations Manager, BurgerCo", quote: "The ROI was immediate. We saved $2,400 in the first month alone across our 3 locations.", rating: 5 },
 ];
@@ -42,9 +42,9 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5"><div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center"><Leaf className="h-4 w-4 text-primary" /></div><span className="text-base font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>ZeroWaste</span></div>
+          <div className="flex items-center gap-2.5"><div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center"><Leaf className="h-4 w-4 text-primary" /></div><span className="text-base font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>zeroBite</span></div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground"><a href="#features" className="hover:text-foreground transition-colors">Features</a><a href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</a><a href="#pricing" className="hover:text-foreground transition-colors">Pricing</a></div>
-          <div className="flex items-center gap-2"><ThemeToggle /><Link to="/login"><Button variant="ghost" size="sm">Log In</Button></Link><Link to="/signup"><Button size="sm">Start Free Trial</Button></Link></div>
+          <div className="flex items-center gap-2"><ThemeToggle /><Link to={ROUTES.LOGIN}><Button variant="ghost" size="sm">Log In</Button></Link><Link to={ROUTES.SIGNUP}><Button size="sm">Start Free Trial</Button></Link></div>
         </div>
       </nav>
       <section className="pt-32 pb-20 px-6">
@@ -106,8 +106,8 @@ export default function LandingPage() {
       </section>
       <footer className="border-t border-border/50 py-10 px-6">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2.5"><div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center"><Leaf className="h-3.5 w-3.5 text-primary" /></div><span className="font-semibold text-foreground text-sm">ZeroWaste AI</span></div>
-          <p className="text-xs text-muted-foreground">© 2026 ZeroWaste AI. All rights reserved.</p>
+          <div className="flex items-center gap-2.5"><div className="h-7 w-7 rounded-md bg-primary/10 flex items-center justify-center"><Leaf className="h-3.5 w-3.5 text-primary" /></div><span className="font-semibold text-foreground text-sm">zeroBite AI</span></div>
+          <p className="text-xs text-muted-foreground">© 2026 zeroBite AI. All rights reserved.</p>
         </div>
       </footer>
     </div>
