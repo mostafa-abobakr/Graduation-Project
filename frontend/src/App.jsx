@@ -11,11 +11,11 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
+      {/* <AuthProvider> */}
         <Toaster />
         <Sonner />
         <RouterProvider router={router} />
-      </AuthProvider>
+      {/* </AuthProvider> */}
     </TooltipProvider>
   </QueryClientProvider>
 );
