@@ -33,11 +33,11 @@ const Routes = [
   },
   {
     path: ROUTES.LOGIN,
-    element: <Login/>,
+    element: <Login />,
   },
   {
     path: ROUTES.SIGNUP,
-    element: <Register/>,
+    element: <Register />,
   },
   {
     path: ROUTES.DASHBOARD,
