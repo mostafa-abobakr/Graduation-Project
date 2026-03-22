@@ -110,10 +110,11 @@ def get_revenue_summary(restaurant_id: str, timeframe: str = "all") -> dict:
                 return f"{sign}{pct:.1f}%"
             return "N/A"
 
-        current["revenue_change_pct"]      = _pct(current["total_revenue"],    prev["total_revenue"])
-        current["profit_change_pct"]       = _pct(current["total_profit"],     prev["total_profit"])
-        current["orders_change_pct"]       = _pct(current["total_orders"],     prev["total_orders"])
-        current["items_sold_change_pct"]   = _pct(current["total_items_sold"], prev["total_items_sold"])
+        current["revenue_change_pct"]          = _pct(current["total_revenue"],    prev["total_revenue"])
+        current["profit_change_pct"]           = _pct(current["total_profit"],     prev["total_profit"])
+        current["orders_change_pct"]           = _pct(current["total_orders"],     prev["total_orders"])
+        current["avg_order_value_change_pct"]  = _pct(current["avg_order_value"],  prev["avg_order_value"])
+        current["items_sold_change_pct"]       = _pct(current["total_items_sold"], prev["total_items_sold"])
 
     return current
 
