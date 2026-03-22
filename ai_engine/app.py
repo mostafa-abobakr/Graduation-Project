@@ -363,7 +363,7 @@ def forecast_all_peaks(
     restaurant_id: str,
     request: DailyForecastRequest,
 ):
-    """Return top 3 peak hours and peak days from a 7-day forecast across all items."""
+    """Return top 5 peak hours and peak days from a 7-day forecast across all items."""
     if len(request.weekly_temperatures) != 7 or len(request.weekly_events) != 7:
         raise HTTPException(
             status_code=400,
@@ -411,7 +411,7 @@ def forecast_all_peaks(
         combined.groupby("hour", as_index=False)
         .agg({"predicted_demand": "sum", "revenue": "sum"})
         .sort_values("predicted_demand", ascending=False)
-        .head(3)
+        .head(5)
     )
 
     peak_hours = []
@@ -431,7 +431,7 @@ def forecast_all_peaks(
         combined.groupby(["date", "day_name"], as_index=False)
         .agg({"predicted_demand": "sum", "revenue": "sum"})
         .sort_values("predicted_demand", ascending=False)
-        .head(3)
+        .head(5)
     )
 
     peak_days = []
@@ -1177,12 +1177,12 @@ def analytics_forecast_alerts(
         if rev_change <= -0.15:
             day_alerts.append({
                 "type": "forecast_revenue_drop", "severity": "warning",
-                "message": f"Forecasted revenue for tomorrow is expected to drop {abs(rev_change * 100):.1f}% vs {day_baseline} (${day_total_actual_rev:.2f} → ${day_total_pred_rev:.2f})"
+                "message": f"Forecasted revenue for tomorrow is expected to drop {abs(rev_change * 100):.1f}% vs {day_baseline} (${int(round(day_total_actual_rev))} → ${int(round(day_total_pred_rev))})"
             })
         elif rev_change >= 0.20:
             day_alerts.append({
                 "type": "forecast_revenue_spike", "severity": "info",
-                "message": f"Forecasted revenue for tomorrow is expected to surge {rev_change * 100:.1f}% vs {day_baseline} (${day_total_actual_rev:.2f} → ${day_total_pred_rev:.2f})"
+                "message": f"Forecasted revenue for tomorrow is expected to surge {rev_change * 100:.1f}% vs {day_baseline} (${int(round(day_total_actual_rev))} → ${int(round(day_total_pred_rev))})"
             })
 
     # Evaluate Week Revenue
@@ -1191,12 +1191,12 @@ def analytics_forecast_alerts(
         if rev_change <= -0.15:
             week_alerts.append({
                 "type": "forecast_revenue_drop", "severity": "warning",
-                "message": f"Forecasted revenue for next week is expected to drop {abs(rev_change * 100):.1f}% vs last week (${week_total_actual_rev:.2f} → ${week_total_pred_rev:.2f})"
+                "message": f"Forecasted revenue for next week is expected to drop {abs(rev_change * 100):.1f}% vs last week (${int(round(week_total_actual_rev))} → ${int(round(week_total_pred_rev))})"
             })
         elif rev_change >= 0.20:
             week_alerts.append({
                 "type": "forecast_revenue_spike", "severity": "info",
-                "message": f"Forecasted revenue for next week is expected to surge {rev_change * 100:.1f}% vs last week (${week_total_actual_rev:.2f} → ${week_total_pred_rev:.2f})"
+                "message": f"Forecasted revenue for next week is expected to surge {rev_change * 100:.1f}% vs last week (${int(round(week_total_actual_rev))} → ${int(round(week_total_pred_rev))})"
             })
 
     day_alerts.sort(key=lambda x: 0 if x["severity"] == "warning" else 1)

@@ -60,28 +60,62 @@ def get_revenue_summary(restaurant_id: str, timeframe: str = "all") -> dict:
             {"restaurant_id": restaurant_id}
         ).fetchone()
 
-    if row is None or row[1] == 0:
+    def _parse_row(r):
+        if r is None or r[1] == 0:
+            return {
+                "total_revenue":     0.0,
+                "total_orders":      0,
+                "avg_order_value":   0.0,
+                "total_items_sold":  0,
+                "total_profit":      0.0,
+                "margin_percentage": 0.0,
+            }
+
+        t_rev = float(r[0] or 0)
+        t_prof  = float(r[4] or 0)
+        m_pct    = round((t_prof / t_rev) * 100, 2) if t_rev > 0 else 0.0
+
         return {
-            "total_revenue":     0.0,
-            "total_orders":      0,
-            "avg_order_value":   0.0,
-            "total_items_sold":  0,
-            "total_profit":      0.0,
-            "margin_percentage": 0.0,
+            "total_revenue":     round(t_rev, 2),
+            "total_orders":      int(r[1] or 0),
+            "avg_order_value":   round(float(r[2] or 0), 2),
+            "total_items_sold":  int(r[3] or 0),
+            "total_profit":      round(t_prof, 2),
+            "margin_percentage": m_pct,
         }
 
-    total_revenue = float(row[0] or 0)
-    total_profit  = float(row[4] or 0)
-    margin_pct    = round((total_profit / total_revenue) * 100, 2) if total_revenue > 0 else 0.0
+    current = _parse_row(row)
 
-    return {
-        "total_revenue":     round(total_revenue, 2),
-        "total_orders":      int(row[1] or 0),
-        "avg_order_value":   round(float(row[2] or 0), 2),
-        "total_items_sold":  int(row[3] or 0),
-        "total_profit":      round(total_profit, 2),
-        "margin_percentage": margin_pct,
-    }
+    if timeframe != "all" and timeframe:
+        days = {"day": 0, "week": 6, "month": 29}.get(timeframe, 0)
+        period_length = days + 1
+        start_offset = days + period_length
+        end_offset = days + 1
+
+        max_date_subquery = "(SELECT MAX(CAST(OrderTimestamp AS DATE)) FROM Orders WHERE RestaurantId = :restaurant_id)"
+        prev_clause = f" AND CAST(o.OrderTimestamp AS DATE) >= DATEADD(day, -{start_offset}, {max_date_subquery}) AND CAST(o.OrderTimestamp AS DATE) <= DATEADD(day, -{end_offset}, {max_date_subquery})"
+
+        with engine.connect() as conn:
+            prev_row = conn.execute(
+                text(_REVENUE_SUMMARY_SQL.format(timeframe_clause=prev_clause)),
+                {"restaurant_id": restaurant_id}
+            ).fetchone()
+
+        prev = _parse_row(prev_row)
+
+        def _pct(curr_val, prev_val):
+            if prev_val and prev_val > 0:
+                pct = ((curr_val - prev_val) / prev_val) * 100
+                sign = "+" if pct >= 0 else ""
+                return f"{sign}{pct:.1f}%"
+            return "N/A"
+
+        current["revenue_change_pct"]      = _pct(current["total_revenue"],    prev["total_revenue"])
+        current["profit_change_pct"]       = _pct(current["total_profit"],     prev["total_profit"])
+        current["orders_change_pct"]       = _pct(current["total_orders"],     prev["total_orders"])
+        current["items_sold_change_pct"]   = _pct(current["total_items_sold"], prev["total_items_sold"])
+
+    return current
 
 
 # ---------------------------------------------------------------------------
@@ -184,7 +218,7 @@ def get_menu_performance(restaurant_id: str, timeframe: str = "all") -> list[dic
 # 4. Peak Hours & Days
 # ---------------------------------------------------------------------------
 _PEAK_HOURS_SQL = """
-    SELECT TOP 3
+    SELECT TOP 5
         DATEPART(hour, o.OrderTimestamp) AS hour,
         COUNT(DISTINCT o.OrderId)        AS order_count,
         SUM(o.TotalOrderValue)           AS revenue
@@ -195,7 +229,7 @@ _PEAK_HOURS_SQL = """
 """
 
 _PEAK_DAYS_SQL = """
-    SELECT TOP 3
+    SELECT TOP 5
         DATENAME(weekday, o.OrderTimestamp) AS day_name,
         DATEPART(weekday, o.OrderTimestamp) AS day_num,
         COUNT(DISTINCT o.OrderId)           AS order_count,
@@ -346,7 +380,7 @@ def get_alerts(restaurant_id: str, timeframe: str = "all") -> list[dict]:
                 "message": (
                     f"Revenue dropped {abs(r['change'] * 100):.1f}% on "
                     f"{r['day'].date()} vs previous day "
-                    f"(${r['prev']:.2f} → ${r['revenue']:.2f})"
+                    f"(${int(round(r['prev']))} → ${int(round(r['revenue']))})"
                 ),
             })
             
@@ -358,7 +392,7 @@ def get_alerts(restaurant_id: str, timeframe: str = "all") -> list[dict]:
                 "message": (
                     f"Revenue spiked {abs(r['change'] * 100):.1f}% on "
                     f"{r['day'].date()} vs previous day "
-                    f"(${r['prev']:.2f} → ${r['revenue']:.2f})"
+                    f"(${int(round(r['prev']))} → ${int(round(r['revenue']))})"
                 ),
             })
 
