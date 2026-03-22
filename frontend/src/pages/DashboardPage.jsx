@@ -314,8 +314,5 @@ function AdminDashboard({ ct }) {
 export default function DashboardPage() {
   const ct = useChartTheme();
   const { isAdmin } = useAuth();
-
-  // Notice we removed `ct={ct}` from ManagerDashboard because your new version
-  // uses Tailwind classes to handle themes instead of the `useChartTheme` hook.
   return isAdmin ? <AdminDashboard ct={ct} /> : <ManagerDashboard />;
 }
