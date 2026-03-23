@@ -2,8 +2,7 @@ import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 // Replaced MUI icons with Lucide icons
-import { TriangleAlert, ChevronRight ,TrendingUp,
-  TrendingDown,} from "lucide-react";
+import { TriangleAlert, TrendingUp, TrendingDown } from "lucide-react";
 
 const Alerts = ({ data }) => {
   if (!data) return null;
@@ -53,7 +52,7 @@ const Alerts = ({ data }) => {
                         />
                       )}
                     </div>
-                    <p className="text-sm text-foreground leading-relaxed">
+                    <p className="text-xs sm:text-sm text-foreground leading-relaxed">
                       {alert.message}
                     </p>
                   </div>

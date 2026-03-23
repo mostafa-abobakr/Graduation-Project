@@ -233,7 +233,7 @@ function AdminDashboard({ ct }) {
           </table>
         </div>
       </Card>
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-5">
         <Card className="p-6 bg-card border-border/60 premium-shadow">
           <h3 className="text-base font-semibold text-foreground mb-4">
             Platform Revenue Trend

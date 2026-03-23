@@ -369,7 +369,7 @@ export default function ForecastPage() {
                                 </AreaChart>
                               </ResponsiveContainer>
                             </div>
-                            <div className="flex gap-6 mt-3 text-xs text-muted-foreground">
+                            <div className="flex gap-5 mt-3 text-xs text-muted-foreground">
                               <span>
                                 🔥 Peak:{" "}
                                 {item.peak_hour?.hour || item.peak_hour} —{" "}

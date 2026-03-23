@@ -1,8 +1,6 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Wallet, Crosshair } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Wallet, Crosshair } from "lucide-react";
 
 export default function CostReduction({ data }) {
   if (!data) return null;
@@ -29,11 +27,11 @@ export default function CostReduction({ data }) {
         </div>
       </div>
 
-        <div className="text-2xl sm:text-3xl font-black text-foreground my-2">
-          {costPercentage}%
-        </div>
+      <div className="text-2xl sm:text-3xl font-black text-foreground my-2">
+        {costPercentage}%
+      </div>
 
-        <div className="flex justify-between items-center text-xs p-2 sm:p-2.5 bg-muted/70 rounded-lg border border-border/40">
+      <div className="flex justify-between items-center text-xs p-2 sm:p-2.5 bg-muted/70 rounded-lg border border-border/40">
           <div className="flex items-center gap-1.5 text-foreground font-medium">
             <Crosshair className="w-3 h-3 text-primary" />
             <span>Target: {target}%</span>

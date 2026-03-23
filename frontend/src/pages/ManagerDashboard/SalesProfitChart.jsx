@@ -1,13 +1,11 @@
 import React, { useState } from "react";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-} from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import { BarChart3 } from "lucide-react";
 
 const chartConfig = {
@@ -20,8 +18,6 @@ const chartConfig = {
     color: "#10b981",
   },
 };
-
-
 
 const SalesProfitDashboard = ({ data, viewMode }) => {
   if (!data) return null;
@@ -151,7 +147,7 @@ const SalesProfitDashboard = ({ data, viewMode }) => {
                           className="h-2 w-2 shrink-0 rounded-full"
                           style={{ backgroundColor: item.color }}
                         />
-                        <div className="flex flex-1 justify-between gap-6 items-center leading-none">
+                        <div className="flex flex-1 justify-between gap-5 items-center leading-none">
                           <span className="text-sm font-medium text-foreground capitalize">
                             {name}
                           </span>

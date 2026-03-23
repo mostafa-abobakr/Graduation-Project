@@ -97,7 +97,7 @@ function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { isAdmin } = useAuth();
-  
+
   const renderGroup = (label, items) => (
     <SidebarGroup>
       <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70 px-3">
@@ -128,8 +128,8 @@ function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-r border-border/60">
       <SidebarContent>
-        <div className={`p-4 ${collapsed ? "px-2" : "px-4"}`}>
-          <Link to="/" className="flex items-center gap-2.5">
+        <div className={`pt-4 ${collapsed ? "px-2" : "px-4"}`}>
+          <Link to="/" className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <Leaf className="h-4 w-4 text-primary" />
             </div>
@@ -161,7 +161,9 @@ function AppSidebar() {
         ) : (
           <>
             {renderGroup("Analytics", managerAnalyticsItems)}
+            <Separator className="mx-3 w-auto" />
             {renderGroup("Management", managerManagementItems)}
+            <Separator className="mx-3 w-auto" />
             {renderGroup("Other", managerOtherItems)}
           </>
         )}
@@ -259,7 +261,7 @@ export default function DashboardLayout() {
               </DropdownMenu>
             </div>
           </header>
-          <main className="flex-1 p-6 overflow-auto">
+          <main className="flex-1 px-4 md:px-5 overflow-auto">
             <Outlet />
           </main>
         </div>

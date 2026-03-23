@@ -10,7 +10,7 @@ const Header = ({ viewMode, setViewMode }) => {
         items-center 
         gap-4
         px-4 
-        py-3
+        py-5
         border-b 
         border-border/60 
         bg-background 

@@ -64,23 +64,23 @@ const ManagerDashboard = () => {
       <Header viewMode={viewMode} setViewMode={setViewMode} />
 
       {/* Main Dashboard Container */}
-      <main className="flex-1  py-4 md:py-6 lg:py-8 space-y-4 md:space-y-8">
+      <main className="flex-1 py-5 space-y-4 md:space-y-5">
         {/* Row 1: Stats & Cost Reduction */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
           <Statistics data={statistics} />
-          <CostReduction data={costReduction}  />
+          <CostReduction data={costReduction} />
         </div>
 
         {/* Row 2: Layout block - Alerts (left), PeakTimes (right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 items-stretch">
           {/* Left Column */}
           <Alerts data={dashboardData} />
 
           {/* Right Column */}
-          <PeakTimes data={peakTimes} />
+          <PeakTimes data={peakTimes} viewMode={viewMode} />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 md:gap-6 items-stretch">
+        <div className="grid grid-cols-1 items-stretch">
           <SalesProfitChart data={salesProfit} viewMode={viewMode} />
         </div>
       </main>

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Clock, Calendar, Activity } from "lucide-react";
 
-const PeakTimes = ({ data }) => {
+const PeakTimes = ({ data, viewMode }) => {
   if (!data) return null;
 
   const formatTo12Hr = (timeStr) => {
@@ -14,9 +14,10 @@ const PeakTimes = ({ data }) => {
     return `${hour12} ${ampm}`;
   };
 
-  // Limit to top 4 hours to prevent the card from growing infinitely
-  const hours = data.peak_hours?.slice(0, 4) || [];
-  const days = data.peak_days || [];
+  // On Today view, show more hours and hide Top Days
+  const hoursLimit = viewMode === "today" ? 5 : 3;
+  const hours = data.peak_hours?.slice(0, hoursLimit) || [];
+  const days = data.peak_days?.slice(0, 3) || [];
   const maxOrderCount = Math.max(...hours.map((h) => h.order_count), 1);
   const maxRevenueDayIndex = days.length > 0
     ? days.reduce((maxIdx, day, idx, arr) => day.revenue > arr[maxIdx].revenue ? idx : maxIdx, 0)
@@ -70,13 +71,14 @@ const PeakTimes = ({ data }) => {
           </section>
 
           {/* Top Days Section */}
-          <section className="pt-2">
-            <div className="flex items-center gap-2 mb-3">
-              <Calendar className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-foreground tracking-tight">
-                Top Days (Revenue)
-              </span>
-            </div>
+          {viewMode !== "today" && (
+            <section className="pt-2">
+              <div className="flex items-center gap-2 mb-3">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground tracking-tight">
+                  Top Days (Revenue)
+                </span>
+              </div>
             <div className="grid grid-cols-3 gap-3">
               {days.map((day, index) => (
                 <div
@@ -101,6 +103,7 @@ const PeakTimes = ({ data }) => {
               ))}
             </div>
           </section>
+          )}
         </div>
       </CardContent>
     </Card>
