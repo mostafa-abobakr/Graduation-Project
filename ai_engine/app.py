@@ -31,6 +31,9 @@ Analytics  (pure SQL — no ML)
 
 Seed / Data Generation
   POST /seed/{restaurant_id}
+  POST /seedAll
+  GET  /seed/check/{restaurant_id}     ← check if a single restaurant has data
+  GET  /seed/check/all                 ← list all restaurants with no data
 """
 from contextlib import asynccontextmanager
 from typing import Literal
@@ -73,7 +76,7 @@ from analytics.queries import (
     get_previous_week_kpis,
 )
 
-from database.seeder import seed_restaurant_data
+from database.seeder import seed_restaurant_data, check_restaurant_has_data, get_restaurants_without_data
 
 
 # ---------------------------------------------------------------------------
@@ -101,6 +104,29 @@ def root():
 # ---------------------------------------------------------------------------
 # SEED DATA
 # ---------------------------------------------------------------------------
+@app.get("/seed/check/all")
+def check_all_restaurants_data():
+    """
+    Scan all restaurants and return those that have no seeded data (no menu items).
+    """
+    try:
+        return get_restaurants_without_data()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to scan restaurants: {str(e)}")
+
+
+@app.get("/seed/check/{restaurant_id}")
+def check_restaurant_data(restaurant_id: str):
+    """
+    Check whether a specific restaurant already has seeded data (menu items).
+    Returns has_data: true/false.
+    """
+    try:
+        return check_restaurant_has_data(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to check restaurant data: {str(e)}")
+
+
 @app.post("/seed/{restaurant_id}")
 def seed_dummy_data(restaurant_id: str):
     """
@@ -125,6 +151,7 @@ def seed_all_dummy_data():
         return seed_all_restaurants()
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to run batch seed: {str(e)}")
+
 
 
 # ---------------------------------------------------------------------------

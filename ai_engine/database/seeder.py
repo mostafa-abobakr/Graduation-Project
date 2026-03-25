@@ -394,6 +394,47 @@ def seed_restaurant_data(restaurant_id: str) -> Dict[str, Any]:
     }
 
 
+def check_restaurant_has_data(restaurant_id: str) -> Dict[str, Any]:
+    """
+    Checks whether a restaurant already has menu items (i.e. has been seeded).
+    Returns a dict with restaurant_id and has_data boolean.
+    """
+    engine = get_engine()
+    with engine.connect() as conn:
+        existing = conn.execute(
+            text("SELECT TOP 1 1 FROM MenuItems WHERE RestaurantId = :rid"),
+            {"rid": restaurant_id}
+        ).fetchone()
+    return {
+        "restaurant_id": restaurant_id,
+        "has_data": existing is not None,
+    }
+
+
+def get_restaurants_without_data() -> Dict[str, Any]:
+    """
+    Iterates through all restaurants and returns those with no MenuItems.
+    """
+    engine = get_engine()
+    with engine.connect() as conn:
+        rows = conn.execute(text("SELECT RestID FROM Restaurants")).fetchall()
+
+    total = len(rows)
+    empty_restaurants = []
+
+    for row in rows:
+        rest_id = str(row[0])
+        result = check_restaurant_has_data(rest_id)
+        if not result["has_data"]:
+            empty_restaurants.append(rest_id)
+
+    return {
+        "total_restaurants": total,
+        "empty_count": len(empty_restaurants),
+        "empty_restaurants": empty_restaurants,
+    }
+
+
 def seed_all_restaurants() -> Dict[str, Any]:
     """
     Iterates through all restaurants in the Restaurants table.
