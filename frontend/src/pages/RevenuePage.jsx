@@ -11,7 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useChartTheme } from "./DashboardPage";
+import { useChartTheme } from "@/hooks/useChartTheme";
 export default function RevenuePage() {
   const ct = useChartTheme();
   const totalRevenue = dailyData.reduce((s, d) => s + d.revenue, 0);

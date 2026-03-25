@@ -1,56 +1,240 @@
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { menuAnalytics } from "@/lib/mockData";
-import { useState } from "react";
-import { ArrowUp, ArrowDown, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ArrowUp, ArrowDown, Search, UtensilsCrossed } from "lucide-react";
 
 export default function MenuAnalyticsPage() {
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState("ordersToday");
+  const [sortKey, setSortKey] = useState("orders");
   const [sortAsc, setSortAsc] = useState(false);
+  const [timeframe, setTimeframe] = useState("day");
+
+  // Fetch the data from the ZeroBite AI Engine
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["menuPerformance", 2], // Hardcoded restaurant_id 2 for now based on context
+    queryFn: async () => {
+      const res = await fetch("https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/menu/performance/2", {
+        headers: { accept: "application/json" }
+      });
+      if (!res.ok) throw new Error("Failed to fetch menu analytics");
+      const json = await res.json();
+      return json.data; 
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+
+  // Extract the specific array based on the timeframe (day, week, month, all)
+  const currentData = data ? data[timeframe] || [] : [];
 
   const handleSort = (key) => {
     if (sortKey === key) setSortAsc(!sortAsc);
-    else { setSortKey(key); setSortAsc(false); }
+    else {
+      setSortKey(key);
+      setSortAsc(false);
+    }
   };
 
-  const filtered = menuAnalytics
-    .filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
+  // Filter and sort the data
+  const filtered = currentData
+    .filter((i) => i.item_name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       const mult = sortAsc ? 1 : -1;
-      if (sortKey === "name") return mult * a.name.localeCompare(b.name);
+      if (sortKey === "item_name") return mult * a.item_name.localeCompare(b.item_name);
       return mult * (a[sortKey] - b[sortKey]);
     });
 
-  const SortIcon = ({ col }) => sortKey === col ? (sortAsc ? <ArrowUp className="h-3 w-3 inline ml-1" /> : <ArrowDown className="h-3 w-3 inline ml-1" />) : null;
+  const SortIcon = ({ col }) => {
+    if (sortKey !== col) return null;
+    return sortAsc ? (
+      <ArrowUp className="h-3 w-3 inline ml-1 text-primary" />
+    ) : (
+      <ArrowDown className="h-3 w-3 inline ml-1 text-primary" />
+    );
+  };
+
+  if (error) {
+    return (
+      <div className="p-8 text-center text-destructive bg-destructive/10 rounded-xl border border-destructive/20">
+        <h3 className="font-bold text-lg mb-2">Error Loading Analytics</h3>
+        <p>{error.message}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div><h1 className="text-2xl font-bold text-foreground">Menu Analytics</h1><p className="text-muted-foreground">Performance metrics for each menu item</p></div>
-      <div className="relative max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search menu items..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 bg-card border-border/60" /></div>
-      <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
-        <div className="overflow-x-auto">
+    <div className="flex flex-col h-[calc(100vh-4rem)] animate-fade-in pb-4"> 
+      {/* Header Section */}
+      <header className="py-5 border-b border-border/60 mb-6">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
+          <UtensilsCrossed className="h-6 w-6 text-primary" />
+          Menu Item Performance
+        </h1>
+        <p className="text-muted-foreground mt-1 text-sm">Detailed real-time analytics for every item on your menu.</p>
+      </header>
+
+      {/* Controls Row */}
+      <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
+        {/* Search Bar */}
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search menu items..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 bg-card border-border/60 premium-shadow"
+          />
+        </div>
+
+        {/* Animated Segmented Picker (Glider) */}
+        <div className="relative flex bg-muted/60 p-1.5 rounded-xl w-full sm:w-[380px] shadow-inner border border-border/40 shrink-0">
+          <div
+            className="absolute top-1.5 bottom-1.5 w-[calc(25%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"
+            style={{
+              transform: `translateX(calc(${
+                timeframe === "day" ? "0" : timeframe === "week" ? "100" : timeframe === "month" ? "200" : "300"
+              }%))`,
+            }}
+          />
+          {[
+            { id: "day", label: "Today" },
+            { id: "week", label: "Week" },
+            { id: "month", label: "Month" },
+            { id: "all", label: "All Time" },
+          ].map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => setTimeframe(mode.id)}
+              aria-pressed={timeframe === mode.id}
+              className={`relative z-10 flex-1 py-1.5 text-[13px] font-bold tracking-wide capitalize transition-colors duration-200 ${
+                timeframe === mode.id
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Data Table */}
+      <Card className="flex-1 bg-card border-border/60 premium-shadow overflow-hidden flex flex-col min-h-0">
+        <div className="overflow-auto flex-1 relative">
           <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/60 bg-muted/40">
-                {[["name", "Menu Item"], ["cost", "Cost"], ["price", "Price"], ["ordersToday", "Orders Today"], ["predictedDemand", "Predicted Demand"], ["wastePercent", "Waste %"]].map(([key, label]) => (
-                  <th key={key} className="text-left py-3 px-4 text-muted-foreground font-medium cursor-pointer hover:text-foreground select-none" onClick={() => handleSort(key)}>{label}<SortIcon col={key} /></th>
+            <thead className="sticky top-0 z-10 bg-card">
+              <tr className="border-b border-border/60 bg-muted/40 shadow-sm">
+                {[
+                  [
+                    "item_name",
+                    <div className="flex items-center gap-2">
+                      Menu Items
+                      <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 pointer-events-none rounded-md px-1.5 py-0 min-w-[1.5rem] flex items-center justify-center">
+                        {filtered.length}
+                      </Badge>
+                    </div>,
+                  ],
+                  ["orders", "Total Orders"],
+                  ["revenue", "Generated Revenue"],
+                  ["profit", "Net Profit"],
+                  ["margin_percentage", "Profit Margin"],
+                ].map(([key, label]) => (
+                  <th
+                    key={key}
+                    className={`py-4 px-5 text-muted-foreground font-semibold cursor-pointer hover:text-foreground select-none transition-colors ${
+                      key === "item_name" ? "text-left" : "text-center"
+                    }`}
+                    onClick={() => handleSort(key)}
+                  >
+                    {label}
+                    <SortIcon col={key} />
+                  </th>
                 ))}
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Trend</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
-                <tr key={item.id} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
-                  <td className="py-3 px-4 text-foreground font-medium">{item.image} {item.name}</td>
-                  <td className="py-3 px-4 text-muted-foreground">${item.cost.toFixed(2)}</td>
-                  <td className="py-3 px-4 text-foreground">${item.price.toFixed(2)}</td>
-                  <td className="py-3 px-4 text-foreground mono">{item.ordersToday}</td>
-                  <td className="py-3 px-4 text-primary font-semibold mono">{item.predictedDemand}</td>
-                  <td className="py-3 px-4"><span className={`text-xs px-2 py-0.5 rounded-full ${item.wastePercent > 8 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{item.wastePercent}%</span></td>
-                  <td className="py-3 px-4"><span className={`flex items-center gap-1 text-xs ${item.trend === "up" ? "text-primary" : "text-destructive"}`}>{item.trend === "up" ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}{item.trendValue}%</span></td>
+              {isLoading ? (
+                // Loading Skeleton Rows
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <tr key={idx} className="border-b border-border/30">
+                    <td className="py-4 px-5"><Skeleton className="h-4 w-32" /></td>
+                    <td className="py-4 px-5"><Skeleton className="h-4 w-16 mx-auto" /></td>
+                    <td className="py-4 px-5"><Skeleton className="h-4 w-20 mx-auto" /></td>
+                    <td className="py-4 px-5"><Skeleton className="h-4 w-20 mx-auto" /></td>
+                    <td className="py-4 px-5"><Skeleton className="h-6 w-16 rounded-full mx-auto" /></td>
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
+                // Empty State
+                <tr>
+                  <td colSpan={5} className="py-16 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <Search className="h-8 w-8 text-muted-foreground/50" />
+                      <p>No menu items found matching "{search}".</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setSearch("")}
+                        className="mt-2"
+                      >
+                        Clear Search
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
-              ))}
+              ) : (
+                // Data Rows
+                filtered.map((item, idx) => (
+                  <tr
+                    key={idx}
+                    className="border-b border-border/30 hover:bg-muted/30 transition-colors"
+                  >
+                    <td className="py-4 px-5 text-foreground font-medium">
+                      {item.item_name}
+                    </td>
+                    <td className="py-4 px-5 text-center font-mono font-medium text-muted-foreground">
+                      {item.orders.toLocaleString("en-US")}
+                    </td>
+                    <td className="py-4 px-5 text-center font-medium text-foreground">
+                      {item.revenue.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 0,
+                      })}
+                    </td>
+                    <td className="py-4 px-5 text-center font-medium text-emerald-600 dark:text-emerald-500">
+                      {item.profit.toLocaleString("en-US", {
+                        style: "currency",
+                        currency: "USD",
+                        maximumFractionDigits: 0,
+                      })}
+                    </td>
+                    <td className="py-4 px-5 text-center">
+                      <span
+                        className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                          item.margin_percentage >= 70
+                            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                            : item.margin_percentage >= 40
+                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                            : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                        }`}
+                      >
+                        {item.margin_percentage.toFixed(1)}%
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

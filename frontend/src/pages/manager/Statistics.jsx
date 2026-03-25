@@ -15,28 +15,32 @@ const Statistics = ({ data }) => {
   const statsData = [
     {
       title: "Total Revenue",
-      value: data.total_revenue.toFixed(0),
+      prefix: "$",
+      value: data.total_revenue.toLocaleString("en-US", { maximumFractionDigits: 0 }),
       change: data.revenue_change_pct,
       isPositive: data.revenue_change_pct?.startsWith("+"),
       icon: DollarSign,
     },
     {
       title: "Net Profit",
-      value: data.total_profit.toFixed(0),
+      prefix: "$",
+      value: data.total_profit.toLocaleString("en-US", { maximumFractionDigits: 0 }),
       change: data.profit_change_pct,
       isPositive: data.profit_change_pct?.startsWith("+"),
       icon: PieChart,
     },
     {
       title: "Total Orders",
-      value: data.total_orders,
+      prefix: "",
+      value: data.total_orders.toLocaleString("en-US"),
       change: data.orders_change_pct,
       isPositive: data.orders_change_pct?.startsWith("+"),
       icon: ShoppingBag,
     },
     {
       title: "Avg Order Value",
-      value: data.avg_order_value.toFixed(2),
+      prefix: "$",
+      value: data.avg_order_value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       change: data.avg_order_value_change_pct,
       isPositive: data.avg_order_value_change_pct?.startsWith("+"),
       icon: Receipt,
@@ -63,7 +67,7 @@ const Statistics = ({ data }) => {
 
             <div className="flex items-end justify-between gap-2 mt-auto">
               <span className="text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-foreground">
-                ${stat.value}
+                {stat.prefix}{stat.value}
               </span>
 
               {stat.change && (

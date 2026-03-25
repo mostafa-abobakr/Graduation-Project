@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { ArrowRight, BarChart3, Brain, Leaf, TrendingDown, TrendingUp, Users, Zap, Check, Star } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { ROUTES } from "@/routes/ROUTES";
 const stats = [
   { label: "Food Waste Reduced", value: "32%", icon: TrendingDown },

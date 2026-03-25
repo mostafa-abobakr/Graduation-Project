@@ -2,30 +2,25 @@ import React from "react";
 import { createBrowserRouter } from "react-router-dom";
 import LandingPage from "../pages/LandingPage";
 // import AuthPage from "../pages/AuthPage";
-import DashboardLayout from "../components/DashboardLayout";
-import DashboardPage from "../pages/DashboardPage";
-import ForecastPage from "../pages/ForecastPage";
-import MenuAnalyticsPage from "../pages/MenuAnalyticsPage";
-import WasteAnalyticsPage from "../pages/WasteAnalyticsPage";
-import RevenuePage from "../pages/RevenuePage";
-import AIInsightsPage from "../pages/AIInsightsPage";
-import MenuManagementPage from "../pages/MenuManagementPage";
-import SettingsPage from "../pages/SettingsPage";
-import StaffPage from "../pages/StaffPage";
-import InventoryPage from "../pages/InventoryPage";
-import FeedbackPage from "../pages/FeedbackPage";
-import ReportsPage from "../pages/ReportsPage";
-import ProfilePage from "../pages/ProfilePage";
-import BillingPage from "../pages/BillingPage";
-import RestaurantsPage from "../pages/admin/RestaurantsPage";
-import UsersPage from "../pages/admin/UsersPage";
-import PlatformAnalyticsPage from "../pages/admin/PlatformAnalyticsPage";
-import PlatformSettingsPage from "../pages/admin/PlatformSettingsPage";
+import DashboardLayout from "../components/layout/DashboardLayout";
+import { lazy } from "react";
+
+const DashboardIndex = lazy(() => import("../pages/DashboardIndex"));
+const ForecastPage = lazy(() => import("../pages/ForecastPage"));
+const MenuAnalyticsPage = lazy(() => import("../pages/MenuAnalyticsPage"));
+const RevenuePage = lazy(() => import("../pages/RevenuePage"));
+const AIInsightsPage = lazy(() => import("../pages/AIInsightsPage"));
+const MenuManagementPage = lazy(() => import("../pages/MenuManagementPage"));
+const SettingsPage = lazy(() => import("../pages/SettingsPage"));
+const StaffPage = lazy(() => import("../pages/StaffPage"));
+const InventoryPage = lazy(() => import("../pages/InventoryPage"));
+const ReportsPage = lazy(() => import("../pages/ReportsPage"));
+const ProfilePage = lazy(() => import("../pages/ProfilePage"));
+const BillingPage = lazy(() => import("../pages/BillingPage"));
 import NotFound from "../pages/NotFound";
 import { ROUTES } from "./ROUTES";
 import Login from "@/pages/Auth/Login";
 import Register from "@/pages/Auth/Register";
-
 const Routes = [
   {
     path: ROUTES.LANDING,
@@ -45,7 +40,7 @@ const Routes = [
     children: [
       {
         index: true,
-        element: <DashboardPage />,
+        element: <DashboardIndex />,
       },
       {
         path: ROUTES.FORECAST,
@@ -54,10 +49,6 @@ const Routes = [
       {
         path: ROUTES.MENU_ANALYTICS,
         element: <MenuAnalyticsPage />,
-      },
-      {
-        path: ROUTES.WASTE,
-        element: <WasteAnalyticsPage />,
       },
       {
         path: ROUTES.REVENUE,
@@ -71,17 +62,13 @@ const Routes = [
         path: ROUTES.MENU,
         element: <MenuManagementPage />,
       },
-      {
-        path: ROUTES.STAFF,
-        element: <StaffPage />,
-      },
+      // {
+      //   path: ROUTES.STAFF,
+      //   element: <StaffPage />,
+      // },
       {
         path: ROUTES.INVENTORY,
         element: <InventoryPage />,
-      },
-      {
-        path: ROUTES.FEEDBACK,
-        element: <FeedbackPage />,
       },
       {
         path: ROUTES.REPORTS,
@@ -90,22 +77,6 @@ const Routes = [
       {
         path: ROUTES.SETTINGS,
         element: <SettingsPage />,
-      },
-      {
-        path: ROUTES.RESTAURANTS,
-        element: <RestaurantsPage />,
-      },
-      {
-        path: ROUTES.USERS,
-        element: <UsersPage />,
-      },
-      {
-        path: ROUTES.PLATFORM_ANALYTICS,
-        element: <PlatformAnalyticsPage />,
-      },
-      {
-        path: ROUTES.PLATFORM_SETTINGS,
-        element: <PlatformSettingsPage />,
       },
       {
         path: ROUTES.PROFILE,

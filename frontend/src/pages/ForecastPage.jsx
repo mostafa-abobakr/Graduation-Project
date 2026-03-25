@@ -37,7 +37,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useChartTheme } from "./DashboardPage";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { useChartTheme } from "@/hooks/useChartTheme";
 import { useQuery } from "@tanstack/react-query";
 import {
   Search,
@@ -256,12 +261,12 @@ export default function ForecastPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">#</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead className="text-right">Expected</TableHead>
-                <TableHead className="text-right">Revenue</TableHead>
-                <TableHead className="text-right">Profit</TableHead>
-                <TableHead className="text-right">Accuracy</TableHead>
-                <TableHead className="w-10" />
+                <TableHead className="text-center">Item</TableHead>
+                <TableHead className="text-center">Expected</TableHead>
+                <TableHead className="text-center">Revenue</TableHead>
+                <TableHead className="text-center">Profit</TableHead>
+                <TableHead className="text-center">Accuracy</TableHead>
+                <TableHead className="w-10 text-center" />
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -276,16 +281,16 @@ export default function ForecastPage() {
                       <TableCell className="text-muted-foreground">
                         {(page - 1) * rowsPerPage + index + 1}
                       </TableCell>
-                      <TableCell className="font-medium text-foreground">
+                      <TableCell className="font-medium text-foreground text-center">
                         {item.item_name}
                       </TableCell>
-                      <TableCell className="text-right text-foreground">
+                      <TableCell className="text-center text-foreground">
                         {item.expected_orders}
                       </TableCell>
-                      <TableCell className="text-right text-foreground">
+                      <TableCell className="text-center text-foreground">
                         ${item.revenue}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center">
                         <span
                           className={
                             item.profit >= 50
@@ -296,20 +301,24 @@ export default function ForecastPage() {
                           ${item.profit.toFixed()}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Badge
-                          variant="outline"
-                          className="border-primary/30 text-primary text-xs"
-                        >
-                          {item.accuracy.toFixed()}%
-                        </Badge>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center">
+                          <Badge
+                            variant="outline"
+                            className="border-primary/30 text-primary text-xs"
+                          >
+                            {item.accuracy.toFixed()}%
+                          </Badge>
+                        </div>
                       </TableCell>
-                      <TableCell>
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        )}
+                      <TableCell className="text-center">
+                        <div className="flex justify-center">
+                          {isExpanded ? (
+                            <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
 
@@ -317,15 +326,34 @@ export default function ForecastPage() {
                       <TableRow>
                         <TableCell colSpan={7} className="p-0">
                           <div className="p-5 bg-muted/20 border-t border-border/30">
-                            <p className="text-sm font-semibold text-foreground mb-3">
-                              ⏱️ Hourly Sales — 🥗 {item.item_name}
-                            </p>
+                            <div className="flex items-center justify-between mb-3">
+                              <p className="text-sm font-semibold text-foreground">
+                                ⏱️ Hourly Sales — 🥗 {item.item_name}
+                              </p>
+                              <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mr-2">
+                                <div className="w-3 h-3 rounded bg-primary shadow-sm shadow-emerald-500/20" />
+                                <span>Orders</span>
+                              </div>
+                            </div>
                             <div className="h-[220px]">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={item.chart_data}>
+                              <ChartContainer
+                                config={{
+                                  orders: { label: "Orders", color: "#10b981" },
+                                }}
+                                className="aspect-auto h-full w-full"
+                              >
+                                <AreaChart
+                                  data={item.chart_data}
+                                  margin={{
+                                    top: 10,
+                                    right: 10,
+                                    left: 0,
+                                    bottom: alignment === "week" ? 20 : 10,
+                                  }}
+                                >
                                   <defs>
                                     <linearGradient
-                                      id={`gradient-${item.item_name}`}
+                                      id={`colorOrders-${index}`}
                                       x1="0"
                                       y1="0"
                                       x2="0"
@@ -333,55 +361,191 @@ export default function ForecastPage() {
                                     >
                                       <stop
                                         offset="5%"
-                                        stopColor="hsl(160 84% 39%)"
-                                        stopOpacity={0.3}
+                                        stopColor="var(--color-orders)"
+                                        stopOpacity={0.4}
                                       />
                                       <stop
                                         offset="95%"
-                                        stopColor="hsl(160 84% 39%)"
+                                        stopColor="var(--color-orders)"
                                         stopOpacity={0}
                                       />
                                     </linearGradient>
                                   </defs>
                                   <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke={ct.grid}
+                                    vertical={false}
+                                    strokeDasharray="4 4"
+                                    stroke="hsl(var(--border))"
+                                    strokeOpacity={0.5}
                                   />
                                   <XAxis
-                                    dataKey="hour"
-                                    tick={ct.tick}
+                                    dataKey={
+                                      alignment === "week" ? "date" : "hour"
+                                    }
                                     axisLine={false}
                                     tickLine={false}
+                                    tick={{
+                                      fill: "hsl(var(--muted-foreground))",
+                                      fontSize: 11,
+                                      fontWeight: 500,
+                                    }}
+                                    dy={15}
+                                    angle={alignment === "week" ? -35 : 0}
+                                    textAnchor={
+                                      alignment === "week" ? "end" : "middle"
+                                    }
+                                    interval={
+                                      alignment === "week"
+                                        ? 0
+                                        : "preserveStartEnd"
+                                    }
+                                    tickFormatter={(val) => {
+                                      if (alignment === "week") {
+                                        const d = new Date(val);
+                                        return d.toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                        });
+                                      }
+                                      // Convert "HH:00" → "h AM/PM"
+                                      const [h] = val.split(":").map(Number);
+                                      const ampm = h >= 12 ? "PM" : "AM";
+                                      const h12 = h % 12 || 12;
+                                      return `${h12} ${ampm}`;
+                                    }}
                                   />
                                   <YAxis
-                                    tick={ct.tick}
                                     axisLine={false}
                                     tickLine={false}
+                                    tick={{
+                                      fill: "hsl(var(--muted-foreground))",
+                                      fontSize: 12,
+                                      fontWeight: 500,
+                                    }}
+                                    width={40}
                                   />
-                                  <Tooltip {...ct.tooltip} />
+                                  <ChartTooltip
+                                    cursor={{
+                                      stroke: "hsl(var(--muted))",
+                                      strokeWidth: 2,
+                                      strokeDasharray: "4 4",
+                                    }}
+                                    content={({ active, payload, label }) => {
+                                      if (!active || !payload?.length)
+                                        return null;
+
+                                      // Format the header label
+                                      let displayLabel = label;
+                                      if (label) {
+                                        if (alignment === "week") {
+                                          const dateObj = new Date(label);
+                                          displayLabel =
+                                            dateObj.toLocaleDateString(
+                                              "en-US",
+                                              {
+                                                month: "short",
+                                                day: "numeric",
+                                              },
+                                            );
+                                        } else {
+                                          const raw = String(label);
+                                          const [h] = raw
+                                            .split(":")
+                                            .map(Number);
+                                          const ampm = h >= 12 ? "PM" : "AM";
+                                          const h12 = h % 12 || 12;
+                                          displayLabel = `${h12} ${ampm}`;
+                                        }
+                                      }
+
+                                      const d = payload[0].payload;
+                                      return (
+                                        <div className="bg-popover/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-border/50 animate-in fade-in zoom-in duration-200 min-w-[170px]">
+                                          <p className="text-xs font-semibold text-muted-foreground mb-2">
+                                            {displayLabel}
+                                          </p>
+                                          <div className="space-y-1.5">
+                                            <div className="flex justify-between gap-6 items-center">
+                                              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                <span className="h-2 w-2 rounded-full bg-orange-500 inline-block" />
+                                                Orders
+                                              </span>
+                                              <span className="text-xs font-bold text-foreground">
+                                                {d.orders}
+                                              </span>
+                                            </div>
+                                            <div className="flex justify-between gap-6 items-center">
+                                              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                <span className="h-2 w-2 rounded-full bg-blue-500 inline-block" />
+                                                Revenue
+                                              </span>
+                                              <span className="text-xs font-bold text-foreground">
+                                                $
+                                                {d.revenue?.toLocaleString(
+                                                  "en-US",
+                                                )}
+                                              </span>
+                                            </div>
+                                            <div className="flex justify-between gap-6 items-center">
+                                              <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                <span className="h-2 w-2 rounded-full bg-primary inline-block" />
+                                                Profit
+                                              </span>
+                                              <span className="text-xs font-bold text-primary">
+                                                ${d.profit?.toFixed(2)}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    }}
+                                  />
                                   <Area
                                     type="monotone"
                                     dataKey="orders"
-                                    stroke="hsl(160 84% 39%)"
-                                    strokeWidth={2}
-                                    fill={`url(#gradient-${item.item_name})`}
+                                    name="Orders"
+                                    stroke="var(--color-orders)"
+                                    strokeWidth={3}
+                                    fill={`url(#colorOrders-${index})`}
+                                    animationDuration={1200}
+                                    animationEasing="ease-out"
                                   />
                                 </AreaChart>
-                              </ResponsiveContainer>
+                              </ChartContainer>
                             </div>
                             <div className="flex gap-5 mt-3 text-xs text-muted-foreground">
                               <span>
                                 🔥 Peak:{" "}
-                                {item.peak_hour?.hour || item.peak_hour} —{" "}
-                                {item.peak_hour?.orders ??
-                                  (item.chart_data?.find(
-                                    (d) => d.hour === item.peak_hour,
-                                  )?.orders ||
-                                    0)}{" "}
+                                {alignment === "week"
+                                  ? (() => {
+                                      if (!item.peak_day?.date) return "N/A";
+                                      const d = new Date(item.peak_day.date);
+                                      return d.toLocaleDateString("en-US", {
+                                        month: "short",
+                                        day: "numeric",
+                                      });
+                                    })()
+                                  : (() => {
+                                      const raw = String(
+                                        item.peak_hour?.hour ||
+                                          item.peak_hour ||
+                                          "",
+                                      );
+                                      if (!raw) return "N/A";
+                                      const [h] = raw.split(":").map(Number);
+                                      const ampm = h >= 12 ? "PM" : "AM";
+                                      const h12 = h % 12 || 12;
+                                      return `${h12} ${ampm}`;
+                                    })()}{" "}
+                                —{" "}
+                                {alignment === "week"
+                                  ? item.peak_day?.orders
+                                  : item.peak_hour?.orders}{" "}
                                 orders
                               </span>
                               <span>
-                                📦 Total today: {item.expected_orders} orders
+                                📦 Total{" "}
+                                {alignment === "week" ? "this week" : "today"}:{" "}
+                                {item.expected_orders} orders
                               </span>
                             </div>
                           </div>

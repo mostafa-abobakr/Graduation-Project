@@ -1,4 +1,5 @@
-import { NavLink } from "@/components/NavLink";
+import React, { Suspense } from "react";
+import { NavLink } from "@/components/shared/NavLink";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
   Sidebar,
@@ -35,8 +36,8 @@ import {
   Activity,
   UserCog,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
-import { NotificationsDropdown } from "@/components/NotificationsDropdown";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
+import { NotificationsDropdown } from "@/components/shared/NotificationsDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -53,44 +54,23 @@ const managerAnalyticsItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
   { title: "Forecast", url: "/dashboard/forecast", icon: Brain },
   { title: "Menu Analytics", url: "/dashboard/menu-analytics", icon: ChefHat },
-  { title: "Waste Analytics", url: "/dashboard/waste", icon: Trash2 },
   { title: "Revenue", url: "/dashboard/revenue", icon: DollarSign },
   { title: "AI Insights", url: "/dashboard/insights", icon: Lightbulb },
 ];
 
 const managerManagementItems = [
   { title: "Menu Management", url: "/dashboard/menu", icon: BarChart3 },
-  { title: "Staff", url: "/dashboard/staff", icon: Users },
+  // { title: "Staff", url: "/dashboard/staff", icon: Users },
   { title: "Inventory", url: "/dashboard/inventory", icon: Package },
 ];
 
 const managerOtherItems = [
-  { title: "Feedback", url: "/dashboard/feedback", icon: MessageSquare },
   { title: "Reports", url: "/dashboard/reports", icon: FileText },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
-const adminOverviewItems = [
-  { title: "Platform Overview", url: "/dashboard", icon: LayoutDashboard },
-  {
-    title: "Platform Analytics",
-    url: "/dashboard/platform-analytics",
-    icon: Activity,
-  },
-];
-
-const adminManagementItems = [
-  { title: "Restaurants", url: "/dashboard/restaurants", icon: Building2 },
-  { title: "Users & Managers", url: "/dashboard/users", icon: UserCog },
-];
-
-const adminOtherItems = [
-  { title: "Billing", url: "/dashboard/billing", icon: CreditCard },
-  {
-    title: "Platform Settings",
-    url: "/dashboard/platform-settings",
-    icon: Settings,
-  },
+const adminItems = [
+  { title: "Admin Dashboard", url: "/dashboard", icon: Shield },
 ];
 
 function AppSidebar() {
@@ -142,21 +122,11 @@ function AppSidebar() {
               </span>
             )}
           </Link>
-          {!collapsed && isAdmin && (
-            <div className="mt-2 flex items-center gap-1.5">
-              <Shield className="h-3 w-3 text-primary" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-                Admin Mode
-              </span>
-            </div>
-          )}
         </div>
         <Separator className="mx-3 w-auto" />
         {isAdmin ? (
           <>
-            {renderGroup("Overview", adminOverviewItems)}
-            {renderGroup("Management", adminManagementItems)}
-            {renderGroup("System", adminOtherItems)}
+            {renderGroup("Platform", adminItems)}
           </>
         ) : (
           <>
@@ -230,15 +200,7 @@ export default function DashboardLayout() {
                       Settings
                     </DropdownMenuItem>
                   )}
-                  {isAdmin && (
-                    <DropdownMenuItem
-                      onClick={() => navigate("/dashboard/platform-settings")}
-                      className="cursor-pointer"
-                    >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Platform Settings
-                    </DropdownMenuItem>
-                  )}
+                  {/* Platform Settings removed for simplicity */}
                   <DropdownMenuItem
                     onClick={() => navigate("/dashboard/billing")}
                     className="cursor-pointer"
@@ -262,7 +224,13 @@ export default function DashboardLayout() {
             </div>
           </header>
           <main className="flex-1 px-4 md:px-5 overflow-auto">
-            <Outlet />
+            <Suspense fallback={
+              <div className="flex h-[50vh] w-full items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            }>
+              <Outlet />
+            </Suspense>
           </main>
         </div>
       </div>

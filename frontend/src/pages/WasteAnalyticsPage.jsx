@@ -14,7 +14,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useChartTheme } from "./DashboardPage";
+import { useChartTheme } from "@/hooks/useChartTheme";
 const COLORS = [
   "hsl(160 84% 39%)",
   "hsl(210 76% 52%)",
