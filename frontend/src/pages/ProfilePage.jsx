@@ -31,12 +31,16 @@ export default function ProfilePage() {
     });
   };
   return (
-    <div className="space-y-6 animate-fade-in max-w-3xl">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Profile</h1>
-        <p className="text-muted-foreground">
-          Manage your account information and preferences
-        </p>
+    <div className="space-y-5 animate-fade-in max-w-3xl py-5">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <User className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Profile</h1>
+          <p className="text-muted-foreground text-sm">Manage your account information and preferences</p>
+        </div>
       </div>
       <Card className="p-6 bg-card border-border/60">
         <div className="flex items-center gap-5">

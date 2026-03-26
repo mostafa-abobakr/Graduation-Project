@@ -1,5 +1,5 @@
 import React from "react";
-
+import { LayoutDashboard } from "lucide-react";
 const Header = ({ viewMode, setViewMode }) => {
   return (
     <header
@@ -9,17 +9,22 @@ const Header = ({ viewMode, setViewMode }) => {
         justify-between 
         items-center 
         gap-4
-        px-4 
-        py-5
-        border-b 
-        border-border/60 
         bg-background 
-        backdrop-blur-sm
       "
     >
-      <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
-        Manager Dashboard
-      </h1>
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <LayoutDashboard className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">
+            Manager Dashboard
+          </h1>
+          <p className="text-muted-foreground text-sm">
+            Manage your business operations
+          </p>
+        </div>
+      </div>
 
       {/* Animated Segmented Picker (Glider) */}
       <div className="relative flex bg-muted/60 p-1.5 rounded-xl w-full sm:w-[320px] shadow-inner border border-border/40">

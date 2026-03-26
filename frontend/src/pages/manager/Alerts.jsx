@@ -1,8 +1,56 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-// Replaced MUI icons with Lucide icons
-import { TriangleAlert, TrendingUp, TrendingDown } from "lucide-react";
+import {
+  TriangleAlert,
+  TrendingDown,
+  TrendingUp,
+  Snowflake,
+  Coffee,
+  AlertTriangle,
+  Gem,
+  PackageMinus,
+  PackagePlus,
+  BadgeAlert,
+  Rocket,
+  Info,
+} from "lucide-react";
+
+// Helper component to render the correct icon based on alert type
+const AlertIcon = ({ type, severity }) => {
+  const iconMap = {
+    // Business Rule-Based Alerts
+    revenue_drop: { Icon: TrendingDown, color: "text-rose-500" },
+    revenue_spike: { Icon: TrendingUp, color: "text-emerald-500" },
+    cold_item_underperformance: { Icon: Snowflake, color: "text-sky-400" },
+    hot_item_underperformance: { Icon: Coffee, color: "text-orange-500" },
+    low_margin_high_volume: { Icon: AlertTriangle, color: "text-rose-600" },
+    high_margin_low_volume: { Icon: Gem, color: "text-violet-500" },
+
+    // Predictive Forecast Alerts
+    item_decrease: { Icon: PackageMinus, color: "text-amber-500" },
+    item_surge: { Icon: PackagePlus, color: "text-emerald-500" },
+    low_margin_surge: { Icon: BadgeAlert, color: "text-rose-500" },
+    high_margin_surge: { Icon: Rocket, color: "text-emerald-600" },
+    forecast_revenue_drop: { Icon: TrendingDown, color: "text-rose-500" },
+    forecast_revenue_spike: { Icon: TrendingUp, color: "text-emerald-500" },
+  };
+
+  const config = iconMap[type];
+
+  // Fallback if an unknown alert type is passed
+  if (!config) {
+    const FallbackIcon = severity === "warning" ? AlertTriangle : Info;
+    const defaultColor =
+      severity === "warning" ? "text-rose-500" : "text-emerald-500";
+    return (
+      <FallbackIcon className={`h-4 w-4 ${defaultColor}`} strokeWidth={3} />
+    );
+  }
+
+  const { Icon, color } = config;
+  return <Icon className={`h-4 w-4 ${color}`} strokeWidth={3} />;
+};
 
 const Alerts = ({ data }) => {
   if (!data) return null;
@@ -24,33 +72,25 @@ const Alerts = ({ data }) => {
         {!data?.alerts || data.alerts.length === 0 ? (
           <div className="flex flex-col items-center justify-center flex-1 h-full text-muted-foreground w-full gap-5 pb-6">
             <div className="h-24 w-24 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center shadow-sm">
-              <TriangleAlert className="h-12 w-12 text-muted-foreground/60" strokeWidth={1.5} />
+              <TriangleAlert
+                className="h-12 w-12 text-muted-foreground/60"
+                strokeWidth={1.5}
+              />
             </div>
-            <span className="text-base font-semibold">
-              No alerts for now
-            </span>
+            <span className="text-base font-semibold">No alerts for now</span>
           </div>
         ) : (
           <ScrollArea className="h-full px-4 pb-4">
             <ul className="space-y-3 list-none m-0 p-0">
-              {data.alerts.slice(0, 5).map((alert, index) => (
+              {data.alerts.map((alert, index) => (
                 <li
                   key={alert.link ?? index}
                   className="flex items-start sm:items-center justify-between gap-4 p-3 rounded-lg border border-border/50 bg-background shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300"
                 >
                   <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
                     <div className="mt-0.5 sm:mt-0 p-1.5 rounded-full shrink-0 shadow-xs border border-border/40 bg-muted/20">
-                      {alert.severity === "info" ? (
-                        <TrendingUp
-                          className="h-4 w-4 text-emerald-500"
-                          strokeWidth={3}
-                        />
-                      ) : (
-                        <TrendingDown
-                          className="h-4 w-4 text-rose-500"
-                          strokeWidth={3}
-                        />
-                      )}
+                      {/* Integrated the new AlertIcon component here */}
+                      <AlertIcon type={alert.type} severity={alert.severity} />
                     </div>
                     <p className="text-xs sm:text-sm text-foreground leading-relaxed">
                       {alert.message}

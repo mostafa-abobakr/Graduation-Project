@@ -73,18 +73,20 @@ export default function MenuAnalyticsPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] animate-fade-in pb-4"> 
-      {/* Header Section */}
-      <header className="py-5 border-b border-border/60 mb-6">
-        <h1 className="text-xl md:text-2xl font-bold text-foreground flex items-center gap-2">
-          <UtensilsCrossed className="h-6 w-6 text-primary" />
-          Menu Item Performance
-        </h1>
-        <p className="text-muted-foreground mt-1 text-sm">Detailed real-time analytics for every item on your menu.</p>
-      </header>
+    <div className="space-y-5 animate-fade-in py-5">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <UtensilsCrossed className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Menu Item Performance</h1>
+          <p className="text-muted-foreground text-sm">Detailed real-time analytics for every item on your menu.</p>
+        </div>
+      </div>
 
       {/* Controls Row */}
-      <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
+      <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
         {/* Search Bar */}
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -129,7 +131,7 @@ export default function MenuAnalyticsPage() {
       </div>
 
       {/* Data Table */}
-      <Card className="flex-1 bg-card border-border/60 premium-shadow overflow-hidden flex flex-col min-h-0">
+      <Card className="bg-card border-border/60 premium-shadow overflow-hidden flex flex-col">
         <div className="overflow-auto flex-1 relative">
           <table className="w-full text-sm">
             <thead className="sticky top-0 z-10 bg-card">

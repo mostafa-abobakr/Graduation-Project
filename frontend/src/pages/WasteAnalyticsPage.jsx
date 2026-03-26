@@ -15,6 +15,7 @@ import {
   Cell,
 } from "recharts";
 import { useChartTheme } from "@/hooks/useChartTheme";
+import { Trash2 } from "lucide-react";
 const COLORS = [
   "hsl(160 84% 39%)",
   "hsl(210 76% 52%)",
@@ -29,12 +30,16 @@ export default function WasteAnalyticsPage() {
   const ct = useChartTheme();
   const totalWaste = wasteByItem.reduce((s, i) => s + i.waste, 0);
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Waste Analytics</h1>
-        <p className="text-muted-foreground">
-          Track and reduce food waste across your restaurant
-        </p>
+    <div className="space-y-5 animate-fade-in py-5">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <Trash2 className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Waste Analytics</h1>
+          <p className="text-muted-foreground text-sm">Track and reduce food waste across your restaurant</p>
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5 bg-card border-border/60 premium-shadow">

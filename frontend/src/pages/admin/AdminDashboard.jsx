@@ -293,19 +293,15 @@ const RestaurantsTable = ({ restaurants, loading }) => {
                 ))
               ) : filteredData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-64 text-center">
-                    <div className="flex flex-col items-center justify-center text-muted-foreground w-full py-8">
-                      <div className="h-20 w-20 rounded-full bg-muted/50 flex flex-col items-center justify-center mb-4 border border-border/50 shadow-sm animate-pulse-slow">
-                        <SearchX className="h-10 w-10 text-muted-foreground/60" strokeWidth={1.5} />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-1 tracking-tight">No restaurants found</h3>
-                      <p className="text-sm text-balance max-w-sm mb-4">
-                        We couldn't find any match for <span className="font-semibold text-foreground">"{search}"</span>.
-                      </p>
+                  <TableCell colSpan={6} className="py-16 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <Search className="h-8 w-8 text-muted-foreground/50" />
+                      <p>No restaurants found matching "{search}".</p>
                       <Button 
-                        variant="secondary" 
+                        variant="outline" 
+                        size="sm" 
                         onClick={() => setSearch("")}
-                        className="rounded-full shadow-sm"
+                        className="mt-2"
                       >
                         Clear Search
                       </Button>

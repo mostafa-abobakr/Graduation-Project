@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   Table,
   TableBody,
@@ -54,6 +54,7 @@ import {
   ChevronUp,
   Loader2,
   AlertCircle,
+  Brain,
 } from "lucide-react";
 import axios from "axios";
 
@@ -175,14 +176,23 @@ export default function ForecastPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in py-5">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Sales Dashboard
-          </h1>
-          <p className="text-muted-foreground text-sm">{now.toDateString()}</p>
+      <div className=" flex 
+        flex-col sm:flex-row 
+        justify-between 
+        items-center 
+        gap-4
+        bg-background">
+        {/* Header text + icon */}
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Brain className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Sales Forecast</h1>
+            <p className="text-muted-foreground text-sm">{now.toDateString()}</p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -192,12 +202,30 @@ export default function ForecastPage() {
           >
             <Settings className="h-4 w-4 mr-1.5" /> Settings
           </Button>
-          <Tabs value={alignment} onValueChange={setAlignment}>
-            <TabsList>
-              <TabsTrigger value="day">Day</TabsTrigger>
-              <TabsTrigger value="week">Week</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Glider-style segmented toggle — matches dashboard pattern */}
+          <div className="relative flex bg-muted/60 p-1.5 rounded-xl shadow-inner border border-border/40">
+            <div
+              className="absolute top-1.5 bottom-1.5 w-[calc(50%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"
+              style={{ transform: `translateX(${alignment === "day" ? "0%" : "calc(100% - 6px)"})` }}
+            />
+            {[
+              { id: "day", label: "Tomorrow" },
+              { id: "week", label: "This Week" },
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setAlignment(mode.id)}
+                aria-pressed={alignment === mode.id}
+                className={`relative z-10 px-4 py-1 text-[13px] font-bold tracking-wide capitalize transition-colors duration-200 ${
+                  alignment === mode.id
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -232,7 +260,9 @@ export default function ForecastPage() {
                 >
                   {stat.change}
                 </span>
-                <span className="text-muted-foreground ml-1">vs last week</span>
+                <span className="text-muted-foreground ml-1">
+                  {alignment === "day" ? "vs yesterday" : "vs last week"}
+                </span>
               </p>
             </Card>
           );
@@ -270,7 +300,25 @@ export default function ForecastPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedItems.map((item, index) => {
+              {filteredItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-16 text-center text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <Search className="h-8 w-8 text-muted-foreground/50" />
+                      <p>No items found matching "{searchTerm}".</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setSearchTerm("")}
+                        className="mt-2"
+                      >
+                        Clear Search
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedItems.map((item, index) => {
                 const isExpanded = expandedItems[item.item_name];
                 return (
                   <React.Fragment key={item.item_name}>
@@ -554,7 +602,8 @@ export default function ForecastPage() {
                     )}
                   </React.Fragment>
                 );
-              })}
+              })
+            )}
             </TableBody>
           </Table>
         </div>
