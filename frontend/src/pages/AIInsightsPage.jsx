@@ -62,29 +62,21 @@ function fmt(n) {
 }
 
 // ── Summary stat card ────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, icon: Icon, accent = false }) {
+function StatCard({ label, value, sub, icon: Icon, accent }) {
   return (
-    <Card className="p-5 bg-card border-border/60 premium-shadow flex-1 min-w-0">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">{label}</p>
-          <p
-            className={`text-2xl font-bold tracking-tight ${
-              accent ? "text-emerald-500" : "text-foreground"
-            }`}
-          >
-            {value}
-          </p>
-          {sub && (
-            <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-          )}
+    <Card className="p-5 bg-card border-border/60 premium-shadow">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          {label}
+        </span>
+        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+          <Icon className="h-4 w-4 text-primary" />
         </div>
-        {Icon && (
-          <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-            <Icon className="h-4 w-4 text-primary" />
-          </div>
-        )}
       </div>
+      <p className="stat-number text-foreground">{value}</p>
+
+      {/* Renders the subtext at the bottom if it exists */}
+      {sub && <p className="text-xs mt-1 text-muted-foreground">{sub}</p>}
     </Card>
   );
 }
@@ -146,7 +138,7 @@ export default function AIInsightsPage() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">AI Insights</h1>
             <p className="text-muted-foreground text-sm">
-              Forecast alerts &amp; revenue intelligence powered by AI
+              Forecast Alerts &amp; Revenue Insights Powered By AI
             </p>
           </div>
         </div>
