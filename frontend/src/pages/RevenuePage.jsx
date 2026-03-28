@@ -11,20 +11,22 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useChartTheme } from "./DashboardPage";
+import { useChartTheme } from "@/hooks/useChartTheme";
+import { DollarSign } from "lucide-react";
 export default function RevenuePage() {
   const ct = useChartTheme();
   const totalRevenue = dailyData.reduce((s, d) => s + d.revenue, 0);
   const avgDaily = Math.round(totalRevenue / dailyData.length);
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">
-          Revenue Analytics
-        </h1>
-        <p className="text-muted-foreground">
-          Revenue trends and profit analysis
-        </p>
+    <div className="space-y-5 animate-fade-in py-5">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <DollarSign className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Revenue Analytics</h1>
+          <p className="text-muted-foreground text-sm">Revenue trends and profit analysis</p>
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="p-5 bg-card border-border/60 premium-shadow">
@@ -101,7 +103,7 @@ export default function RevenuePage() {
           </AreaChart>
         </ResponsiveContainer>
       </Card>
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-5">
         <Card className="p-6 bg-card border-border/60 premium-shadow">
           <h3 className="text-base font-semibold text-foreground mb-4">
             Revenue by Item

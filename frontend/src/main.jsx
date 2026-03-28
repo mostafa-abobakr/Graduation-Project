@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { ThemeProvider } from "./components/ThemeProvider";
+import { ThemeProvider } from "./components/shared/ThemeProvider";
 import App from "./App.jsx";
 import "./index.css";
 

@@ -1,3 +1,92 @@
-import { Card } from "@/components/ui/card"; import { customerFeedback, feedbackSummary } from "@/lib/mockData"; import { Star, TrendingUp, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react"; import { Badge } from "@/components/ui/badge";
-const sentimentConfig = { positive: { class: "bg-primary/15 text-primary border-0", icon: ThumbsUp }, negative: { class: "bg-destructive/15 text-destructive border-0", icon: ThumbsDown }, neutral: { class: "bg-muted text-muted-foreground border-0", icon: MessageSquare } };
-export default function FeedbackPage() { return (<div className="space-y-6 animate-fade-in"><div><h1 className="text-2xl font-bold text-foreground">Customer Feedback</h1><p className="text-muted-foreground">Reviews, ratings, and sentiment analysis</p></div><div className="grid grid-cols-1 sm:grid-cols-4 gap-4"><Card className="p-5 bg-card border-border/60 premium-shadow"><div className="flex items-center justify-between mb-3"><span className="text-sm text-muted-foreground">Average Rating</span><Star className="h-4 w-4 text-warning" /></div><div className="stat-number text-foreground">{feedbackSummary.averageRating}</div><div className="flex items-center gap-1 mt-1.5 text-xs text-primary"><TrendingUp className="h-3 w-3" />+{feedbackSummary.weeklyTrend} this week</div></Card><Card className="p-5 bg-card border-border/60 premium-shadow"><div className="text-sm text-muted-foreground mb-3">Total Reviews</div><div className="stat-number text-foreground">{feedbackSummary.totalReviews}</div></Card><Card className="p-5 bg-card border-border/60 premium-shadow"><div className="text-sm text-muted-foreground mb-3">Positive</div><div className="stat-number text-primary">{feedbackSummary.positivePercent}%</div></Card><Card className="p-5 bg-card border-border/60 premium-shadow"><div className="text-sm text-muted-foreground mb-3">Negative</div><div className="stat-number text-destructive">{feedbackSummary.negativePercent}%</div></Card></div><div className="space-y-3">{customerFeedback.map((fb) => { const config = sentimentConfig[fb.sentiment]; return (<Card key={fb.id} className="p-5 bg-card border-border/60 premium-shadow hover:border-border transition-colors"><div className="flex items-start justify-between gap-4"><div className="flex-1 min-w-0"><div className="flex items-center gap-3 mb-2 flex-wrap"><span className="font-semibold text-foreground">{fb.customer}</span><div className="flex items-center gap-0.5">{Array.from({ length: 5 }).map((_, i) => (<Star key={i} className={`h-3.5 w-3.5 ${i < fb.rating ? "fill-warning text-warning" : "text-muted-foreground/30"}`} />))}</div><Badge variant="secondary" className={config.class}>{fb.sentiment}</Badge></div><p className="text-sm text-muted-foreground mb-2">"{fb.comment}"</p><span className="text-xs text-muted-foreground/70">{fb.date}</span></div></div></Card>); })}</div></div>); }
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { customerFeedback, feedbackSummary } from "@/lib/mockData";
+import { Star, TrendingUp, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
+
+const sentimentConfig = {
+  positive: { class: "bg-primary/15 text-primary border-0",         icon: ThumbsUp },
+  negative: { class: "bg-destructive/15 text-destructive border-0", icon: ThumbsDown },
+  neutral:  { class: "bg-muted text-muted-foreground border-0",     icon: MessageSquare },
+};
+
+export default function FeedbackPage() {
+  return (
+    <div className="space-y-5 animate-fade-in py-5">
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+          <MessageSquare className="h-5 w-5 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Customer Feedback</h1>
+          <p className="text-muted-foreground text-sm">Reviews, ratings, and sentiment analysis</p>
+        </div>
+      </div>
+
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <Card className="p-5 bg-card border-border/60 premium-shadow">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-sm text-muted-foreground">Average Rating</span>
+            <Star className="h-4 w-4 text-warning" />
+          </div>
+          <div className="stat-number text-foreground">{feedbackSummary.averageRating}</div>
+          <div className="flex items-center gap-1 mt-1.5 text-xs text-primary">
+            <TrendingUp className="h-3 w-3" />
+            +{feedbackSummary.weeklyTrend} this week
+          </div>
+        </Card>
+        <Card className="p-5 bg-card border-border/60 premium-shadow">
+          <div className="text-sm text-muted-foreground mb-3">Total Reviews</div>
+          <div className="stat-number text-foreground">{feedbackSummary.totalReviews}</div>
+        </Card>
+        <Card className="p-5 bg-card border-border/60 premium-shadow">
+          <div className="text-sm text-muted-foreground mb-3">Positive</div>
+          <div className="stat-number text-primary">{feedbackSummary.positivePercent}%</div>
+        </Card>
+        <Card className="p-5 bg-card border-border/60 premium-shadow">
+          <div className="text-sm text-muted-foreground mb-3">Negative</div>
+          <div className="stat-number text-destructive">{feedbackSummary.negativePercent}%</div>
+        </Card>
+      </div>
+
+      {/* Feedback Cards */}
+      <div className="space-y-3">
+        {customerFeedback.map((fb) => {
+          const config = sentimentConfig[fb.sentiment];
+          return (
+            <Card
+              key={fb.id}
+              className="p-5 bg-card border-border/60 premium-shadow hover:border-border transition-colors"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
+                    <span className="font-semibold text-foreground">{fb.customer}</span>
+                    <div className="flex items-center gap-0.5">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-3.5 w-3.5 ${
+                            i < fb.rating
+                              ? "fill-warning text-warning"
+                              : "text-muted-foreground/30"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <Badge variant="secondary" className={config.class}>
+                      {fb.sentiment}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">"{fb.comment}"</p>
+                  <span className="text-xs text-muted-foreground/70">{fb.date}</span>
+                </div>
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}

@@ -11,7 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   Table,
   TableBody,
@@ -37,7 +37,12 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { useChartTheme } from "./DashboardPage";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import { useChartTheme } from "@/hooks/useChartTheme";
 import { useQuery } from "@tanstack/react-query";
 import {
   Search,
@@ -49,6 +54,7 @@ import {
   ChevronUp,
   Loader2,
   AlertCircle,
+  Brain,
 } from "lucide-react";
 import axios from "axios";
 
@@ -170,14 +176,29 @@ export default function ForecastPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 animate-fade-in py-5">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Sales Dashboard
-          </h1>
-          <p className="text-muted-foreground text-sm">{now.toDateString()}</p>
+      <div
+        className=" flex 
+        flex-col sm:flex-row 
+        justify-between 
+        items-center 
+        gap-4
+        bg-background"
+      >
+        {/* Header text + icon */}
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Brain className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Sales Forecast
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              {now.toDateString()}
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -187,12 +208,32 @@ export default function ForecastPage() {
           >
             <Settings className="h-4 w-4 mr-1.5" /> Settings
           </Button>
-          <Tabs value={alignment} onValueChange={setAlignment}>
-            <TabsList>
-              <TabsTrigger value="day">Day</TabsTrigger>
-              <TabsTrigger value="week">Week</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {/* Glider-style segmented toggle — matches dashboard pattern */}
+          <div className="relative flex bg-muted/60 p-1.5 rounded-xl shadow-inner border border-border/40">
+            <div
+              className="absolute top-1.5 bottom-1.5 w-[calc(50%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"
+              style={{
+                transform: `translateX(${alignment === "day" ? "0%" : "calc(100% - 6px)"})`,
+              }}
+            />
+            {[
+              { id: "day", label: "Tomorrow" },
+              { id: "week", label: "This Week" },
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setAlignment(mode.id)}
+                aria-pressed={alignment === mode.id}
+                className={`relative z-10 px-4 py-1 text-[13px] font-bold tracking-wide capitalize transition-colors duration-200 ${
+                  alignment === mode.id
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -227,7 +268,9 @@ export default function ForecastPage() {
                 >
                   {stat.change}
                 </span>
-                <span className="text-muted-foreground ml-1">vs last week</span>
+                <span className="text-muted-foreground ml-1">
+                  {alignment === "day" ? "vs yesterday" : "vs last week"}
+                </span>
               </p>
             </Card>
           );
@@ -246,9 +289,12 @@ export default function ForecastPage() {
               className="pl-9"
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
+          <Badge
+            variant="secondary"
+            className="bg-primary/10 text-primary hover:bg-primary/20 pointer-events-none rounded-md px-1.5 py-0 min-w-[1.5rem] flex items-center justify-center"
+          >
             {filteredItems.length} items found
-          </p>
+          </Badge>
         </div>
 
         <div className="overflow-x-auto">
@@ -256,141 +302,325 @@ export default function ForecastPage() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">#</TableHead>
-                <TableHead>Item</TableHead>
-                <TableHead className="text-right">Expected</TableHead>
-                <TableHead className="text-right">Revenue</TableHead>
-                <TableHead className="text-right">Profit</TableHead>
-                <TableHead className="text-right">Accuracy</TableHead>
-                <TableHead className="w-10" />
+                <TableHead className="text-center">Item</TableHead>
+                <TableHead className="text-center">Expected</TableHead>
+                <TableHead className="text-center">Revenue</TableHead>
+                <TableHead className="text-center">Profit</TableHead>
+                <TableHead className="text-center">Accuracy</TableHead>
+                <TableHead className="w-10 text-center" />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedItems.map((item, index) => {
-                const isExpanded = expandedItems[item.item_name];
-                return (
-                  <React.Fragment key={item.item_name}>
-                    <TableRow
-                      className="cursor-pointer hover:bg-muted/30 transition-colors"
-                      onClick={() => toggleItemExpansion(item.item_name)}
-                    >
-                      <TableCell className="text-muted-foreground">
-                        {(page - 1) * rowsPerPage + index + 1}
-                      </TableCell>
-                      <TableCell className="font-medium text-foreground">
-                        {item.item_name}
-                      </TableCell>
-                      <TableCell className="text-right text-foreground">
-                        {item.expected_orders}
-                      </TableCell>
-                      <TableCell className="text-right text-foreground">
-                        ${item.revenue}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span
-                          className={
-                            item.profit >= 50
-                              ? "text-primary"
-                              : "text-destructive"
-                          }
-                        >
-                          ${item.profit.toFixed()}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Badge
-                          variant="outline"
-                          className="border-primary/30 text-primary text-xs"
-                        >
-                          {item.accuracy.toFixed()}%
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                        )}
-                      </TableCell>
-                    </TableRow>
-
-                    {isExpanded && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="p-0">
-                          <div className="p-5 bg-muted/20 border-t border-border/30">
-                            <p className="text-sm font-semibold text-foreground mb-3">
-                              ⏱️ Hourly Sales — 🥗 {item.item_name}
-                            </p>
-                            <div className="h-[220px]">
-                              <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={item.chart_data}>
-                                  <defs>
-                                    <linearGradient
-                                      id={`gradient-${item.item_name}`}
-                                      x1="0"
-                                      y1="0"
-                                      x2="0"
-                                      y2="1"
-                                    >
-                                      <stop
-                                        offset="5%"
-                                        stopColor="hsl(160 84% 39%)"
-                                        stopOpacity={0.3}
-                                      />
-                                      <stop
-                                        offset="95%"
-                                        stopColor="hsl(160 84% 39%)"
-                                        stopOpacity={0}
-                                      />
-                                    </linearGradient>
-                                  </defs>
-                                  <CartesianGrid
-                                    strokeDasharray="3 3"
-                                    stroke={ct.grid}
-                                  />
-                                  <XAxis
-                                    dataKey="hour"
-                                    tick={ct.tick}
-                                    axisLine={false}
-                                    tickLine={false}
-                                  />
-                                  <YAxis
-                                    tick={ct.tick}
-                                    axisLine={false}
-                                    tickLine={false}
-                                  />
-                                  <Tooltip {...ct.tooltip} />
-                                  <Area
-                                    type="monotone"
-                                    dataKey="orders"
-                                    stroke="hsl(160 84% 39%)"
-                                    strokeWidth={2}
-                                    fill={`url(#gradient-${item.item_name})`}
-                                  />
-                                </AreaChart>
-                              </ResponsiveContainer>
-                            </div>
-                            <div className="flex gap-6 mt-3 text-xs text-muted-foreground">
-                              <span>
-                                🔥 Peak:{" "}
-                                {item.peak_hour?.hour || item.peak_hour} —{" "}
-                                {item.peak_hour?.orders ??
-                                  (item.chart_data?.find(
-                                    (d) => d.hour === item.peak_hour,
-                                  )?.orders ||
-                                    0)}{" "}
-                                orders
-                              </span>
-                              <span>
-                                📦 Total today: {item.expected_orders} orders
-                              </span>
-                            </div>
+              {filteredItems.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={7}
+                    className="py-16 text-center text-muted-foreground"
+                  >
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <Search className="h-8 w-8 text-muted-foreground/50" />
+                      <p>No items found matching "{searchTerm}".</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSearchTerm("")}
+                        className="mt-2"
+                      >
+                        Clear Search
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                paginatedItems.map((item, index) => {
+                  const isExpanded = expandedItems[item.item_name];
+                  return (
+                    <React.Fragment key={item.item_name}>
+                      <TableRow
+                        className="cursor-pointer hover:bg-muted/30 transition-colors"
+                        onClick={() => toggleItemExpansion(item.item_name)}
+                      >
+                        <TableCell className="text-muted-foreground">
+                          {(page - 1) * rowsPerPage + index + 1}
+                        </TableCell>
+                        <TableCell className="font-medium text-foreground text-center">
+                          {item.item_name}
+                        </TableCell>
+                        <TableCell className="text-center text-foreground">
+                          {item.expected_orders}
+                        </TableCell>
+                        <TableCell className="text-center text-foreground">
+                          ${item.revenue}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <span
+                            className={
+                              item.profit >= 50
+                                ? "text-primary"
+                                : "text-destructive"
+                            }
+                          >
+                            ${item.profit.toFixed()}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            <Badge
+                              variant="outline"
+                              className="border-primary/30 text-primary text-xs"
+                            >
+                              {item.accuracy.toFixed()}%
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <div className="flex justify-center">
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
-                    )}
-                  </React.Fragment>
-                );
-              })}
+
+                      {isExpanded && (
+                        <TableRow>
+                          <TableCell colSpan={7} className="p-0">
+                            <div className="p-5 bg-muted/20 border-t border-border/30">
+                              <div className="flex items-center justify-between mb-3">
+                                <p className="text-sm font-semibold text-foreground">
+                                  ⏱️ Hourly Sales — 🥗 {item.item_name}
+                                </p>
+                                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mr-2">
+                                  <div className="w-3 h-3 rounded bg-primary shadow-sm shadow-emerald-500/20" />
+                                  <span>Orders</span>
+                                </div>
+                              </div>
+                              <div className="h-[220px]">
+                                <ChartContainer
+                                  config={{
+                                    orders: {
+                                      label: "Orders",
+                                      color: "#10b981",
+                                    },
+                                  }}
+                                  className="aspect-auto h-full w-full"
+                                >
+                                  <AreaChart
+                                    data={item.chart_data}
+                                    margin={{
+                                      top: 10,
+                                      right: 10,
+                                      left: 0,
+                                      bottom: alignment === "week" ? 20 : 10,
+                                    }}
+                                  >
+                                    <defs>
+                                      <linearGradient
+                                        id={`colorOrders-${index}`}
+                                        x1="0"
+                                        y1="0"
+                                        x2="0"
+                                        y2="1"
+                                      >
+                                        <stop
+                                          offset="5%"
+                                          stopColor="var(--color-orders)"
+                                          stopOpacity={0.4}
+                                        />
+                                        <stop
+                                          offset="95%"
+                                          stopColor="var(--color-orders)"
+                                          stopOpacity={0}
+                                        />
+                                      </linearGradient>
+                                    </defs>
+                                    <CartesianGrid
+                                      vertical={false}
+                                      strokeDasharray="4 4"
+                                      stroke="hsl(var(--border))"
+                                      strokeOpacity={0.5}
+                                    />
+                                    <XAxis
+                                      dataKey={
+                                        alignment === "week" ? "date" : "hour"
+                                      }
+                                      axisLine={false}
+                                      tickLine={false}
+                                      tick={{
+                                        fill: "hsl(var(--muted-foreground))",
+                                        fontSize: 11,
+                                        fontWeight: 500,
+                                      }}
+                                      dy={15}
+                                      angle={alignment === "week" ? -35 : 0}
+                                      textAnchor={
+                                        alignment === "week" ? "end" : "middle"
+                                      }
+                                      interval={
+                                        alignment === "week"
+                                          ? 0
+                                          : "preserveStartEnd"
+                                      }
+                                      tickFormatter={(val) => {
+                                        if (alignment === "week") {
+                                          const d = new Date(val);
+                                          return d.toLocaleDateString("en-US", {
+                                            month: "short",
+                                            day: "numeric",
+                                          });
+                                        }
+                                        // Convert "HH:00" → "h AM/PM"
+                                        const [h] = val.split(":").map(Number);
+                                        const ampm = h >= 12 ? "PM" : "AM";
+                                        const h12 = h % 12 || 12;
+                                        return `${h12} ${ampm}`;
+                                      }}
+                                    />
+                                    <YAxis
+                                      axisLine={false}
+                                      tickLine={false}
+                                      tick={{
+                                        fill: "hsl(var(--muted-foreground))",
+                                        fontSize: 12,
+                                        fontWeight: 500,
+                                      }}
+                                      width={40}
+                                    />
+                                    <ChartTooltip
+                                      cursor={{
+                                        stroke: "hsl(var(--muted))",
+                                        strokeWidth: 2,
+                                        strokeDasharray: "4 4",
+                                      }}
+                                      content={({ active, payload, label }) => {
+                                        if (!active || !payload?.length)
+                                          return null;
+
+                                        // Format the header label
+                                        let displayLabel = label;
+                                        if (label) {
+                                          if (alignment === "week") {
+                                            const dateObj = new Date(label);
+                                            displayLabel =
+                                              dateObj.toLocaleDateString(
+                                                "en-US",
+                                                {
+                                                  month: "short",
+                                                  day: "numeric",
+                                                },
+                                              );
+                                          } else {
+                                            const raw = String(label);
+                                            const [h] = raw
+                                              .split(":")
+                                              .map(Number);
+                                            const ampm = h >= 12 ? "PM" : "AM";
+                                            const h12 = h % 12 || 12;
+                                            displayLabel = `${h12} ${ampm}`;
+                                          }
+                                        }
+
+                                        const d = payload[0].payload;
+                                        return (
+                                          <div className="bg-popover/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-border/50 animate-in fade-in zoom-in duration-200 min-w-[170px]">
+                                            <p className="text-xs font-semibold text-muted-foreground mb-2">
+                                              {displayLabel}
+                                            </p>
+                                            <div className="space-y-1.5">
+                                              <div className="flex justify-between gap-6 items-center">
+                                                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                  <span className="h-2 w-2 rounded-full bg-orange-500 inline-block" />
+                                                  Orders
+                                                </span>
+                                                <span className="text-xs font-bold text-foreground">
+                                                  {d.orders}
+                                                </span>
+                                              </div>
+                                              <div className="flex justify-between gap-6 items-center">
+                                                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                  <span className="h-2 w-2 rounded-full bg-blue-500 inline-block" />
+                                                  Revenue
+                                                </span>
+                                                <span className="text-xs font-bold text-foreground">
+                                                  $
+                                                  {d.revenue?.toLocaleString(
+                                                    "en-US",
+                                                  )}
+                                                </span>
+                                              </div>
+                                              <div className="flex justify-between gap-6 items-center">
+                                                <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                                                  <span className="h-2 w-2 rounded-full bg-primary inline-block" />
+                                                  Profit
+                                                </span>
+                                                <span className="text-xs font-bold text-primary">
+                                                  ${d.profit?.toFixed(2)}
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      }}
+                                    />
+                                    <Area
+                                      type="monotone"
+                                      dataKey="orders"
+                                      name="Orders"
+                                      stroke="var(--color-orders)"
+                                      strokeWidth={3}
+                                      fill={`url(#colorOrders-${index})`}
+                                      animationDuration={1200}
+                                      animationEasing="ease-out"
+                                    />
+                                  </AreaChart>
+                                </ChartContainer>
+                              </div>
+                              <div className="flex gap-5 mt-3 text-xs text-muted-foreground">
+                                <span>
+                                  🔥 Peak:{" "}
+                                  {alignment === "week"
+                                    ? (() => {
+                                        if (!item.peak_day?.date) return "N/A";
+                                        const d = new Date(item.peak_day.date);
+                                        return d.toLocaleDateString("en-US", {
+                                          month: "short",
+                                          day: "numeric",
+                                        });
+                                      })()
+                                    : (() => {
+                                        const raw = String(
+                                          item.peak_hour?.hour ||
+                                            item.peak_hour ||
+                                            "",
+                                        );
+                                        if (!raw) return "N/A";
+                                        const [h] = raw.split(":").map(Number);
+                                        const ampm = h >= 12 ? "PM" : "AM";
+                                        const h12 = h % 12 || 12;
+                                        return `${h12} ${ampm}`;
+                                      })()}{" "}
+                                  —{" "}
+                                  {alignment === "week"
+                                    ? item.peak_day?.orders
+                                    : item.peak_hour?.orders}{" "}
+                                  orders
+                                </span>
+                                <span>
+                                  📦 Total{" "}
+                                  {alignment === "week" ? "this week" : "today"}
+                                  : {item.expected_orders} orders
+                                </span>
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </React.Fragment>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </div>

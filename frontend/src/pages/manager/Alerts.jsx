@@ -1,32 +1,108 @@
 import React from "react";
-import { AlertTriangle, ChevronRight } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  TriangleAlert,
+  TrendingDown,
+  TrendingUp,
+  Snowflake,
+  Coffee,
+  AlertTriangle,
+  Gem,
+  PackageMinus,
+  PackagePlus,
+  BadgeAlert,
+  Rocket,
+  Info,
+} from "lucide-react";
+
+// Helper component to render the correct icon based on alert type
+const AlertIcon = ({ type, severity }) => {
+  const iconMap = {
+    // Business Rule-Based Alerts
+    revenue_drop: { Icon: TrendingDown, color: "text-rose-500" },
+    revenue_spike: { Icon: TrendingUp, color: "text-emerald-500" },
+    cold_item_underperformance: { Icon: Snowflake, color: "text-sky-400" },
+    hot_item_underperformance: { Icon: Coffee, color: "text-orange-500" },
+    low_margin_high_volume: { Icon: AlertTriangle, color: "text-rose-600" },
+    high_margin_low_volume: { Icon: Gem, color: "text-violet-500" },
+
+    // Predictive Forecast Alerts
+    item_decrease: { Icon: PackageMinus, color: "text-amber-500" },
+    item_surge: { Icon: PackagePlus, color: "text-emerald-500" },
+    low_margin_surge: { Icon: BadgeAlert, color: "text-rose-500" },
+    high_margin_surge: { Icon: Rocket, color: "text-emerald-600" },
+    forecast_revenue_drop: { Icon: TrendingDown, color: "text-rose-500" },
+    forecast_revenue_spike: { Icon: TrendingUp, color: "text-emerald-500" },
+  };
+
+  const config = iconMap[type];
+
+  // Fallback if an unknown alert type is passed
+  if (!config) {
+    const FallbackIcon = severity === "warning" ? AlertTriangle : Info;
+    const defaultColor =
+      severity === "warning" ? "text-rose-500" : "text-emerald-500";
+    return (
+      <FallbackIcon className={`h-4 w-4 ${defaultColor}`} strokeWidth={3} />
+    );
+  }
+
+  const { Icon, color } = config;
+  return <Icon className={`h-4 w-4 ${color}`} strokeWidth={3} />;
+};
 
 const Alerts = ({ data }) => {
   if (!data) return null;
 
   return (
-    <section className="flex-1 min-h-0 md:ml-4 p-4 flex flex-col overflow-y-auto max-h-[350px] rounded-xl border bg-card text-card-foreground shadow-sm [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-      <h2 className="mb-4 text-lg md:text-xl font-bold tracking-tight">
-        Smart Alerts
-      </h2>
+    <Card className="flex flex-col h-full bg-card border-border/60 premium-shadow">
+      <CardHeader className="p-6 pb-3 shrink-0">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg md:text-xl font-bold text-foreground">
+            Smart Alerts
+          </CardTitle>
+          <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
+            <TriangleAlert className="w-4 h-4" />
+          </div>
+        </div>
+      </CardHeader>
 
-      <ul className="flex flex-col gap-3">
-        {data.alerts.slice(0, 5).map((alert, index) => (
-          <li
-            key={alert.link ?? index}
-            className="flex items-center justify-between gap-4 p-3 rounded-lg bg-muted/50 border border-border/50 hover:bg-muted/80 transition-colors cursor-pointer"
-          >
-            <div className="flex items-center gap-3 flex-1">
-              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
-              <p className="text-sm font-medium text-balance">
-                {alert.message}
-              </p>
+      <CardContent className="p-0 flex-1 min-h-[250px] lg:basis-0 lg:min-h-[150px] flex flex-col">
+        {!data?.alerts || data.alerts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center flex-1 h-full text-muted-foreground w-full gap-5 pb-6">
+            <div className="h-24 w-24 rounded-full bg-muted/50 border border-border/50 flex items-center justify-center shadow-sm">
+              <TriangleAlert
+                className="h-12 w-12 text-muted-foreground/60"
+                strokeWidth={1.5}
+              />
             </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-          </li>
-        ))}
-      </ul>
-    </section>
+            <span className="text-base font-semibold">No alerts for now</span>
+          </div>
+        ) : (
+          <ScrollArea className="h-full px-4 pb-4">
+            <ul className="space-y-3 list-none m-0 p-0">
+              {data.alerts.map((alert, index) => (
+                <li
+                  key={alert.link ?? index}
+                  className="flex items-start sm:items-center justify-between gap-4 p-3 rounded-lg border border-border/50 bg-background shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300"
+                >
+                  <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                    <div className="mt-0.5 sm:mt-0 p-1.5 rounded-full shrink-0 shadow-xs border border-border/40 bg-muted/20">
+                      {/* Integrated the new AlertIcon component here */}
+                      <AlertIcon type={alert.type} severity={alert.severity} />
+                    </div>
+                    <p className="text-xs sm:text-sm text-foreground leading-relaxed">
+                      {alert.message}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 
