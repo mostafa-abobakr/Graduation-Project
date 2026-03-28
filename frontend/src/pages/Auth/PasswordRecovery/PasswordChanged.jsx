@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import img from "@/assets/Auth/Authentication.png";
-import AuthContainer from "./AuthContainer";
-import AuthForm from "./AuthForm";
+import AuthContainer from "@/components/AuthContainer";
+import AuthForm from "@/components/AuthForm";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 

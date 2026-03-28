@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
@@ -8,76 +8,33 @@ import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { toast } from "sonner";
 
-import AuthContainer from "./AuthContainer";
+import AuthContainer from "@/components/AuthContainer";
 import img from "@/assets/Auth/SignUp.png";
+import { signupValidationSchema } from "@/schemas/auth/validations";
+import { useRegisterContext } from "@/contexts/Valdation";
+import { Loader2 } from "lucide-react";
+const validationSchema = signupValidationSchema.pick([ "address", "restaurantName", "city", "restaurantPhone", ""])
 
-const validationSchema = Yup.object({
-  restaurantName: Yup.string().required("Restaurant Name is required"),
-  address: Yup.string().required("Address is required"),
-  city: Yup.string().required("City is required"),
-  restaurantPhone: Yup.string().required("Restaurant Phone is required"),
-});
-
-function getPersonalInfoFromStorage() {
-  const storedPersonal = localStorage.getItem("registerPersonal");
-  if (!storedPersonal) return null;
-  try {
-    return JSON.parse(storedPersonal);
-  } catch {
-    return null;
-  }
-}
-
-function getPreviousRegisterFromStorage() {
-  const storedFull = localStorage.getItem("registerFull");
-  if (!storedFull) return null;
-  try {
-    return JSON.parse(storedFull);
-  } catch {
-    return null;
-  }
-}
 
 const RegisterRestaurant = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-
-  const personalInfo = getPersonalInfoFromStorage();
-  const previousRegister = getPreviousRegisterFromStorage();
-
+  const [loading, setLoading]= useState(false);
+  const {formData ,updateFromData}= useRegisterContext()
   const formik = useFormik({
     initialValues: {
-      restaurantName: previousRegister?.restaurantName || "",
-      address: previousRegister?.address || "",
-      city: previousRegister?.city || "",
-      restaurantPhone: previousRegister?.restaurantPhone || "",
+      restaurantName: formData.restaurantName || "",
+      address: formData.address || "",
+      city: formData.city || "",
+      restaurantPhone: formData.restaurantPhone || "",
     },
     validationSchema,
     onSubmit: async (values) => {
-      const finalData = { ...(personalInfo || {}), ...values };
-      localStorage.setItem("registerFull", JSON.stringify(finalData));
-      setIsSubmitting(true);
-      setSubmitError("");
-      try {
-        const response = await axios.post(
-          "http://resturantai.runasp.net/api/Auth/register",
-          finalData,
-        );
-        toast.success("Registration successful!");
-        navigate("/login");
-        localStorage.removeItem("registerFull");
-        localStorage.removeItem("registerPersonal");
-      } catch (error) {
-        const serverMessage =
-          error.response?.data ||
-          error.response?.request?.responseText ||
-          "Cannot connect to server. Please try again.";
-        toast.error(serverMessage);
-        setSubmitError(serverMessage);
-      } finally {
-        setIsSubmitting(false);
-      }
+      setLoading(true)
+      updateFromData(values)
+      navigate("/register/connect-pos");
+      setLoading(false);
     },
   });
 
@@ -168,7 +125,7 @@ const RegisterRestaurant = () => {
         )}
 
         <Button type="submit" className="w-full mt-6 h-12 text-[1rem] shadow-md" disabled={isSubmitting}>
-          {isSubmitting ? "Submitting..." : "Complete Registration"}
+          {isSubmitting ? <Loader2 className="animate-spin" /> : "Complete Registration"}
         </Button>
       </form>
     </AuthContainer>

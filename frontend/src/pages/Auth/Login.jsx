@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import AuthContainer from "./AuthContainer";
-import AuthFooter from "./AuthFooter";
-import AuthForm from "./AuthForm";
+import AuthContainer from "@/components/AuthContainer";
+import AuthFooter from "@/components/AuthFooter";
+import AuthForm from "@/components/AuthForm";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
-import * as Yup from "yup";
+import { loginValidationSchema } from "@/schemas/auth/validations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,10 @@ function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const validationSchema = Yup.object({
-    email: Yup.string().email("Invalid email address").required("Email is required"),
-    password: Yup.string().min(8, "Password must be at least 8 characters").required("Password is required"),
-  });
-
   const { login } = useAuth();
   const formik = useFormik({
     initialValues: { email: "", password: "" },
-    validationSchema,
+    validationSchema: loginValidationSchema,
     onSubmit: async (values) => {
       try {
         setIsSubmitting(true);
@@ -36,8 +31,6 @@ function Login() {
           navigate("/dashboard");
         }
       } catch (error) {
-        // the error messages are already handled and toasted by the AuthContext 
-        // we can still set local submit error if desired
         setSubmitError(error.response?.data?.message || "Login failed.");
       } finally {
         setIsSubmitting(false);

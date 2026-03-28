@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import img from "@/assets/Auth/Authentication.png";
-import AuthContainer from "./AuthContainer";
-import AuthForm from "./AuthForm";
+import AuthContainer from "@/components/AuthContainer";
+import AuthForm from "@/components/AuthForm";
 import { Button } from "@/components/ui/button";
 import OtpInput from "@/components/common/OtpInput";
 import { useNavigate, useLocation } from "react-router-dom";

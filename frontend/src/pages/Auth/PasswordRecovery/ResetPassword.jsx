@@ -1,7 +1,7 @@
 import React from "react";
 import img from "@/assets/Auth/ResetPassword.png";
-import AuthContainer from "./AuthContainer";
-import AuthForm from "./AuthForm";
+import AuthContainer from "@/components/AuthContainer";
+import AuthForm from "@/components/AuthForm";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

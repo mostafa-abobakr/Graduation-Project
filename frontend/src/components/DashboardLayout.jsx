@@ -34,6 +34,7 @@ import {
   Building2,
   Activity,
   UserCog,
+  CalendarDays,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { NotificationsDropdown } from "@/components/NotificationsDropdown";
@@ -61,6 +62,7 @@ const managerAnalyticsItems = [
 const managerManagementItems = [
   { title: "Menu Management", url: "/dashboard/menu", icon: BarChart3 },
   { title: "Staff", url: "/dashboard/staff", icon: Users },
+  { title: "Schedule", url: "/dashboard/schedule", icon: CalendarDays  },
   { title: "Inventory", url: "/dashboard/inventory", icon: Package },
 ];
 

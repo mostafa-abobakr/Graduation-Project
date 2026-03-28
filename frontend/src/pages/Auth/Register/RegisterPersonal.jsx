@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
@@ -6,54 +6,40 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-import AuthContainer from "./AuthContainer";
+import AuthContainer from "@/components/AuthContainer";
 import img from "@/assets/Auth/SignUp.png";
+import { signupValidationSchema } from "@/schemas/auth/validations";
+import { useRegisterContext } from "@/contexts/Valdation";
 
-const validationSchema = Yup.object({
-  fullName: Yup.string().required("Full Name is required"),
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  userPhone: Yup.number()
-    .typeError("Phone must be a number")
-    .required("Phone is required")
-    .min(11, "Phone Number must be at least 11 number"),
-  password: Yup.string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
-});
+// import {validationSchema} from "@/schemas/auth/register.schema";
 
-function getPreviousRegister() {
-  const storedFull = localStorage.getItem("registerFull");
-  if (!storedFull) return null;
-  try {
-    return JSON.parse(storedFull);
-  } catch {
-    return null;
-  }
-}
-
-const RegisterPersonal = ({ setPersonalInfo }) => {
+// function getPreviousRegister() {
+//   const storedFull = localStorage.getItem("registerFull");
+//   if (!storedFull) return null;
+//   try {
+//     return JSON.parse(storedFull);
+//   } catch {
+//     return null;
+//   }
+// }
+const validationSchema = signupValidationSchema.pick(["fullName","email","userPhone","password"])
+const RegisterPersonal = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const previousRegister = getPreviousRegister();
-
+  const {formData,updateFromData,resetFormData} = useRegisterContext();
   const formik = useFormik({
     initialValues: {
-      fullName: previousRegister?.fullName || "",
-      email: previousRegister?.email || "",
-      userPhone: previousRegister?.userPhone || "",
-      password: previousRegister?.password || "",
+      fullName: formData.fullName || "",
+      email: formData.email || "",
+      userPhone: formData.userPhone || "",
+      password: formData.password || "",
     },
     validationSchema,
     onSubmit: (values) => {
       setIsSubmitting(true);
-      localStorage.setItem("registerPersonal", JSON.stringify(values));
-      if (setPersonalInfo) setPersonalInfo(values);
+      updateFromData(values);
+      navigate("/register/restaurant");
       setIsSubmitting(false);
-      // Removed manual route change due to relying on parent state, or you can keep it depending on usage.
-      // navigate("/register/RegisterRestaurant"); 
     },
   });
 

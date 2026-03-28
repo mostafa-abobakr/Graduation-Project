@@ -3,8 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import img from "@/assets/Auth/Forgotpassword-rafiki.png";
-import AuthContainer from "./AuthContainer";
-import AuthForm from "./AuthForm";
+import AuthContainer from "@/components/AuthContainer";
+import AuthForm from "@/components/AuthForm";
 import { useNavigate } from "react-router-dom";
 
 const ForgetPassword = () => {

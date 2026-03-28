@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
       });
 
       if (response.data && response.data.token) {
-        console.log(response.data);
+
         const role = response.data.role;
         const userData = { ...response.data, email, role };
         

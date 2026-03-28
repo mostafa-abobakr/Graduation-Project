@@ -25,7 +25,11 @@ import NotFound from "../pages/NotFound";
 import { ROUTES } from "./ROUTES";
 import Login from "@/pages/Auth/Login";
 import Register from "@/pages/Auth/Register";
-
+import RegisterPersonal from "@/pages/Auth/Register/RegisterPersonal";
+import RegisterRestaurant from "@/pages/Auth/Register/RegisterRestaurant";
+import PosOptions from "@/pages/pos/ConnectPosPage";
+import SquareAuthPage from "@/pages/pos/SquareAuthPage";
+import SchedulePage from "@/pages/SchedulePage";
 const Routes = [
   {
     path: ROUTES.LANDING,
@@ -36,9 +40,27 @@ const Routes = [
     element: <Login />,
   },
   {
-    path: ROUTES.SIGNUP,
+    path: "/register",
     element: <Register />,
+    children: [
+      {
+        index: true,
+        element: <RegisterPersonal />,
+      },
+      {
+        path: "restaurant",
+        element: <RegisterRestaurant />,
+      },
+      {
+        path: "connect-pos",
+        element: <PosOptions />,
+      },
+    ],
   },
+  // {
+  //   path:ROUTES.AUTHORIZE_POS,
+  //   element: <SquareAuthPage/>,
+  // },
   {
     path: ROUTES.DASHBOARD,
     element: <DashboardLayout />,
@@ -74,6 +96,10 @@ const Routes = [
       {
         path: ROUTES.STAFF,
         element: <StaffPage />,
+      },
+      {
+        path: ROUTES.SCHEDULE,
+        element: <SchedulePage />,
       },
       {
         path: ROUTES.INVENTORY,
