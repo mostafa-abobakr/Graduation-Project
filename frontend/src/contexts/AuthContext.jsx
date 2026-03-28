@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
     return stored ? JSON.parse(stored) : null;
   });
   const [isLoading, setIsLoading] = useState(false);
-
+  
   // You can adjust isAdmin logic based on backend response, e.g. user.role
   const isAdmin = user?.role?.toLowerCase() === "admin";
 

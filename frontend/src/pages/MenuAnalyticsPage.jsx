@@ -13,18 +13,19 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUp, ArrowDown, Search, UtensilsCrossed } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MenuAnalyticsPage() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("orders");
   const [sortAsc, setSortAsc] = useState(false);
   const [timeframe, setTimeframe] = useState("day");
-
+  const {user}= useAuth();
   // Fetch the data from the ZeroBite AI Engine
   const { data, isLoading, error } = useQuery({
     queryKey: ["menuPerformance", 2], // Hardcoded restaurant_id 2 for now based on context
     queryFn: async () => {
-      const res = await fetch("https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/menu/performance/2", {
+      const res = await fetch(`https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/menu/performance/${user.restID}`, {
         headers: { accept: "application/json" }
       });
       if (!res.ok) throw new Error("Failed to fetch menu analytics");

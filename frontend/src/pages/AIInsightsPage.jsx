@@ -18,6 +18,7 @@ import {
   DollarSign,
   ArrowUpRight,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ── Icon map identical to Alerts.jsx so styles stay consistent ──────────────
 const iconMap = {
@@ -90,12 +91,12 @@ function Skeleton({ className }) {
 
 export default function AIInsightsPage() {
   const [period, setPeriod] = useState("day"); // "day" | "week"
-
+  const {user}= useAuth();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["forecastAlerts"],
     queryFn: async () => {
       const res = await fetch(
-        "https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/alerts/forecast/2",
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/alerts/forecast/${user.restID}`,
         {
           method: "POST",
           headers: { accept: "application/json", "Content-Type": "application/json" },

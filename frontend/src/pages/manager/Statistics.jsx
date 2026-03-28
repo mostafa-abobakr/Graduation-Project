@@ -16,7 +16,7 @@ const Statistics = ({ data }) => {
     {
       title: "Total Revenue",
       prefix: "$",
-      value: data.total_revenue.toLocaleString("en-US", { maximumFractionDigits: 0 }),
+      value: data.total_revenue,
       change: data.revenue_change_pct,
       isPositive: data.revenue_change_pct?.startsWith("+"),
       icon: DollarSign,
@@ -24,7 +24,7 @@ const Statistics = ({ data }) => {
     {
       title: "Net Profit",
       prefix: "$",
-      value: data.total_profit.toLocaleString("en-US", { maximumFractionDigits: 0 }),
+      value: data.total_profit,
       change: data.profit_change_pct,
       isPositive: data.profit_change_pct?.startsWith("+"),
       icon: PieChart,
@@ -32,7 +32,7 @@ const Statistics = ({ data }) => {
     {
       title: "Total Orders",
       prefix: "",
-      value: data.total_orders.toLocaleString("en-US"),
+      value: data.total_orders,
       change: data.orders_change_pct,
       isPositive: data.orders_change_pct?.startsWith("+"),
       icon: ShoppingBag,
@@ -40,7 +40,7 @@ const Statistics = ({ data }) => {
     {
       title: "Avg Order Value",
       prefix: "$",
-      value: data.avg_order_value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      value: data.avg_order_value,
       change: data.avg_order_value_change_pct,
       isPositive: data.avg_order_value_change_pct?.startsWith("+"),
       icon: Receipt,
@@ -67,7 +67,7 @@ const Statistics = ({ data }) => {
 
             <div className="flex items-end justify-between gap-2 mt-auto">
               <span className="text-lg md:text-xl lg:text-2xl font-bold tracking-tight text-foreground">
-                {stat.prefix}{stat.value}
+                {stat.prefix}{Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(stat.value)}
               </span>
 
               {stat.change && (

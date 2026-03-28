@@ -8,13 +8,20 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Mail, User, Shield, Globe, Bell } from "lucide-react";
 import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 export default function ProfilePage() {
+  const {user}= useAuth();
+  const {fullName,email,phone,role}= user;
+  const name = fullName.split(" ");
+  const firstName = name[0];
+  const lastName = name[1];
+  
   const [profile, setProfile] = useState({
-    firstName: "John",
-    lastName: "Doe",
-    email: "john@zerowaste.ai",
-    phone: "+1 (555) 123-4567",
-    role: "Restaurant Manager",
+    firstName: firstName,
+    lastName: lastName,
+    email: email,
+    phone: phone,
+    role: role,
     language: "English",
     timezone: "UTC-5 (Eastern)",
   });
@@ -31,7 +38,7 @@ export default function ProfilePage() {
     });
   };
   return (
-    <div className="space-y-5 animate-fade-in max-w-3xl py-5">
+    <div className="space-y-5  animate-fade-in max-w-3xl py-5">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -103,9 +110,7 @@ export default function ProfilePage() {
             <Input
               type="email"
               value={profile.email}
-              onChange={(e) =>
-                setProfile({ ...profile, email: e.target.value })
-              }
+             
               className="mt-1.5 bg-muted/50 border-border/60"
             />
           </div>
