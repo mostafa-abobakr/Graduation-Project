@@ -10,11 +10,15 @@ import { useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 export default function ProfilePage() {
-  const {user}= useAuth();
-  const {fullName,email,phone,role}= user;
-  const name = fullName.split(" ");
-  const firstName = name[0];
-  const lastName = name[1];
+  const { user } = useAuth() || {};
+  const fullName = user?.fullName || user?.name || "";
+  const email = user?.email || "";
+  const phone = user?.phone || "";
+  const role = user?.role || "";
+  
+  const nameParts = fullName.split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts[1] || "";
   
   const [profile, setProfile] = useState({
     firstName: firstName,
@@ -55,8 +59,8 @@ export default function ProfilePage() {
             <Avatar className="h-20 w-20">
               <AvatarImage src="" />
               <AvatarFallback className="bg-primary/15 text-primary text-xl font-semibold">
-                {profile.firstName[0]}
-                {profile.lastName[0]}
+                {profile.firstName?.[0]}
+                {profile.lastName?.[0]}
               </AvatarFallback>
             </Avatar>
             <button className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
