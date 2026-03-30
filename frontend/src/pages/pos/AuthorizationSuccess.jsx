@@ -101,9 +101,9 @@ const {login} = useAuth();
                 </div>
 
                 {/* Redirect Box */}
-                <div className="bg-blue-50 p-4 rounded-xl text-sm text-blue-600 mb-6">
+                {/* <div className="bg-blue-50 p-4 rounded-xl text-sm text-blue-600 mb-6">
                     Redirecting... You will be redirected shortly
-                </div>
+                </div> */}
 
                 {/* Button */}
                 <button

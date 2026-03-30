@@ -301,8 +301,19 @@ console.log(employees);
 
       setIsLoadingShifts(true);
       try {
+        let token = localStorage.getItem("authToken");
+        if (!token) {
+          const storedUser = localStorage.getItem("user");
+          if (storedUser) token = JSON.parse(storedUser).token;
+        }
+
         const url = `http://resturantai.runasp.net/api/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`;
-        const response = await fetch(url);
+        const response = await fetch(url, {
+          headers: {
+            "Accept": "*/*",
+            "Authorization": `Bearer ${token}`
+          }
+        });
         if (!response.ok) throw new Error("Failed to fetch API");
         const data = await response.json();
         
@@ -409,7 +420,7 @@ console.log(employees);
               </Button>
             </div>
           </Card>
-          <div className="flex items-center gap-1">
+          {/* <div className="flex items-center gap-1">
             <span className="text-sm text-muted-foreground mr-2">Show:</span>
             <Button
               size="sm"
@@ -427,13 +438,13 @@ console.log(employees);
             >
               Day
             </Button>
-          </div>
-          <div className="h-2 rounded-full bg-primary/20 overflow-hidden">
+          </div> */}
+          {/* <div className="h-2 rounded-full bg-primary/20 overflow-hidden">
             <div
               className="h-full rounded-full bg-primary transition-all"
               style={{ width: "70%" }}
             />
-          </div>
+          </div> */}
           <Card className="bg-card border-border/60 overflow-hidden">
             <ScrollArea className="w-full">
               <div className="min-w-[700px]">

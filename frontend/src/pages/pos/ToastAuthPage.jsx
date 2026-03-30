@@ -5,6 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthorizationSuccess from "./AuthorizationSuccess";
 import { registerUser } from "@/services/authService";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 
 
 const permissions =
@@ -39,14 +40,50 @@ export default function PosAuthorizePage() {
     const navigate = useNavigate();
     const {login} = useAuth();
 
-    const signInHandler = async () => {
-        const stored = localStorage.getItem("register");
-        const formData = JSON.parse(stored);
-        const { email, password } = formData;
+    const signInHandler = async (e) => {
+        if (e) e.preventDefault();
         
-        const success = await login(email, password)
-        if(success){
-            navigate("/dashboard")
+        setIsLoading(true);
+        setErrorMap("");
+        
+        try {
+            const stored = localStorage.getItem("register");
+            if (!stored) {
+                console.error("No registration data found. Please log in.");
+                navigate("/login");
+                return;
+            }
+            const formData = JSON.parse(stored);
+            if (!formData || !formData.email || !formData.password) {
+                console.error("Incomplete login credentials. Please log in again.");
+                navigate("/login");
+                return;
+            }
+
+            try {
+                await axios.post("http://resturantai.runasp.net/api/Auth/register", formData);
+            } catch (err) {
+                const errorData = err.response?.data;
+                const msg = typeof errorData === "string" ? errorData : errorData?.message || errorData?.title;
+                if (msg !== "Email already exists" && msg !== "User already exists") {
+                    setErrorMap(msg || "Failed to register account.");
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
+            
+            const success = await login(formData.email, formData.password);
+            if (success) {
+                navigate("/dashboard");
+            } else {
+                navigate("/login");
+            }
+        } catch (error) {
+            console.error("Registration/login skip execution failed:", error);
+            setErrorMap("An unexpected error occurred while skipping.");
+        } finally {
+            setIsLoading(false);
         }
     }
 

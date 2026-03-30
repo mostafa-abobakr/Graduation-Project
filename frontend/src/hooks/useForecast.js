@@ -1,10 +1,11 @@
+import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useEffect } from "react";
 
 export function useForecast({ alignment, dailyData, weeklyTemperatures, weeklyEvents }) {
   const queryClient = useQueryClient();
-
+  const {user}= useAuth();
   const query = useQuery({
     queryKey: ["hourlyForecast", alignment],
     queryFn: async () => {
@@ -17,7 +18,7 @@ export function useForecast({ alignment, dailyData, weeklyTemperatures, weeklyEv
           : { temperature_celsius: dailyData[0], event_day: dailyData[1] };
 
       const response = await axios.post(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/forecast/dashboard/${alignment}/2`,
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/forecast/dashboard/${alignment}/${user.restId}`,
         payload,
         { headers: { Accept: "application/json" } },
       );

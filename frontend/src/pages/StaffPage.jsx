@@ -1,13 +1,102 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, UserCheck, Loader2 } from "lucide-react";
+import { Users, Clock, UserCheck, Loader2, Plus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
 
 export default function StaffPage() {
   const { isAdmin } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    role: "Employee",
+    salary: "",
+    phone: "",
+    status: "Active",
+    shift: "Morning",
+    workingHoursPerDay: "8",
+    workingDaysPerWeek: "5",
+    email: "",
+    password: ""
+  });
+
+  const getRestId = () => {
+    try {
+      let token = localStorage.getItem("authToken");
+      if (!token) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) token = JSON.parse(storedUser).token;
+      }
+      if (token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return parseInt(payload.RestID || payload.restId || payload.restID || "0", 10);
+      }
+    } catch (e) {
+      console.error("Could not parse token", e);
+    }
+    return 0;
+  };
+
+  const handleAddEmployee = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      let token = localStorage.getItem("authToken");
+      if (!token) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) token = JSON.parse(storedUser).token;
+      }
+      
+      const payload = {
+        restID: getRestId(),
+        fullName: formData.fullName,
+        role: formData.role,
+        salary: parseFloat(formData.salary) || 0,
+        phone: formData.phone,
+        status: formData.status,
+        shift: formData.shift,
+        workingHoursPerDay: parseInt(formData.workingHoursPerDay, 10) || 0,
+        workingDaysPerWeek: parseInt(formData.workingDaysPerWeek, 10) || 0,
+        email: formData.email,
+        password: formData.password
+      };
+
+      const response = await fetch("http://resturantai.runasp.net/api/Employees", {
+        method: "POST",
+        headers: {
+          "Accept": "*/*",
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) throw new Error("Failed to add employee");
+
+      toast.success("Employee added successfully!");
+      setIsModalOpen(false);
+      setFormData({
+        fullName: "", role: "Employee", salary: "", phone: "", status: "Active",
+        shift: "Morning", workingHoursPerDay: "8", workingDaysPerWeek: "5", email: "", password: ""
+      });
+      setRefreshKey(prev => prev + 1);
+    } catch (error) {
+      console.error("Error adding employee:", error);
+      toast.error("Failed to add employee.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -40,7 +129,7 @@ export default function StaffPage() {
       }
     };
     fetchEmployees();
-  }, []);
+  }, [refreshKey]);
 
   const active = employees.filter((s) => s.status === "Active").length;
   const totalHours = employees.reduce((acc, curr) => acc + (curr.workingHoursPerDay * curr.workingDaysPerWeek), 0);
@@ -117,25 +206,31 @@ export default function StaffPage() {
   return (
     <div className="space-y-5 animate-fade-in py-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <Users className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-foreground">
-              {isAdmin ? "Staff Management Dashboard" : "Staff Management"}
-            </h1>
-            {isAdmin && (
-              <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-                Admin
-              </Badge>
-            )}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Users className="h-5 w-5 text-primary" />
           </div>
-          <p className="text-muted-foreground text-sm">
-            {isAdmin ? "Global employee overview and directories" : "Manage your employees and performance"}
-          </p>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-foreground">
+                {isAdmin ? "Staff Management Dashboard" : "Staff Management"}
+              </h1>
+              {isAdmin && (
+                <Badge variant="outline" className="border-primary/30 text-primary text-xs">
+                  Admin
+                </Badge>
+              )}
+            </div>
+            <p className="text-muted-foreground text-sm">
+              {isAdmin ? "Global employee overview and directories" : "Manage your employees and performance"}
+            </p>
+          </div>
         </div>
+        <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add Employee
+        </Button>
       </div>
 
       {/* Stat Cards */}
@@ -165,6 +260,111 @@ export default function StaffPage() {
 
       {/* Table */}
       <EmployeeTable />
+
+      {/* Add Employee Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[450px]">
+          <form onSubmit={handleAddEmployee}>
+            <DialogHeader>
+              <DialogTitle>Add New Employee</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto px-1">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  placeholder="John Doe"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="role">Role</Label>
+                  <select
+                    id="role"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
+                    value={formData.role}
+                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  >
+                    <option value="Employee">Employee</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="shift">Shift Prefix</Label>
+                  <select
+                    id="shift"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
+                    value={formData.shift}
+                    onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
+                  >
+                    <option value="Morning">Morning</option>
+                    <option value="Evening">Evening</option>
+                    <option value="Night">Night</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <Input
+                    id="phone"
+                    placeholder="01010000000"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="salary">Salary ($)</Label>
+                  <Input
+                    id="salary"
+                    type="number"
+                    placeholder="2500"
+                    value={formData.salary}
+                    onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Initial Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Password123!"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+            <DialogFooter className="mt-2 text-right">
+              <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Add Employee
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

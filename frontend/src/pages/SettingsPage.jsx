@@ -7,15 +7,40 @@ import { useState } from "react";
 import { Settings } from "lucide-react";
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState({
-    name: "The Green Kitchen",
-    capacity: "120",
-    openTime: "09:00",
-    closeTime: "23:00",
-    emailNotifs: true,
-    pushNotifs: true,
-    wasteAlerts: true,
-    weeklyReport: true,
+  const [settings, setSettings] = useState(() => {
+    let defaultName = "My Restaurant";
+    try {
+      // 1. Look for pre-saved registration flows
+      const regData = localStorage.getItem("register");
+      if (regData) {
+        const parsedReg = JSON.parse(regData);
+        if (parsedReg.restaurantName) defaultName = parsedReg.restaurantName;
+        else if (parsedReg.name) defaultName = parsedReg.name;
+      }
+      
+      // 2. Alternatively, if they are just logged in normally
+      if (defaultName === "My Restaurant") {
+        const userData = localStorage.getItem("user");
+        if (userData) {
+          const parsedUser = JSON.parse(userData);
+          if (parsedUser.restaurantName) defaultName = parsedUser.restaurantName;
+          else if (parsedUser.name) defaultName = parsedUser.name;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse local storage for settings", e);
+    }
+
+    return {
+      name: defaultName,
+      capacity: "120",
+      openTime: "09:00",
+      closeTime: "23:00",
+      emailNotifs: true,
+      pushNotifs: true,
+      wasteAlerts: true,
+      weeklyReport: true,
+    };
   });
 
   return (
@@ -80,10 +105,10 @@ export default function SettingsPage() {
         <h3 className="text-base font-semibold text-foreground mb-4">Notifications</h3>
         <div className="space-y-4">
           {[
-            ["emailNotifs",  "Email Notifications", "Receive daily summary and alerts via email"],
-            ["pushNotifs",   "Push Notifications",  "Get real-time alerts on your browser"],
-            ["wasteAlerts",  "Waste Alerts",        "Alert when waste exceeds threshold"],
-            ["weeklyReport", "Weekly Report",       "Automated weekly performance digest"],
+            ["emailNotifs", "Email Notifications", "Receive daily summary and alerts via email"],
+            ["pushNotifs", "Push Notifications", "Get real-time alerts on your browser"],
+            ["wasteAlerts", "Waste Alerts", "Alert when waste exceeds threshold"],
+            ["weeklyReport", "Weekly Report", "Automated weekly performance digest"],
           ].map(([key, label, desc]) => (
             <div key={key} className="flex items-center justify-between">
               <div>

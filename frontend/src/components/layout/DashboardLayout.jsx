@@ -67,7 +67,7 @@ const managerManagementItems = [
 ];
 
 const managerOtherItems = [
-  { title: "Reports", url: "/dashboard/reports", icon: FileText },
+  // { title: "Reports", url: "/dashboard/reports", icon: FileText },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
