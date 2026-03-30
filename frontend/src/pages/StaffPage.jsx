@@ -19,7 +19,7 @@ export default function StaffPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
-    role: "Employee",
+    role: "staff",
     salary: "",
     phone: "",
     status: "Active",
@@ -81,12 +81,13 @@ export default function StaffPage() {
         body: JSON.stringify(payload)
       });
 
+      console.log("data"+response);
       if (!response.ok) throw new Error("Failed to add employee");
 
       toast.success("Employee added successfully!");
       setIsModalOpen(false);
       setFormData({
-        fullName: "", role: "Employee", salary: "", phone: "", status: "Active",
+        fullName: "", role: "staff", salary: "", phone: "", status: "Active",
         shift: "Morning", workingHoursPerDay: "8", workingDaysPerWeek: "5", email: "", password: ""
       });
       setRefreshKey(prev => prev + 1);
@@ -168,6 +169,7 @@ export default function StaffPage() {
                     </div>
                   </td>
                   <td className="py-3 px-4 text-muted-foreground">{e.role}</td>
+                  {/* <td className="py-3 px-4 text-muted-foreground">staff</td> */}
                   <td className="py-3 px-4 text-muted-foreground">
                     <div className="text-sm">{e.email}</div>
                     <div className="text-xs opacity-70">{e.phone}</div>
@@ -288,9 +290,9 @@ export default function StaffPage() {
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   >
-                    <option value="Employee">Employee</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Admin">Admin</option>
+                    <option value="staff">staff</option>
+                    <option value="chef">chef</option>
+                    <option value="waiter">waiter</option>
                   </select>
                 </div>
                 <div className="space-y-2">
