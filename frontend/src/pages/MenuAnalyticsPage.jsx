@@ -25,7 +25,7 @@ export default function MenuAnalyticsPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["menuPerformance", 2], // Hardcoded restaurant_id 2 for now based on context
     queryFn: async () => {
-      const res = await fetch(`https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/menu/performance/${user.restID}`, {
+      const res = await fetch(`https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/menu/performance/${user.restId}`, {
         headers: { accept: "application/json" }
       });
       if (!res.ok) throw new Error("Failed to fetch menu analytics");

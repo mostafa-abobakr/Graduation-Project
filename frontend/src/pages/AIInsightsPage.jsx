@@ -96,7 +96,7 @@ export default function AIInsightsPage() {
     queryKey: ["forecastAlerts"],
     queryFn: async () => {
       const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/alerts/forecast/${user.restID}`,
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/alerts/forecast/${user.restId}`,
         {
           method: "POST",
           headers: { accept: "application/json", "Content-Type": "application/json" },

@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 const ManagerDashboard = () => {
   const [viewMode, setViewMode] = useState("today");
   const {user} = useAuth();
+  console.log(user);
   
 
   const { data, isLoading, error } = useQuery({
@@ -19,7 +20,7 @@ const ManagerDashboard = () => {
       const token = localStorage.getItem("authToken");
       
       const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restID}`,
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restId}`,
         {
           method: "GET",
           headers: {
