@@ -26,19 +26,6 @@ export default function ForecastPage() {
     weeklyEvents,
   });
 
-  if (isFetching) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-muted-foreground text-sm">
-            Loading forecast data...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (isError) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -62,9 +49,9 @@ export default function ForecastPage() {
         setModalOpen={setModalOpen} 
       />
 
-      <ForecastSummaryCards data={data} alignment={alignment} />
+      <ForecastSummaryCards data={data} alignment={alignment} isLoading={isFetching} />
 
-      <ForecastTable items={data?.items || []} alignment={alignment} />
+      <ForecastTable items={data?.items || []} alignment={alignment} isLoading={isFetching} />
 
       <ForecastSettingsModal
         open={modalOpen}

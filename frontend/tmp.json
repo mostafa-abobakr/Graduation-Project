@@ -1,0 +1,45 @@
+{
+  "restaurant_id": "6",
+  "data": {
+    "day": {
+      "metrics": {
+        "period_revenue": 0,
+        "daily_average": 0,
+        "avg_profit_margin": 0,
+        "revenue_change_pct": "N/A"
+      },
+      "revenue_trend": [],
+      "item_performance": []
+    },
+    "week": {
+      "metrics": {
+        "period_revenue": 0,
+        "daily_average": 0,
+        "avg_profit_margin": 0,
+        "revenue_change_pct": "N/A"
+      },
+      "revenue_trend": [],
+      "item_performance": []
+    },
+    "month": {
+      "metrics": {
+        "period_revenue": 0,
+        "daily_average": 0,
+        "avg_profit_margin": 0,
+        "revenue_change_pct": "N/A"
+      },
+      "revenue_trend": [],
+      "item_performance": []
+    },
+    "all": {
+      "metrics": {
+        "period_revenue": 0,
+        "daily_average": 0,
+        "avg_profit_margin": 0,
+        "revenue_change_pct": "0.0%"
+      },
+      "revenue_trend": [],
+      "item_performance": []
+    }
+  }
+}

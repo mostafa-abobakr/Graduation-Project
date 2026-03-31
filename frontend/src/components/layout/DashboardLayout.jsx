@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   BarChart3,
   Brain,
+  UtensilsCrossed,
   ChefHat,
   Trash2,
   DollarSign,
@@ -54,20 +55,20 @@ import {
 const managerAnalyticsItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
   { title: "Forecast", url: "/dashboard/forecast", icon: Brain },
-  { title: "Menu Analytics", url: "/dashboard/menu-analytics", icon: ChefHat },
+  { title: "Menu Analytics", url: "/dashboard/menu-analytics", icon: UtensilsCrossed },
   { title: "Revenue", url: "/dashboard/revenue", icon: DollarSign },
   { title: "AI Insights", url: "/dashboard/insights", icon: Lightbulb },
 ];
 
 const managerManagementItems = [
-  { title: "Menu Management", url: "/dashboard/menu", icon: BarChart3 },
+  { title: "Menu Management", url: "/dashboard/menu", icon: ChefHat },
   { title: "Staff", url: "/dashboard/staff", icon: Users },
   { title: "Schedule", url: "/dashboard/schedule", icon: CalendarDays  },
   { title: "Inventory", url: "/dashboard/inventory", icon: Package },
 ];
 
 const managerOtherItems = [
-  // { title: "Reports", url: "/dashboard/reports", icon: FileText },
+  { title: "Reports", url: "/dashboard/reports", icon: FileText },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 

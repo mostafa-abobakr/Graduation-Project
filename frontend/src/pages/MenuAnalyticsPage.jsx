@@ -4,13 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUp, ArrowDown, Search, UtensilsCrossed } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +16,7 @@ export default function MenuAnalyticsPage() {
   const {user}= useAuth();
   // Fetch the data from the ZeroBite AI Engine
   const { data, isLoading, error } = useQuery({
-    queryKey: ["menuPerformance", 2], // Hardcoded restaurant_id 2 for now based on context
+    queryKey: ["menuPerformance", user?.restId],
     queryFn: async () => {
       const res = await fetch(`https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/menu/performance/${user.restId}`, {
         headers: { accept: "application/json" }
@@ -56,12 +49,9 @@ export default function MenuAnalyticsPage() {
     });
 
   const SortIcon = ({ col }) => {
-    if (sortKey !== col) return null;
-    return sortAsc ? (
-      <ArrowUp className="h-3 w-3 inline ml-1 text-primary" />
-    ) : (
-      <ArrowDown className="h-3 w-3 inline ml-1 text-primary" />
-    );
+    const isActive = sortKey === col;
+    const Icon = isActive && sortAsc ? ArrowUp : ArrowDown;
+    return <Icon className={`h-3 w-3 shrink-0 transition-opacity ${isActive ? "opacity-100 text-primary" : "opacity-0"}`} />;
   };
 
   if (error) {
@@ -138,29 +128,28 @@ export default function MenuAnalyticsPage() {
             <thead className="sticky top-0 z-10 bg-card">
               <tr className="border-b border-border/60 bg-muted/40 shadow-sm">
                 {[
-                  [
-                    "item_name",
-                    <div className="flex items-center gap-2">
-                      Menu Items
-                      <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 pointer-events-none rounded-md px-1.5 py-0 min-w-[1.5rem] flex items-center justify-center">
-                        {filtered.length}
-                      </Badge>
-                    </div>,
-                  ],
-                  ["orders", "Total Orders"],
-                  ["revenue", "Generated Revenue"],
-                  ["profit", "Net Profit"],
-                  ["margin_percentage", "Profit Margin"],
-                ].map(([key, label]) => (
+                  { key: "item_name", label: "Menu Items", align: "left" },
+                  { key: "orders", label: "Total Orders", align: "center" },
+                  { key: "revenue", label: "Generated Revenue", align: "center" },
+                  { key: "profit", label: "Net Profit", align: "center" },
+                  { key: "margin_percentage", label: "Profit Margin", align: "center" },
+                ].map(({ key, label, align }) => (
                   <th
                     key={key}
                     className={`py-4 px-5 text-muted-foreground font-semibold cursor-pointer hover:text-foreground select-none transition-colors ${
-                      key === "item_name" ? "text-left" : "text-center"
+                      align === "left" ? "text-left" : "text-center"
                     }`}
                     onClick={() => handleSort(key)}
                   >
-                    {label}
-                    <SortIcon col={key} />
+                    <span className="inline-flex items-center gap-1.5">
+                      {label}
+                      {key === "item_name" && (
+                        <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 pointer-events-none rounded-md px-1.5 py-0 min-w-[1.5rem] items-center justify-center">
+                          {filtered.length}
+                        </Badge>
+                      )}
+                      <SortIcon col={key} />
+                    </span>
                   </th>
                 ))}
               </tr>
