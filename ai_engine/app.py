@@ -1274,6 +1274,50 @@ def analytics_dashboard(restaurant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/analytics/dashboard/revenue/{restaurant_id}")
+def analytics_dashboard_revenue(restaurant_id: str):
+    """
+    Combined endpoint for the Revenue Analytics dashboard.
+    Returns data from revenue summary, revenue trend, and menu performance.
+    Data is divided by timeframes: day, week, month, and all.
+    """
+    try:
+        response_data = {}
+        for timeframe in ["day", "week", "month", "all"]:
+            summary = get_revenue_summary(restaurant_id, timeframe)
+            granularity = "hour" if timeframe == "day" else "day"
+            trend = get_revenue_trend(restaurant_id, granularity, timeframe)
+            item_performance = get_menu_performance(restaurant_id, timeframe)
+            
+            period_revenue = summary.get("total_revenue", 0.0)
+            avg_profit_margin = summary.get("margin_percentage", 0.0)
+            
+            days_map = {"day": 1, "week": 7, "month": 30}
+            days = days_map.get(timeframe)
+            if days:
+                daily_average = round(period_revenue / days, 2)
+            else:
+                daily_average = round(period_revenue / len(trend), 2) if trend else 0.0
+
+            response_data[timeframe] = {
+                "metrics": {
+                    "period_revenue": period_revenue,
+                    "daily_average": daily_average,
+                    "avg_profit_margin": avg_profit_margin,
+                    "revenue_change_pct": summary.get("revenue_change_pct", "0.0%"),
+                },
+                "revenue_trend": trend,
+                "item_performance": item_performance
+            }
+
+        return {
+            "restaurant_id": restaurant_id,
+            "data": response_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ---------------------------------------------------------------------------
 # MODELS MANAGEMENT
 # ---------------------------------------------------------------------------
