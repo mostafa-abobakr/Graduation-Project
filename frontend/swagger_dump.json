@@ -1,0 +1,407 @@
+{
+  "CreateEmployeeDto": {
+    "type": "object",
+    "properties": {
+      "restID": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "fullName": {
+        "type": "string",
+        "nullable": true
+      },
+      "role": {
+        "type": "string",
+        "nullable": true
+      },
+      "salary": {
+        "type": "number",
+        "format": "double"
+      },
+      "phone": {
+        "type": "string",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "nullable": true
+      },
+      "shift": {
+        "type": "string",
+        "nullable": true
+      },
+      "workingHoursPerDay": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "workingDaysPerWeek": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "email": {
+        "type": "string",
+        "nullable": true
+      },
+      "password": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "additionalProperties": false
+  },
+  "CreateInventoryDto": {
+    "type": "object",
+    "properties": {
+      "itemName": {
+        "type": "string",
+        "nullable": true
+      },
+      "category": {
+        "type": "string",
+        "nullable": true
+      },
+      "stock": {
+        "type": "number",
+        "format": "double"
+      },
+      "reorderLevel": {
+        "type": "number",
+        "format": "double"
+      },
+      "costPerUnit": {
+        "type": "number",
+        "format": "double"
+      },
+      "supplier": {
+        "type": "string",
+        "nullable": true
+      },
+      "restID": {
+        "type": "integer",
+        "format": "int32"
+      }
+    },
+    "additionalProperties": false
+  },
+  "CreateMenuItemDto": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "nullable": true
+      },
+      "imageUrl": {
+        "type": "string",
+        "nullable": true
+      },
+      "cost": {
+        "type": "number",
+        "format": "float"
+      },
+      "price": {
+        "type": "number",
+        "format": "float"
+      }
+    },
+    "additionalProperties": false
+  },
+  "CreateScheduleDto": {
+    "type": "object",
+    "properties": {
+      "empID": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "restID": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "day": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "startTime": {
+        "type": "string",
+        "format": "date-span"
+      },
+      "endTime": {
+        "type": "string",
+        "format": "date-span"
+      },
+      "shiftType": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "additionalProperties": false
+  },
+  "LoginDto": {
+    "type": "object",
+    "properties": {
+      "email": {
+        "type": "string",
+        "nullable": true
+      },
+      "password": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "additionalProperties": false
+  },
+  "RegisterDto": {
+    "required": [
+      "address",
+      "city",
+      "email",
+      "fullName",
+      "password",
+      "restaurantName",
+      "restaurantPhone",
+      "userPhone"
+    ],
+    "type": "object",
+    "properties": {
+      "fullName": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "email": {
+        "minLength": 1,
+        "type": "string",
+        "format": "email"
+      },
+      "userPhone": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "password": {
+        "minLength": 8,
+        "type": "string"
+      },
+      "restaurantName": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "address": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "city": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "restaurantPhone": {
+        "minLength": 1,
+        "type": "string"
+      }
+    },
+    "additionalProperties": false
+  },
+  "RestaurantCreateDto": {
+    "type": "object",
+    "properties": {
+      "userID": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "restName": {
+        "type": "string",
+        "nullable": true
+      },
+      "address": {
+        "type": "string",
+        "nullable": true
+      },
+      "city": {
+        "type": "string",
+        "nullable": true
+      },
+      "phone": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "additionalProperties": false
+  },
+  "RestaurantUpdateDto": {
+    "type": "object",
+    "properties": {
+      "restName": {
+        "type": "string",
+        "nullable": true
+      },
+      "address": {
+        "type": "string",
+        "nullable": true
+      },
+      "city": {
+        "type": "string",
+        "nullable": true
+      },
+      "phone": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "additionalProperties": false
+  },
+  "UpdateEmployeeAdminDto": {
+    "type": "object",
+    "properties": {
+      "fullName": {
+        "type": "string",
+        "nullable": true
+      },
+      "role": {
+        "type": "string",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "nullable": true
+      },
+      "shift": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "additionalProperties": false
+  },
+  "UpdateEmployeeDto": {
+    "type": "object",
+    "properties": {
+      "fullName": {
+        "type": "string",
+        "nullable": true
+      },
+      "salary": {
+        "type": "number",
+        "format": "double"
+      },
+      "phone": {
+        "type": "string",
+        "nullable": true
+      },
+      "status": {
+        "type": "string",
+        "nullable": true
+      },
+      "shift": {
+        "type": "string",
+        "nullable": true
+      },
+      "workingHoursPerDay": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "workingDaysPerWeek": {
+        "type": "integer",
+        "format": "int32"
+      }
+    },
+    "additionalProperties": false
+  },
+  "UpdateInventoryDto": {
+    "type": "object",
+    "properties": {
+      "stock": {
+        "type": "number",
+        "format": "double"
+      },
+      "reorderLevel": {
+        "type": "number",
+        "format": "double"
+      },
+      "costPerUnit": {
+        "type": "number",
+        "format": "double"
+      }
+    },
+    "additionalProperties": false
+  },
+  "UpdateMenuItemDto": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string",
+        "nullable": true
+      },
+      "imageUrl": {
+        "type": "string",
+        "nullable": true
+      },
+      "cost": {
+        "type": "number",
+        "format": "float"
+      },
+      "price": {
+        "type": "number",
+        "format": "float"
+      }
+    },
+    "additionalProperties": false
+  },
+  "UpdateRestaurantDto": {
+    "type": "object",
+    "properties": {
+      "restaurantName": {
+        "type": "string",
+        "nullable": true
+      },
+      "isActive": {
+        "type": "boolean"
+      }
+    },
+    "additionalProperties": false
+  },
+  "UpdateScheduleDto": {
+    "type": "object",
+    "properties": {
+      "scheduleID": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "day": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "startTime": {
+        "type": "string",
+        "format": "date-span"
+      },
+      "endTime": {
+        "type": "string",
+        "format": "date-span"
+      },
+      "shiftType": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "additionalProperties": false
+  },
+  "WeatherForecast": {
+    "type": "object",
+    "properties": {
+      "date": {
+        "type": "string",
+        "format": "date"
+      },
+      "temperatureC": {
+        "type": "integer",
+        "format": "int32"
+      },
+      "temperatureF": {
+        "type": "integer",
+        "format": "int32",
+        "readOnly": true
+      },
+      "summary": {
+        "type": "string",
+        "nullable": true
+      }
+    },
+    "additionalProperties": false
+  }
+}
