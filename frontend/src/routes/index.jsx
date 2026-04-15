@@ -24,8 +24,8 @@ import Register from "@/pages/Auth/Register";
 import RegisterPersonal from "@/pages/Auth/Register/RegisterPersonal";
 import RegisterRestaurant from "@/pages/Auth/Register/RegisterRestaurant";
 import PosOptions from "@/pages/pos/ConnectPosPage";
-import SquareAuthPage from "@/pages/pos/SquareAuthPage";
 import SchedulePage from "@/pages/SchedulePage";
+
 
 const requireAuth = () => {
   const storedUser = localStorage.getItem("user");
