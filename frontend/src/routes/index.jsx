@@ -1,5 +1,5 @@
 import React from "react";
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter, redirect } from "react-router-dom";
 import LandingPage from "../pages/LandingPage";
 // import AuthPage from "../pages/AuthPage";
 import DashboardLayout from "../components/layout/DashboardLayout";
@@ -26,6 +26,15 @@ import RegisterRestaurant from "@/pages/Auth/Register/RegisterRestaurant";
 import PosOptions from "@/pages/pos/ConnectPosPage";
 import SquareAuthPage from "@/pages/pos/SquareAuthPage";
 import SchedulePage from "@/pages/SchedulePage";
+
+const requireAuth = () => {
+  const storedUser = localStorage.getItem("user");
+  if (!storedUser) {
+    throw redirect(ROUTES.LOGIN);
+  }
+  return null;
+};
+
 const Routes = [
   {
     path: ROUTES.LANDING,
@@ -60,6 +69,7 @@ const Routes = [
   {
     path: ROUTES.DASHBOARD,
     element: <DashboardLayout />,
+    loader: requireAuth,
     children: [
       {
         index: true,

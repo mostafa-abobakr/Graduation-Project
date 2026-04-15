@@ -153,7 +153,7 @@ export default function ConnectPOS() {
       <button
         onClick={handleConnect}
         disabled={loading}
-        className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3 rounded-xl text-lg font-medium transition-all disabled:opacity-50"
+        className={`${selected === "toast"||selected === "geidea" ? "bg-orange-600 hover:bg-orange-700" : "bg-black hover:bg-gray-800"} text-white px-8 py-3 rounded-xl text-lg font-medium transition-all disabled:opacity-50`}
       >
         {loading ? "Connecting..." : "Connect to POS →"}
       </button>

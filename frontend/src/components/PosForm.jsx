@@ -7,6 +7,31 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import SquareAuthPage from "@/pages/pos/SquareAuthPage";
 import ToastAuthPage from "@/pages/pos/ToastAuthPage";
 import GeideaAuthPage from "@/pages/pos/GeideaAuthPage";
+
+const POS_FOOTER_LINKS = {
+  Square: [
+    { label: "Privacy Policy", href: "https://squareup.com/us/en/legal/general/privacy-no-account" },
+    { label: "Terms of Service", href: "https://squareup.com/us/en/legal/general/ua" },
+    { label: "Help", href: "https://squareup.com/help/us/en" },
+  ],
+  Toast: [
+    { label: "Privacy Policy", href: "https://pos.toasttab.com/privacy" },
+    { label: "Terms of Service", href: "https://pos.toasttab.com/terms-of-service" },
+    { label: "Help", href: "https://central.toasttab.com/" },
+  ],
+  geidea: [
+    { label: "Privacy Policy", href: "https://www.geidea.net/privacy-policy/" },
+    { label: "Terms of Service", href: "https://www.geidea.net/terms-and-conditions/" },
+    { label: "Help", href: "https://help.geidea.net/" },
+  ],
+};
+const SIGNUP_URL = [
+  { title: "Toast", url: "https://pos.toasttab.com/request-demo-intl" },
+  { title: "geidea", url: "https://app.squareup.com/signup/en-US" },
+  { title: "Square", url: "https://squareup.com/us/en/signup" },
+];
+
+
 const PosForm = ({ title, bgClass, textClass, icon }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
@@ -46,6 +71,7 @@ const PosForm = ({ title, bgClass, textClass, icon }) => {
       return <GeideaAuthPage />
     }
   }
+  const footerLinks = POS_FOOTER_LINKS[title] || POS_FOOTER_LINKS.geidea;
   return (
     <div className="flex flex-col items-center justify-center bg-gray-50 h-[100vh]">
       <div className="text-center">
@@ -85,9 +111,23 @@ const PosForm = ({ title, bgClass, textClass, icon }) => {
         {/* <h1 className={`my-3 ${textClass} `} >Forgot Password ?</h1> */}
         <button type="submit" disabled={loading} className={` ${bgClass} mt-6 text-white w-full rounded-sm py-2 text-sm `}> Sign in</button>
         <hr className="border-gray-200 h-1 my-4" />
-        <h2 className="text-center text-black">Dont have an account ? <button type="button" className={`${textClass}`}>Sign up</button></h2>
+        <h2 className="text-center text-black">Dont have an account ? <a href={SIGNUP_URL.find(url => url.title === title)?.url} target="_blank" rel="noreferrer" className={`${textClass}`}>Sign up</a></h2>
       </form>
-      <h4 className="text-center text-gray-500 mt-4">Privacy Policy · Terms of Service · Help</h4>
+      <h4 className="text-center text-gray-500 mt-4">
+        {footerLinks.map((link, index) => (
+          <React.Fragment key={link.label}>
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:underline"
+            >
+              {link.label}
+            </a>
+            {index < footerLinks.length - 1 ? " · " : ""}
+          </React.Fragment>
+        ))}
+      </h4>
     </div>
   );
 };

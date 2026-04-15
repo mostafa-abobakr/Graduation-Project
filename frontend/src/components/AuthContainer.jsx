@@ -18,8 +18,8 @@ function AuthContainer({ img, children, isLottie = false }) {
           )}
         </div>
 
-        <div className="hidden md:flex flex-col items-center h-full px-6">
-          <div className="h-[90%] w-px bg-border my-auto"></div>
+        <div className="hidden md:flex items-center px-6 self-stretch">
+          <div className="h-full w-px bg-border"></div>
         </div>
 
         <div className="flex-1 p-4 md:p-8 flex flex-col justify-center w-full max-w-[500px] mx-auto">

@@ -87,7 +87,7 @@ function Login() {
             <Link to="/login/forgot-password" className="text-[0.875rem] font-bold text-primary hover:text-primary/80 transition-colors">forgot password?</Link>
           </div>
 
-          <AuthFooter text="Don't have an account?" linkText="Sign up" onLinkClick={() => navigate("/register")} />
+          {/* <AuthFooter text="Don't have an account?" linkText="Sign up" onLinkClick={() => navigate("/register")} /> */}
         </div>
       </AuthForm>
     </AuthContainer>

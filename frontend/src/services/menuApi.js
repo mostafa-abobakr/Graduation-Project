@@ -2,7 +2,7 @@ export const fetchMenuItems = async () => {
     const token = localStorage.getItem("authToken");
 
     const response = await fetch(
-        "http://resturantai.runasp.net/api/MenuItems",
+        "/api/MenuItems",
         {
             method: "GET",
             headers: {

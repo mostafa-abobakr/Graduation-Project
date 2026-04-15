@@ -23,7 +23,7 @@ export const registerUser = async () => {
 
   try {
     const response = await axios.post(
-      "http://resturantai.runasp.net/api/Auth/register",
+      "/api/Auth/register",
       formData,
     )
     const id = response.data.restId;
@@ -58,13 +58,13 @@ export const registerUser = async () => {
     else if (data && typeof data === "object") {
       // ASP.NET validation format: { errors: { FieldName: ["msg1", ...] } }
       if (data.message === "Email already exists") {
-       
+
         console.log("Email already exists");
-          const result = await signIn(email, password)
-          if(result.success){
-            return { success: true, data: response.data };
-          }
-        
+        const result = await signIn(email, password)
+        if (result.success) {
+          return { success: true, data: response.data };
+        }
+
       }
       if (data.errors && typeof data.errors === "object") {
         serverMessage = Object.values(data.errors).flat().join(", ");
@@ -88,16 +88,16 @@ export const registerUser = async () => {
 
 const signIn = async (email, password) => {
   try {
-    const response = await axios.post("http://resturantai.runasp.net/api/Auth/login", 
-      { email, password }, 
+    const response = await axios.post("/api/Auth/login",
+      { email, password },
       {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
     const id = response.data.restId;
     console.log(response.data);
-    
+
     console.log(id);
     if (!id) {
       return { success: false, error: "Registration succeeded, but restaurant ID is missing" };

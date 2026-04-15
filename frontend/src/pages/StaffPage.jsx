@@ -24,11 +24,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
+const SHIFT_OPTIONS = ["Morning", "Evening", "Night"];
+
 export default function StaffPage() {
   const { isAdmin } = useAuth();
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [search, setSearch] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -167,6 +170,22 @@ function getRestIdFromToken() {
 
   const active = employees.filter((s) => s.status === "Active").length;
   const totalHours = employees.reduce((acc, curr) => acc + (curr.workingHoursPerDay * curr.workingDaysPerWeek), 0);
+  const totalSalaryBill = employees.reduce((acc, curr) => acc + (Number(curr.salary) || 0), 0);
+  const filtered = employees.filter((employee) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    const name = (employee.fullName || "").toLowerCase();
+    const role = (employee.role || "").toLowerCase();
+    return name.includes(q) || role.includes(q);
+  });
+
+  const initials = (name = "") =>
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join("");
 
   const EmployeeTable = () => (
     <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
