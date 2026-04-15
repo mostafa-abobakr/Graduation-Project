@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
   DialogContent,
@@ -41,7 +42,6 @@ export default function SchedulePage() {
   const [shifts, setShifts] = useState([]);
   const [isLoadingShifts, setIsLoadingShifts] = useState(false);
   const [employees, setEmployees] = useState([]);
-console.log(employees);
   const [refreshKey, setRefreshKey] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState("");
@@ -249,7 +249,6 @@ console.log(employees);
           throw new Error(`Failed to fetch employees: ${response.status}`);
         }
         const data = await response.json();
-        console.log(response);
         
         const formattedEmployees = data.map(emp => ({
           id: emp.empID,
@@ -363,15 +362,20 @@ console.log(employees);
   }, [weekDates, shifts, employees]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in py-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Staff Schedule Manager
-          </h1>
-          <p className="text-muted-foreground">
-            Create and manage weekly staff schedules
-          </p>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <CalendarDays className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">
+              Staff Schedule Manager
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Create and manage weekly staff schedules
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -382,21 +386,9 @@ console.log(employees);
             <Users className="h-4 w-4" />
             Employee List
           </Button>
-          {/* <Button
-            className="gap-2 bg-primary text-primary-foreground"
-            onClick={handlePublish}
-            disabled={isPublishing}
-          >
-            {isPublishing ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Send className="h-4 w-4" />
-            )}
-            {isPublishing ? "Publishing..." : "Publish Schedule"}
-          </Button> */}
         </div>
       </div>
-      <div className="flex flex-col lg:flex-row gap-6">
+      <div className="flex flex-col lg:flex-row">
         <div className="flex-1 space-y-4">
           <Card className="p-4 bg-card border-border/60">
             <div className="flex items-center justify-between">
@@ -478,9 +470,16 @@ console.log(employees);
                   className={`grid ${viewMode === "week" ? "grid-cols-7" : "grid-cols-1 max-w-sm mx-auto"}`}
                 >
                   {isLoadingShifts ? (
-                    <div className="col-span-full flex justify-center items-center py-20">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
+                    displayedDates.map((_, index) => (
+                      <div
+                        key={index}
+                        className="border-r last:border-r-0 border-border/30 p-2 min-h-[280px] space-y-2"
+                      >
+                        <Skeleton className="h-[60px] w-full rounded-lg" />
+                        <Skeleton className="h-[60px] w-full rounded-lg" />
+                        <Skeleton className="h-[40px] w-full rounded-lg" />
+                      </div>
+                    ))
                   ) : (
                     displayedDates.map((date, index) => (
                       <div
@@ -593,7 +592,9 @@ console.log(employees);
         <DialogContent className="sm:max-w-[425px]">
           <form onSubmit={handleSubmitShift}>
             <DialogHeader>
-              <DialogTitle>{isEditMode ? "Edit Shift" : "Add New Shift"}</DialogTitle>
+              <DialogTitle>
+                {isEditMode ? "Edit Shift" : "Add New Shift"}
+              </DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
@@ -604,12 +605,18 @@ console.log(employees);
                   id="empID"
                   className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={formData.empID}
-                  onChange={(e) => setFormData({ ...formData, empID: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, empID: e.target.value })
+                  }
                   required
                 >
-                  <option value="" disabled>Select employee</option>
-                  {employees.map(member => (
-                    <option key={member.id} value={member.id}>{member.name}</option>
+                  <option value="" disabled>
+                    Select employee
+                  </option>
+                  {employees.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.name}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -621,7 +628,9 @@ console.log(employees);
                   id="shiftType"
                   className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   value={formData.shiftType}
-                  onChange={(e) => setFormData({ ...formData, shiftType: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, shiftType: e.target.value })
+                  }
                   required
                 >
                   <option value="Morning">Morning</option>
@@ -638,7 +647,9 @@ console.log(employees);
                   type="time"
                   className="col-span-3"
                   value={formData.startTime}
-                  onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, startTime: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -651,27 +662,35 @@ console.log(employees);
                   type="time"
                   className="col-span-3"
                   value={formData.endTime}
-                  onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, endTime: e.target.value })
+                  }
                   required
                 />
               </div>
             </div>
             <DialogFooter className="sm:justify-between w-full">
               {isEditMode ? (
-                <Button 
-                  type="button" 
-                  variant="destructive" 
-                  onClick={handleDeleteShift} 
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDeleteShift}
                   disabled={isDeleting || isSubmitting}
                 >
-                  {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                  {isDeleting ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="mr-2 h-4 w-4" />
+                  )}
                   Delete Shift
                 </Button>
               ) : (
                 <div />
               )}
               <Button type="submit" disabled={isSubmitting || isDeleting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 {isEditMode ? "Update Shift" : "Save Shift"}
               </Button>
             </DialogFooter>

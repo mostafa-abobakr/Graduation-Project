@@ -1,8 +1,9 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, TrendingUp, ShoppingBag } from "lucide-react";
 
-export default function ForecastSummaryCards({ data, alignment }) {
+export default function ForecastSummaryCards({ data, alignment, isLoading }) {
   const statistics = [
     {
       name: "Total Revenue",
@@ -23,6 +24,16 @@ export default function ForecastSummaryCards({ data, alignment }) {
       icon: ShoppingBag,
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-[120px] w-full rounded-xl" />
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

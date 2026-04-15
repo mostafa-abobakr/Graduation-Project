@@ -5,6 +5,7 @@ import SalesProfitChart from "./SalesProfitChart";
 import Alerts from "./Alerts";
 import PeakTimes from "./PeakTimes";
 import CostReduction from "./CostReduction";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -37,8 +38,27 @@ const ManagerDashboard = () => {
 
   if (isLoading)
     return (
-      <div className="p-8 text-center text-muted-foreground animate-pulse">
-        Loading dashboard...
+      <div className="flex flex-col py-5 space-y-5">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+          </div>
+          <Skeleton className="h-10 w-full sm:w-[320px] rounded-xl" />
+        </div>
+
+        <div className="pt-5 space-y-4 md:space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
+            {Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-[120px] w-full rounded-xl" />)}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 items-stretch">
+             <Skeleton className="h-[400px] w-full rounded-xl" />
+             <Skeleton className="h-[400px] w-full rounded-xl" />
+          </div>
+        </div>
       </div>
     );
   if (error)

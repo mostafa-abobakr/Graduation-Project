@@ -1,12 +1,27 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, Clock, UserCheck, Loader2, Plus } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Users,
+  Clock,
+  UserCheck,
+  Loader2,
+  Plus,
+  Search,
+  DollarSign,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export default function StaffPage() {
@@ -19,7 +34,7 @@ export default function StaffPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
-    role: "staff",
+    role: "Employee",
     salary: "",
     phone: "",
     status: "Active",
@@ -30,35 +45,54 @@ export default function StaffPage() {
     password: ""
   });
 
-  const getRestId = () => {
-    try {
-      let token = localStorage.getItem("authToken");
-      if (!token) {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) token = JSON.parse(storedUser).token;
-      }
-      if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return parseInt(payload.RestID || payload.restId || payload.restID || "0", 10);
-      }
-    } catch (e) {
-      console.error("Could not parse token", e);
-    }
-    return 0;
-  };
+function getToken() {
+  let token = localStorage.getItem("authToken");
+  if (!token) {
+    const stored = localStorage.getItem("user");
+    if (stored) token = JSON.parse(stored).token;
+  }
+  return token;
+}
 
+function getRestIdFromToken() {
+  try {
+    const token = getToken();
+    if (token) {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return parseInt(payload.RestID || payload.restId || payload.restID || "0", 10);
+    }
+  } catch { /* ignore */ }
+  return 0;
+}
+
+  /* ── Fetch employees ──────────────────────────────────── */
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      setIsLoading(true);
+      try {
+        const token = getToken();
+        if (!token) return;
+        const res = await fetch("http://resturantai.runasp.net/api/Employees", {
+          headers: { Accept: "*/*", Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) setEmployees(await res.json());
+      } catch (err) {
+        console.error("Failed to fetch employees", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, [refreshKey]);
+
+  /* ── Add employee ─────────────────────────────────────── */
   const handleAddEmployee = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      let token = localStorage.getItem("authToken");
-      if (!token) {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) token = JSON.parse(storedUser).token;
-      }
-      
+      const token = getToken();
       const payload = {
-        restID: getRestId(),
+        restID: getRestIdFromToken(),
         fullName: formData.fullName,
         role: formData.role,
         salary: parseFloat(formData.salary) || 0,
@@ -68,26 +102,25 @@ export default function StaffPage() {
         workingHoursPerDay: parseInt(formData.workingHoursPerDay, 10) || 0,
         workingDaysPerWeek: parseInt(formData.workingDaysPerWeek, 10) || 0,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       };
 
-      const response = await fetch("http://resturantai.runasp.net/api/Employees", {
+      const res = await fetch("http://resturantai.runasp.net/api/Employees", {
         method: "POST",
         headers: {
-          "Accept": "*/*",
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+          Accept: "*/*",
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
 
-      console.log("data"+response);
       if (!response.ok) throw new Error("Failed to add employee");
 
       toast.success("Employee added successfully!");
       setIsModalOpen(false);
       setFormData({
-        fullName: "", role: "staff", salary: "", phone: "", status: "Active",
+        fullName: "", role: "Employee", salary: "", phone: "", status: "Active",
         shift: "Morning", workingHoursPerDay: "8", workingDaysPerWeek: "5", email: "", password: ""
       });
       setRefreshKey(prev => prev + 1);
@@ -169,7 +202,6 @@ export default function StaffPage() {
                     </div>
                   </td>
                   <td className="py-3 px-4 text-muted-foreground">{e.role}</td>
-                  {/* <td className="py-3 px-4 text-muted-foreground">staff</td> */}
                   <td className="py-3 px-4 text-muted-foreground">
                     <div className="text-sm">{e.email}</div>
                     <div className="text-xs opacity-70">{e.phone}</div>
@@ -207,7 +239,8 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
-      {/* Header */}
+
+      {/* ── Header ──────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -225,47 +258,178 @@ export default function StaffPage() {
               )}
             </div>
             <p className="text-muted-foreground text-sm">
-              {isAdmin ? "Global employee overview and directories" : "Manage your employees and performance"}
+              {isAdmin ? "Global employee overview and directories" : "Manage your employees and schedules"}
             </p>
           </div>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="gap-2">
+        <Button onClick={() => setIsModalOpen(true)} className="gap-2 shrink-0">
           <Plus className="h-4 w-4" />
           Add Employee
         </Button>
       </div>
 
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="p-5 bg-card border-border/60 premium-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">Total Staff</span>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="stat-number text-foreground">{employees.length}</div>
-        </Card>
-        <Card className="p-5 bg-card border-border/60 premium-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">Active Members</span>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="stat-number text-primary">{active}</div>
-        </Card>
-        <Card className="p-5 bg-card border-border/60 premium-shadow">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm text-muted-foreground">Weekly Staff Hours</span>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="stat-number text-foreground">{totalHours}</div>
-        </Card>
+      {/* ── KPI Cards ───────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          {
+            label: "Total Staff",
+            value: employees.length,
+            icon: Users,
+            color: "text-foreground",
+          },
+          {
+            label: "Active Members",
+            value: active,
+            icon: UserCheck,
+            color: "text-primary",
+          },
+          {
+            label: "Weekly Hrs",
+            value: `${totalHours}h`,
+            icon: Clock,
+            color: "text-foreground",
+          },
+          {
+            label: "Monthly Salary Bill",
+            value: `$${totalSalaryBill.toLocaleString()}`,
+            icon: DollarSign,
+            color: "text-foreground",
+          },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <Card
+            key={label}
+            className="bg-card border-border/60 premium-shadow overflow-hidden transition-all p-4 flex flex-col justify-center duration-300 hover:bg-muted/30"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-sm font-semibold text-muted-foreground">{label}</span>
+              <div className="p-1.5 bg-primary/10 rounded-full text-primary shrink-0">
+                <Icon className="w-4 h-4" />
+              </div>
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              <div className={`text-xl md:text-2xl font-bold tracking-tight ${color}`}>
+                {value}
+              </div>
+            )}
+          </Card>
+        ))}
       </div>
 
-      {/* Table */}
-      <EmployeeTable />
+      {/* ── Table Card ──────────────────────────────────────── */}
+      <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
+        <div className="p-5 pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h3 className="text-base font-semibold text-foreground">
+            Staff Directory
+            {!isLoading && (
+              <Badge
+                variant="secondary"
+                className="ml-2 bg-primary/10 text-primary border-0 text-xs font-semibold"
+              >
+                {filtered.length}
+              </Badge>
+            )}
+          </h3>
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or role…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 bg-card border-border/60"
+            />
+          </div>
+        </div>
 
-      {/* Add Employee Dialog */}
+        <div className="overflow-x-auto mt-4">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/60 bg-muted/40">
+                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">Employee</th>
+                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">Role</th>
+                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">Contact</th>
+                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">Hire Date</th>
+                <th className="text-center py-3 px-5 text-muted-foreground font-semibold">Schedule</th>
+                <th className="text-right py-3 px-5 text-muted-foreground font-semibold">Salary</th>
+                <th className="text-center py-3 px-5 text-muted-foreground font-semibold">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i} className="border-b border-border/30">
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    </td>
+                    <td className="py-4 px-5"><Skeleton className="h-4 w-20" /></td>
+                    <td className="py-4 px-5"><div className="space-y-1.5"><Skeleton className="h-4 w-36" /><Skeleton className="h-3 w-24" /></div></td>
+                    <td className="py-4 px-5"><Skeleton className="h-4 w-24" /></td>
+                    <td className="py-4 px-5"><Skeleton className="h-4 w-24 mx-auto" /></td>
+                    <td className="py-4 px-5"><Skeleton className="h-4 w-16 ml-auto" /></td>
+                    <td className="py-4 px-5"><Skeleton className="h-6 w-16 rounded-full mx-auto" /></td>
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                      <Search className="h-8 w-8 text-muted-foreground/50" />
+                      {search
+                        ? <><p>No employees found matching "{search}".</p><Button variant="outline" size="sm" onClick={() => setSearch("")}>Clear Search</Button></>
+                        : <p>No employees found.</p>
+                      }
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((e) => (
+                  <tr key={e.empID} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
+                          {initials(e.fullName)}
+                        </div>
+                        <span className="text-foreground font-semibold">{e.fullName}</span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-5 text-muted-foreground">{e.role}</td>
+                    <td className="py-4 px-5">
+                      <div className="text-sm text-foreground">{e.email}</div>
+                      <div className="text-xs text-muted-foreground">{e.phone}</div>
+                    </td>
+                    <td className="py-4 px-5 text-muted-foreground">
+                      {e.hireDate ? new Date(e.hireDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—"}
+                    </td>
+                    <td className="py-4 px-5 text-center text-muted-foreground">
+                      <div className="text-xs">{e.shift}</div>
+                      <div className="text-xs opacity-70">{e.workingDaysPerWeek}d × {e.workingHoursPerDay}h</div>
+                    </td>
+                    <td className="py-4 px-5 text-right font-mono font-medium text-foreground">
+                      ${e.salary?.toLocaleString()}
+                    </td>
+                    <td className="py-4 px-5 text-center">
+                      <Badge
+                        variant={e.status === "Active" ? "default" : "secondary"}
+                        className={e.status === "Active" ? "bg-primary/15 text-primary border-0" : ""}
+                      >
+                        {e.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* ── Add Employee Dialog ──────────────────────────────── */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[450px]">
+        <DialogContent className="sm:max-w-[460px]">
           <form onSubmit={handleAddEmployee}>
             <DialogHeader>
               <DialogTitle>Add New Employee</DialogTitle>
@@ -286,32 +450,30 @@ export default function StaffPage() {
                   <Label htmlFor="role">Role</Label>
                   <select
                     id="role"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   >
-                    <option value="staff">staff</option>
-                    <option value="chef">chef</option>
-                    <option value="waiter">waiter</option>
+                    <option value="Employee">Employee</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Admin">Admin</option>
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="shift">Shift Prefix</Label>
+                  <Label htmlFor="shift">Shift</Label>
                   <select
                     id="shift"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background disabled:opacity-50"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                     value={formData.shift}
                     onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
                   >
-                    <option value="Morning">Morning</option>
-                    <option value="Evening">Evening</option>
-                    <option value="Night">Night</option>
+                    {SHIFT_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
+                  <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
                     placeholder="01010000000"
@@ -355,7 +517,7 @@ export default function StaffPage() {
                 />
               </div>
             </div>
-            <DialogFooter className="mt-2 text-right">
+            <DialogFooter className="mt-2">
               <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
@@ -367,6 +529,7 @@ export default function StaffPage() {
           </form>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }

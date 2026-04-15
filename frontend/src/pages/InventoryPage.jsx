@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Package, AlertTriangle, TrendingDown, CheckCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -105,25 +106,33 @@ export default function InventoryPage() {
       {/* Table */}
       <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
         <div className="overflow-x-auto">
-          {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/60 bg-muted/40">
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Item</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Category</th>
-                  <th className="text-right py-3 px-4 text-muted-foreground font-medium">Stock</th>
-                  <th className="text-right py-3 px-4 text-muted-foreground font-medium">Reorder Level</th>
-                  <th className="text-right py-3 px-4 text-muted-foreground font-medium">Cost/unit</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Supplier</th>
-                  <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inventoryItems.map((item) => (
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/60 bg-muted/40">
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Item</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Category</th>
+                <th className="text-right py-3 px-4 text-muted-foreground font-medium">Stock</th>
+                <th className="text-right py-3 px-4 text-muted-foreground font-medium">Reorder Level</th>
+                <th className="text-right py-3 px-4 text-muted-foreground font-medium">Cost/unit</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Supplier</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={idx} className="border-b border-border/30">
+                    <td className="py-3 px-4"><Skeleton className="h-4 w-32" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-4 w-24" /></td>
+                    <td className="py-3 px-4 text-right"><Skeleton className="h-4 w-12 ml-auto" /></td>
+                    <td className="py-3 px-4 text-right"><Skeleton className="h-4 w-12 ml-auto" /></td>
+                    <td className="py-3 px-4 text-right"><Skeleton className="h-4 w-16 ml-auto" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-4 w-28" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                  </tr>
+                ))
+              ) : (
+                inventoryItems.map((item) => (
                   <tr key={item.id} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
                     <td className="py-3 px-4 text-foreground font-medium">{item.itemName}</td>
                     <td className="py-3 px-4 text-muted-foreground">{item.category}</td>
@@ -140,17 +149,17 @@ export default function InventoryPage() {
                       </Badge>
                     </td>
                   </tr>
-                ))}
-                {inventoryItems.length === 0 && (
-                  <tr>
-                    <td colSpan="7" className="py-8 text-center text-muted-foreground">
-                      No inventory items found.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          )}
+                ))
+              )}
+              {inventoryItems.length === 0 && !isLoading && (
+                <tr>
+                  <td colSpan="7" className="py-8 text-center text-muted-foreground">
+                    No inventory items found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </Card>
     </div>

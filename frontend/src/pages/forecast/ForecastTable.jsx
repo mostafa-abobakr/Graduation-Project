@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -32,7 +33,7 @@ import {
 } from "@/components/ui/chart";
 import { Search, ChevronDown, ChevronUp } from "lucide-react";
 
-export default function ForecastTable({ items, alignment }) {
+export default function ForecastTable({ items, alignment, isLoading }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
@@ -91,7 +92,19 @@ export default function ForecastTable({ items, alignment }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredItems.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32 mx-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-12 mx-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 mx-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-16 mx-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-16 rounded-full mx-auto" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-4 mx-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : filteredItems.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={7}
