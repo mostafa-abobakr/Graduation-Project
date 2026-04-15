@@ -40,12 +40,16 @@ from typing import Literal
 
 import numpy as np
 import pandas as pd
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, BackgroundTasks, HTTPException, Path, UploadFile, File, Query
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
+from typing import Dict, Any, List
 import json
 import os
 import shutil
 
 from config.settings import validate_required
+from database.connection import get_engine
 from preprocessing.loader import load_data
 from preprocessing.cleaner import clean_data
 from preprocessing.aggregator import aggregate_hourly
@@ -76,8 +80,24 @@ from analytics.queries import (
     get_previous_week_kpis,
 )
 
-from database.seeder import seed_restaurant_data, check_restaurant_has_data, get_restaurants_without_data
+from database.seeder import (
+    seed_restaurant_data, 
+    check_restaurant_has_data, 
+    get_restaurants_without_data,
+    seed_inventory_data,
+    seed_all_inventory
+)
 
+from schemas.inventory_requests import RestockRequest, RecipeIngredientRequest
+from inventory.service import (
+    consume_inventory,
+    restock_inventory,
+    check_low_stock,
+    forecast_inventory_requirements,
+    get_menu_recipes,
+    add_ingredient_to_recipe,
+    get_all_inventory,
+)
 
 # ---------------------------------------------------------------------------
 # Application lifespan — validate config at startup
@@ -153,6 +173,28 @@ def seed_all_dummy_data():
         raise HTTPException(status_code=500, detail=f"Failed to run batch seed: {str(e)}")
 
 
+@app.post("/seed/inventory/{restaurant_id}")
+def api_seed_inventory(restaurant_id: str):
+    """
+    Seed dummy inventory data and item recipes for a specific restaurant.
+    """
+    try:
+        return seed_inventory_data(restaurant_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to seed inventory data: {str(e)}")
+
+
+@app.post("/seedAll/inventory")
+def api_seed_all_inventory():
+    """
+    Seed dummy inventory data for all restaurants without it.
+    """
+    try:
+        return seed_all_inventory()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to run batch inventory seed: {str(e)}")
 
 # ---------------------------------------------------------------------------
 # TRAIN
@@ -1340,5 +1382,168 @@ def delete_all_models(restaurant_id: str):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to delete models: {str(e)}")
+
+
+# ---------------------------------------------------------------------------
+# INVENTORY MANAGEMENT
+# ---------------------------------------------------------------------------
+@app.post("/inventory/consume/{restaurant_id}/{order_id}")
+def api_consume_inventory(restaurant_id: str, order_id: int):
+    """
+    Deduct stock from Inventories based on consumed menu items in an Order.
+    """
+    try:
+        return consume_inventory(restaurant_id, order_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to consume inventory: {str(e)}")
+
+
+@app.post("/inventory/restock/{restaurant_id}")
+def api_restock_inventory(restaurant_id: str, request: RestockRequest):
+    """
+    Increase inventory stock directly.
+    """
+    try:
+        return restock_inventory(restaurant_id, request.inventory_id, request.quantity)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to restock inventory: {str(e)}")
+
+
+@app.get("/inventory/low-stock/{restaurant_id}")
+def api_check_low_stock(restaurant_id: str):
+    """
+    Return all items where Stock <= ReorderLevel.
+    """
+    try:
+        return check_low_stock(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve low stock: {str(e)}")
+
+
+@app.post("/inventory/forecast-check/{restaurant_id}")
+def api_forecast_inventory_requirements(restaurant_id: str, request: WeeklyDashboardRequest):
+    """
+    Forecast expected shortages based on Prophet predicted demand over the next 7 days.
+    """
+    if len(request.weekly_temperatures) != 7 or len(request.weekly_events) != 7:
+        raise HTTPException(
+            status_code=400,
+            detail="Must provide exactly 7 values for weekly temps/events.",
+        )
+
+    model_dir = os.path.dirname(get_model_path(restaurant_id, "dummy"))
+    if not os.path.exists(model_dir):
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+        
+    items = [f[:-4] for f in os.listdir(model_dir) if f.endswith(".pkl")]
+    if not items:
+        raise HTTPException(status_code=404, detail="No models found for restaurant")
+
+    future_temp: list[float] = []
+    future_events: list[int] = []
+    for t, e in zip(request.weekly_temperatures, request.weekly_events):
+        future_temp.extend([t] * 24)
+        future_events.extend([e] * 24)
+
+    forecast_dicts = []
+    for item_name in items:
+        try:
+            hourly = forecast(restaurant_id, item_name, future_temp, future_events)
+            if hourly.empty:
+                continue
+            
+            orders = float(hourly["predicted_demand"].sum())
+            forecast_dicts.append({"item_name": item_name, "expected_orders": orders})
+        except (FileNotFoundError, ValueError):
+            continue
+
+    if not forecast_dicts:
+        raise HTTPException(status_code=400, detail="Could not generate forecast for any items")
+
+    try:
+        return forecast_inventory_requirements(restaurant_id, forecast_dicts)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to check forecast inventory: {str(e)}")
+
+
+@app.get("/inventory/recipes/{restaurant_id}")
+def api_get_menu_recipes(restaurant_id: str):
+    """
+    Get all menu items and their currently mapped ingredient recipes for a restaurant.
+    """
+    try:
+        return get_menu_recipes(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve recipes: {str(e)}")
+
+
+@app.post("/inventory/recipes/{restaurant_id}/add")
+def api_add_ingredient_to_recipe(restaurant_id: str, request: RecipeIngredientRequest):
+    """
+    Add or update an ingredient in a menu item's recipe.
+    """
+    try:
+        return add_ingredient_to_recipe(
+            rest_id=restaurant_id,
+            menu_item_id=request.menu_item_id,
+            quantity=request.quantity_used,
+            inventory_id=request.inventory_id,
+            new_name=request.new_ingredient_name,
+            new_unit=request.new_ingredient_unit
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to map recipe: {str(e)}")
+
+
+@app.get("/inventory/items/{restaurant_id}")
+def api_get_all_inventory(restaurant_id: str):
+    """
+    Get all inventory items for a restaurant with full details (stock, unit, category, status, etc.).
+    """
+    try:
+        return get_all_inventory(restaurant_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve inventory: {str(e)}")
+
+
+@app.post("/inventory/invoice-scan/{restaurant_id}")
+async def api_invoice_scan(restaurant_id: str, file: UploadFile = File(...), mode: str = Query(default="auto", enum=["auto", "local", "cloud"])):
+    """
+    Invoice Scanning with OCR + AI.
+    Modes:
+      - **auto** (default): Tries local Tesseract OCR first, falls back to cloud AI.
+      - **local**: Uses only Tesseract OCR (no API calls, fully offline).
+      - **cloud**: Uses only Gemini / OpenRouter cloud vision AI.
+    """
+    try:
+        contents = await file.read()
+        
+        # Validate and convert the uploaded file to a proper image
+        from PIL import Image as PILImage
+        import io as _io
+        try:
+            img = PILImage.open(_io.BytesIO(contents))
+            # Convert to RGB PNG bytes to standardize format
+            buf = _io.BytesIO()
+            img.convert("RGB").save(buf, format="PNG")
+            contents = buf.getvalue()
+        except Exception:
+            raise ValueError(
+                f"Uploaded file '{file.filename}' is not a valid image. "
+                f"Please upload a JPG, PNG, or WEBP image of the invoice."
+            )
+        
+        from inventory.invoice_scanner import analyze_invoice_and_restock
+        return analyze_invoice_and_restock(restaurant_id, contents, mode=mode)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 

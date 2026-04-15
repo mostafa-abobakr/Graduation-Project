@@ -74,3 +74,49 @@ class OrderItem(Base):
     # Relationships
     order     = relationship("Order", back_populates="line_items")
     menu_item = relationship("MenuItem", back_populates="line_items")
+
+
+class Inventory(Base):
+    """
+    Tracks inventory items / raw ingredients.
+    """
+    __tablename__ = "Inventories"
+
+    InventoryID     = Column(Integer, primary_key=True)
+    RestID          = Column(String(50), nullable=False, index=True)
+    ItemName        = Column(String(200), nullable=False)
+    Unit            = Column(String(50), nullable=True)
+    ReorderLevel    = Column(Float, nullable=True)
+    ReorderQuantity = Column(Float, nullable=True)
+    Stock           = Column(Float, nullable=True)
+    CostPerUnit     = Column(Float, nullable=True)
+    Category        = Column(String(100), nullable=True)
+    Status          = Column(String(50), nullable=True)
+
+
+class MenuItemIngredient(Base):
+    """
+    Junction mapping MenuItems to Inventories for BOM (Bill of Materials).
+    """
+    __tablename__ = "MenuItemIngredients"
+
+    MenuItemId          = Column(Integer, ForeignKey("MenuItems.MenuItemId"), primary_key=True)
+    InventoryID         = Column(Integer, ForeignKey("Inventories.InventoryID"), primary_key=True)
+    QuantityUsedPerItem = Column(Float, nullable=False)
+
+
+class InventoryTransaction(Base):
+    """
+    Audit log of inventory changes.
+    """
+    __tablename__ = "InventoryTransactions"
+
+    TransactionID   = Column(Integer, primary_key=True, autoincrement=True)
+    InventoryID     = Column(Integer, ForeignKey("Inventories.InventoryID"), nullable=False, index=True)
+    RestID          = Column(String(50), nullable=False, index=True)
+    ChangeType      = Column(String(50), nullable=False)
+    QuantityChange  = Column(Float, nullable=False)
+    ReferenceID     = Column(Integer, nullable=True)
+    ReferenceType   = Column(String(50), nullable=True)
+    CreatedAt       = Column(DateTime, nullable=True)
+

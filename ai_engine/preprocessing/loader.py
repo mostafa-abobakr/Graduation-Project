@@ -6,8 +6,8 @@ Delegates to database/queries.py which executes the normalized
 three-table JOIN (Orders → OrderItems → MenuItems).
 
 Output DataFrame columns (contract):
-    order_timestamp     : datetime
-    quantity            : int
+    ds                  : datetime
+    y                   : int
     temperature_celsius : float
     event_day           : int (0 or 1)
     item_name           : str
@@ -29,7 +29,7 @@ def load_data(restaurant_id: str) -> pd.DataFrame:
 
     Returns:
         DataFrame with columns:
-            order_timestamp, quantity, temperature_celsius, event_day, item_name
+            ds, y, temperature_celsius, event_day, item_name
 
     Raises:
         EnvironmentError: If DATABASE_URL is not set.

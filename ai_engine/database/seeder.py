@@ -476,3 +476,169 @@ def seed_all_restaurants() -> Dict[str, Any]:
         "skipped_restaurants": skipped,
         "errors": errors
     }
+
+
+RECIPE_KNOWLEDGE_BASE = {
+    "Burger": [("Minced Meat", "Kg", 0.200, "Meat"), ("Burger Bun", "Units", 1.0, "Bakery"), ("Lettuce", "Kg", 0.03, "Produce"), ("Cheese Slice", "Units", 1.0, "Dairy")],
+    "Fries": [("Potatoes", "Kg", 0.250, "Produce"), ("Frying Oil", "Liters", 0.050, "Pantry"), ("Salt", "Kg", 0.005, "Pantry")],
+    "Pizza": [("Pizza Flour", "Kg", 0.200, "Pantry"), ("Mozzarella Cheese", "Kg", 0.150, "Dairy"), ("Pizza Sauce", "Liters", 0.100, "Pantry")],
+    "Sandwich": [("Bread Roll", "Units", 1.0, "Bakery"), ("Deli Meat", "Kg", 0.150, "Meat"), ("Lettuce", "Kg", 0.03, "Produce")],
+    "Espresso": [("Coffee Beans", "Kg", 0.018, "Beverage")],
+    "Latte": [("Coffee Beans", "Kg", 0.018, "Beverage"), ("Milk", "Liters", 0.200, "Dairy")],
+    "Cappuccino": [("Coffee Beans", "Kg", 0.018, "Beverage"), ("Milk", "Liters", 0.150, "Dairy")],
+    "Tea": [("Tea Bag", "Units", 1.0, "Beverage"), ("Sugar", "Kg", 0.020, "Pantry")],
+    "Croissant": [("Flour", "Kg", 0.080, "Pantry"), ("Butter", "Kg", 0.050, "Dairy")],
+    "Pasta": [("Dry Pasta", "Kg", 0.150, "Pantry"), ("Cooking Cream", "Liters", 0.100, "Dairy")],
+    "Carbonara": [("Dry Pasta", "Kg", 0.150, "Pantry"), ("Pancetta", "Kg", 0.050, "Meat"), ("Eggs", "Units", 2.0, "Dairy")],
+    "Lasagna": [("Lasagna Sheets", "Kg", 0.200, "Pantry"), ("Minced Meat", "Kg", 0.150, "Meat"), ("Mozzarella", "Kg", 0.100, "Dairy")],
+    "Taco": [("Taco Shell", "Units", 1.0, "Bakery"), ("Minced Meat", "Kg", 0.100, "Meat"), ("Salsa", "Liters", 0.030, "Produce")],
+    "Burrito": [("Tortilla Wrap", "Units", 1.0, "Bakery"), ("Minced Meat", "Kg", 0.150, "Meat"), ("Rice", "Kg", 0.050, "Pantry")],
+    "Koshary": [("Rice", "Kg", 0.100, "Pantry"), ("Macaroni", "Kg", 0.100, "Pantry"), ("Lentils", "Kg", 0.050, "Pantry"), ("Tomato Sauce", "Liters", 0.100, "Pantry")],
+    "Molokhia": [("Molokhia Leaves", "Kg", 0.200, "Produce"), ("Garlic", "Kg", 0.020, "Produce"), ("Chicken Broth", "Liters", 0.200, "Pantry")],
+    "Shawarma": [("Shredded Meat", "Kg", 0.150, "Meat"), ("Wrap Bread", "Units", 1.0, "Bakery"), ("Garlic Dip", "Liters", 0.030, "Pantry")],
+    "Fried Chicken": [("Chicken Pieces", "Units", 3.0, "Meat"), ("Frying Oil", "Liters", 0.100, "Pantry"), ("Flour", "Kg", 0.100, "Pantry")],
+    "Chicken Wings": [("Chicken Wings", "Units", 8.0, "Meat"), ("BBQ Sauce", "Liters", 0.050, "Pantry")],
+    "Seafood": [("Mixed Seafood", "Kg", 0.250, "Seafood"), ("Lemon", "Units", 1.0, "Produce")],
+    "Salmon": [("Salmon Fillet", "Kg", 0.200, "Seafood"), ("Butter", "Kg", 0.020, "Dairy")],
+    "Salad": [("Lettuce", "Kg", 0.150, "Produce"), ("Tomato", "Kg", 0.050, "Produce"), ("Cucumber", "Kg", 0.050, "Produce")],
+    "Drink": [("Soda Syrup", "Liters", 0.050, "Beverage"), ("Carbonated Water", "Liters", 0.300, "Beverage")],
+    "Water": [("Bottled Water", "Units", 1.0, "Beverage")],
+    "Ice Cream": [("Ice Cream Base", "Liters", 0.150, "Dairy"), ("Milk", "Liters", 0.050, "Dairy")],
+}
+FALLBACK_RECIPE = [("Main Raw Ingredient", "Kg", 0.250, "General"), ("Base Garnish", "Kg", 0.050, "Produce"), ("Packaging Box", "Units", 1.0, "Packaging")]
+
+def seed_inventory_data(restaurant_id: str) -> Dict[str, Any]:
+    """
+    Generates realistic dummy inventory items, links them to the existing menu items
+    via MenuItemIngredients with realistic recipes (BOM), and seeds initial stock.
+    """
+    engine = get_engine()
+    
+    with engine.begin() as conn:
+        # 1. Fetch menu items
+        menu_items = conn.execute(
+            text("SELECT MenuItemId, ItemName FROM MenuItems WHERE RestaurantId = :rid"),
+            {"rid": restaurant_id}
+        ).fetchall()
+        
+        if not menu_items:
+            raise ValueError(f"Restaurant '{restaurant_id}' has no menu items. Seed POS data first.")
+            
+        existing_inv = conn.execute(
+            text("SELECT TOP 1 1 FROM Inventories WHERE RestID = :rid"),
+            {"rid": restaurant_id}
+        ).fetchone()
+        
+        if existing_inv:
+            raise ValueError(f"Restaurant '{restaurant_id}' already has inventory seeded.")
+            
+        inserted_inventories = 0
+        inserted_mii = 0
+        
+        # We will keep a dictionary of created inventory items per restaurant to reuse them
+        # e.g., if multiple items need "Lettuce", we only create "Lettuce" once in Inventories.
+        created_inventories: Dict[str, int] = {}
+        
+        sql_insert_inv = text("""
+            INSERT INTO Inventories (RestID, ItemName, Unit, ReorderLevel, ReorderQuantity, Stock, CostPerUnit, Status, Category)
+            OUTPUT inserted.InventoryID
+            VALUES (:rid, :name, :unit, :rl, :rq, :stock, :cost, :status, :category)
+        """)
+        
+        sql_insert_mii = text("""
+            INSERT INTO MenuItemIngredients (MenuItemId, InventoryID, QuantityUsedPerItem)
+            VALUES (:mi_id, :inv_id, :qty)
+        """)
+            
+        # 2. Map realistic ingredients to Menu Items
+        for mi_id, mi_name in menu_items:
+            
+            # Find matching recipe
+            matched_recipe = FALLBACK_RECIPE
+            for keyword, recipe in RECIPE_KNOWLEDGE_BASE.items():
+                if keyword.lower() in mi_name.lower():
+                    matched_recipe = recipe
+                    break
+                    
+            for ing_name, unit, qty, category in matched_recipe:
+                # Deduplicate inventory creation
+                if ing_name not in created_inventories:
+                    # Give realistic limits based on unit
+                    if unit == "Kg" or unit == "Liters":
+                        rl = round(random.uniform(10, 50), 1)
+                        rq = round(random.uniform(50, 100), 1)
+                        stock = round(random.uniform(100, 300), 1)
+                        cost = round(random.uniform(10, 80), 2)
+                    else: # Units
+                        rl = round(random.uniform(100, 500), 1)
+                        rq = round(random.uniform(500, 2000), 1)
+                        stock = round(random.uniform(1000, 3000), 1)
+                        cost = round(random.uniform(0.5, 5), 2)
+                        
+                    res = conn.execute(sql_insert_inv, {
+                        "rid": restaurant_id,
+                        "name": ing_name,
+                        "unit": unit,
+                        "rl": rl,
+                        "rq": rq,
+                        "stock": stock,
+                        "cost": cost,
+                        "status": "Active",
+                        "category": category
+                    }).fetchone()
+                    created_inventories[ing_name] = res[0]
+                    inserted_inventories += 1
+                
+                inv_id = created_inventories[ing_name]
+                
+                # Check if this link already exists (just in case recipe has duplicates)
+                try:
+                    conn.execute(sql_insert_mii, {
+                        "mi_id": mi_id,
+                        "inv_id": inv_id,
+                        "qty": qty
+                    })
+                    inserted_mii += 1
+                except Exception:
+                    pass # ignore duplicate insertions
+                
+    return {
+        "restaurant_id": restaurant_id,
+        "unique_ingredients_created": inserted_inventories,
+        "recipes_mapped": inserted_mii
+    }
+    
+
+def seed_all_inventory() -> Dict[str, Any]:
+    """
+    Seeds inventory data for all restaurants that do not have it yet.
+    """
+    engine = get_engine()
+    
+    with engine.connect() as conn:
+        rows = conn.execute(text("SELECT RestID FROM Restaurants")).fetchall()
+        
+    seeded = []
+    skipped = []
+    errors = []
+    
+    for row in rows:
+        rest_id = str(row[0])
+        try:
+            info = seed_inventory_data(rest_id)
+            seeded.append(info)
+        except ValueError as e:
+            skipped.append({"restaurant_id": rest_id, "reason": str(e)})
+        except Exception as e:
+            errors.append({"restaurant_id": rest_id, "error": str(e)})
+            
+    return {
+        "total": len(rows),
+        "seeded_count": len(seeded),
+        "skipped_count": len(skipped),
+        "error_count": len(errors),
+        "details": seeded,
+        "skipped": skipped,
+        "errors": errors
+    }
+

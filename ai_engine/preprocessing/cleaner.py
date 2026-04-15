@@ -16,7 +16,7 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     - Drop duplicate rows
     """
     df = df.copy()
-    df["order_timestamp"] = pd.to_datetime(df["order_timestamp"])
-    df = df.dropna(subset=["item_name", "quantity"])
+    df["ds"] = pd.to_datetime(df["ds"])
+    df = df.dropna(subset=["item_name", "y"])
     df = df.drop_duplicates()
     return df
