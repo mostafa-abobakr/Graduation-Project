@@ -23,8 +23,11 @@ import Login from "@/pages/Auth/Login";
 import Register from "@/pages/Auth/Register";
 import RegisterPersonal from "@/pages/Auth/Register/RegisterPersonal";
 import RegisterRestaurant from "@/pages/Auth/Register/RegisterRestaurant";
+import RestaurantLocation from "@/pages/Auth/Register/RestaurantLocation";
 import PosOptions from "@/pages/pos/ConnectPosPage";
 import SchedulePage from "@/pages/SchedulePage";
+import BillingPlans from "@/pages/Auth/Register/BillingPlans";
+import PaymentGateway from "@/pages/Auth/Register/PaymentGateway";
 
 
 const requireAuth = () => {
@@ -57,8 +60,20 @@ const Routes = [
         element: <RegisterRestaurant />,
       },
       {
+        path: "restaurant-location",
+        element: <RestaurantLocation />,
+      },
+      {
         path: "connect-pos",
         element: <PosOptions />,
+      },
+      {
+        path: "plans",
+        element: <BillingPlans />,
+      },
+      {
+        path: "payment",
+        element: <PaymentGateway />,
       },
     ],
   },
