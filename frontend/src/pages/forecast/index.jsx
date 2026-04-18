@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loader2, AlertCircle } from "lucide-react";
 
-import { useForecast } from "../hooks/useForecast";
-import ForecastHeader from "./forecast/ForecastHeader";
-import ForecastSummaryCards from "./forecast/ForecastSummaryCards";
-import ForecastTable from "./forecast/ForecastTable";
-import ForecastSettingsModal from "./forecast/ForecastSettingsModal";
+import { useForecast } from "../../hooks/useForecast";
+import ForecastHeader from "./ForecastHeader";
+import ForecastSummaryCards from "./ForecastSummaryCards";
+import ForecastTable from "./ForecastTable";
+import ForecastSettingsModal from "./ForecastSettingsModal";
 
 export default function ForecastPage() {
   const { user } = useAuth();

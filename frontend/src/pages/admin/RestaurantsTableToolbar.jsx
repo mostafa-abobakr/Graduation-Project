@@ -51,12 +51,12 @@ export default function RestaurantsTableToolbar({
           </SelectContent>
         </Select>
 
-        <Button
+        {/* <Button
           className="w-full sm:w-auto gap-2"
           onClick={onAddRestaurant}
         >
           <Plus className="h-4 w-4" /> Add Restaurant
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

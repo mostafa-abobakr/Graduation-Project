@@ -1,12 +1,12 @@
 import React from "react";
 import { createBrowserRouter, redirect } from "react-router-dom";
 import LandingPage from "../pages/LandingPage";
-// import AuthPage from "../pages/AuthPage";
+
 import DashboardLayout from "../components/layout/DashboardLayout";
 import { lazy } from "react";
 
 const DashboardIndex = lazy(() => import("../pages/DashboardIndex"));
-const ForecastPage = lazy(() => import("../pages/ForecastPage"));
+const ForecastPage = lazy(() => import("../pages/forecast"));
 const MenuAnalyticsPage = lazy(() => import("../pages/MenuAnalyticsPage"));
 const RevenuePage = lazy(() => import("../pages/RevenuePage"));
 const AIInsightsPage = lazy(() => import("../pages/AIInsightsPage"));
