@@ -17,15 +17,11 @@ const {login} = useAuth();
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const signInHandler = async () => {
-        const stored = localStorage.getItem("register");
-        const formData = JSON.parse(stored);
-        const { email, password } = formData;
         setLoading(true);
-        const success = await login(email, password)
-        if (success) {
-            navigate("/dashboard")
-        }
-        setLoading(false);
+        // Navigate to billing plan selection rather than dashboard
+        setTimeout(() => {
+            navigate("/register/plans");
+        }, 500);
     }
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">

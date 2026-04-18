@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import axios from "axios";
 
-const API_BASE = "http://resturantai.runasp.net/api/Auth";
+const API_BASE = "/api/Auth";
 
 const AuthContext = createContext(null);
 

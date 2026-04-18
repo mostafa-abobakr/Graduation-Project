@@ -1,40 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useFormik } from "formik";
-import * as Yup from "yup";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
-import { toast } from "sonner";
 
 import AuthContainer from "@/components/AuthContainer";
 import img from "@/assets/Auth/SignUp.png";
 import { signupValidationSchema } from "@/schemas/auth/validations";
 import { useRegisterContext } from "@/contexts/Valdation";
 import { Loader2 } from "lucide-react";
-const validationSchema = signupValidationSchema.pick([ "address", "restaurantName", "city", "restaurantPhone", ""])
 
+const validationSchema = signupValidationSchema.pick([ "restaurantName", "restaurantPhone"]);
 
 const RegisterRestaurant = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const [loading, setLoading]= useState(false);
-  const {formData ,updateFromData}= useRegisterContext()
+  const { formData, updateFromData } = useRegisterContext();
+
   const formik = useFormik({
     initialValues: {
       restaurantName: formData.restaurantName || "",
-      address: formData.address || "",
-      city: formData.city || "",
       restaurantPhone: formData.restaurantPhone || "",
     },
     validationSchema,
     onSubmit: async (values) => {
-      setLoading(true)
-      updateFromData(values)
-      navigate("/register/connect-pos");
-      setLoading(false);
+      setIsSubmitting(true);
+      updateFromData(values);
+      // Changed to navigate to the new location page
+      navigate("/register/restaurant-location");
+      setIsSubmitting(false);
     },
   });
 
@@ -65,41 +61,6 @@ const RegisterRestaurant = () => {
         </div>
 
         <div className="space-y-2 relative">
-          <Label htmlFor="address" className="font-semibold">Address</Label>
-          <div className="relative">
-             <svg className="absolute left-3 top-3 w-5 h-5 text-primary z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <Input
-              id="address"
-              name="address"
-              placeholder="Address"
-              className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("address")}
-            />
-          </div>
-          {formik.touched.address && formik.errors.address && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.address}</p>}
-        </div>
-
-        <div className="space-y-2 relative">
-          <Label htmlFor="city" className="font-semibold">City</Label>
-          <div className="relative">
-             <svg className="absolute left-3 top-3 w-5 h-5 text-primary z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-            </svg>
-            <Input
-              id="city"
-              name="city"
-              placeholder="City"
-              className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("city")}
-            />
-          </div>
-          {formik.touched.city && formik.errors.city && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.city}</p>}
-        </div>
-
-        <div className="space-y-2 relative">
           <Label htmlFor="restaurantPhone" className="font-semibold">Restaurant Phone</Label>
           <div className="relative">
              <svg className="absolute left-3 top-3 w-5 h-5 text-primary z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,7 +86,7 @@ const RegisterRestaurant = () => {
         )}
 
         <Button type="submit" className="w-full mt-6 h-12 text-[1rem] shadow-md" disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="animate-spin" /> : "Complete Registration"}
+          {isSubmitting ? <Loader2 className="animate-spin" /> : "Next: Set Location"}
         </Button>
       </form>
     </AuthContainer>
