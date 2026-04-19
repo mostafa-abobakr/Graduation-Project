@@ -142,7 +142,7 @@ export default function SchedulePage() {
       }
 
       const method = isEditMode ? "PUT" : "POST";
-      const response = await fetch("http://resturantai.runasp.net/api/Schedule", {
+      const response = await fetch("https://resturantai.runasp.net/api/Schedule", {
         method: method,
         headers: {
           "Accept": "*/*",
@@ -179,7 +179,7 @@ export default function SchedulePage() {
         if (storedUser) token = JSON.parse(storedUser).token;
       }
 
-      const response = await fetch(`http://resturantai.runasp.net/api/Schedule/${editingShiftId}`, {
+      const response = await fetch(`https://resturantai.runasp.net/api/Schedule/${editingShiftId}`, {
         method: "DELETE",
         headers: {
           "Accept": "*/*",
@@ -236,7 +236,7 @@ export default function SchedulePage() {
           return;
         }
 
-        const response = await fetch("http://resturantai.runasp.net/api/Employees", {
+        const response = await fetch("https://resturantai.runasp.net/api/Employees", {
           headers: {
             "Accept": "*/*",
             "Authorization": `Bearer ${token}`
@@ -306,7 +306,7 @@ export default function SchedulePage() {
           if (storedUser) token = JSON.parse(storedUser).token;
         }
 
-        const url = `http://resturantai.runasp.net/api/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`;
+        const url = `https://resturantai.runasp.net/api/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`;
         const response = await fetch(url, {
           headers: {
             "Accept": "*/*",
@@ -523,7 +523,7 @@ export default function SchedulePage() {
 
         {/* staff list */}
         <div
-          className={`transition-all duration-500 ease-in-out overflow-hidden origin-right shrink-0
+          className={`transition-all duration-500 ease-in-out overflow-hidden origin-right shrink-0 ml-4
             ${
               isVisble
                 ? "w-full lg:w-72 max-h-[2000px] opacity-100 scale-100"

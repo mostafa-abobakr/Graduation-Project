@@ -10,10 +10,18 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
+  SidebarMenuSubButton,
   SidebarProvider,
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   LayoutDashboard,
   BarChart3,
@@ -30,6 +38,8 @@ import {
   MessageSquare,
   FileText,
   LogOut,
+  PlusCircle,
+  Bell,
   User,
   CreditCard,
   Shield,
@@ -37,10 +47,13 @@ import {
   Activity,
   UserCog,
   CalendarDays,
+  ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationsDropdown } from "@/components/shared/NotificationsDropdown";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -64,7 +77,17 @@ const managerManagementItems = [
   { title: "Menu Management", url: "/dashboard/menu", icon: ChefHat },
   { title: "Staff", url: "/dashboard/staff", icon: Users },
   { title: "Schedule", url: "/dashboard/schedule", icon: CalendarDays  },
-  { title: "Inventory", url: "/dashboard/inventory", icon: Package },
+];
+
+
+const managerInventoryItems = [
+  { title: "Stock Overview", url: "/inventory/dashboard", icon: LayoutDashboard },
+  { title: "Inventory ", url: "/inventory", icon: Package },
+  { title: "Receive Stock", url: "/inventory/add-stock", icon: PlusCircle },
+  { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
+  { title: "Inventory Settings", url: "/inventory/settings", icon: Settings },
+    { title: "Inventory Forecast", url: "/inventory/forecast", icon: AlertTriangle },
+  {title: "Draft", url: "/inventory/draft", icon: ChefHat }
 ];
 
 const managerOtherItems = [
@@ -80,6 +103,7 @@ function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { isAdmin } = useAuth();
+  const { t, language } = useLanguage();
 
   const renderGroup = (label, items) => (
     <SidebarGroup>
@@ -88,28 +112,68 @@ function AppSidebar() {
       </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
-          {items.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
-                <NavLink
-                  to={item.url}
-                  end={item.url === "/dashboard"}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150"
-                  activeClassName="bg-primary/10 text-primary font-medium"
-                >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span>{item.title}</span>}
-                </NavLink>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
+          {items.map((item) => {
+            if (item.subItems) {
+              return (
+                <Collapsible key={item.title} asChild defaultOpen className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton tooltip={t(item.title)}>
+                        <item.icon className="h-4 w-4 shrink-0" />
+                        {!collapsed && <span>{t(item.title)}</span>}
+                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90 rtl:rotate-180 group-data-[state=open]/collapsible:rtl:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {item.subItems.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton asChild>
+                              <NavLink
+                                to={subItem.url}
+                                end={subItem.url === "/dashboard/inventory"}
+                                className="flex items-center w-full px-2 py-1.5 transition-colors text-muted-foreground hover:text-foreground"
+                                activeClassName="bg-primary/10 text-primary font-medium rounded-md"
+                              >
+                                <span>{t(subItem.title)}</span>
+                              </NavLink>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              );
+            }
+
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to={item.url}
+                    end={item.url === "/dashboard"}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150"
+                    activeClassName="bg-primary/10 text-primary font-medium"
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span>{t(item.title)}</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            );
+          })}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
   );
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/60">
+    <Sidebar 
+      side={language === 'ar' ? 'right' : 'left'} 
+      collapsible="icon" 
+      className={language === 'ar' ? "border-l border-border/60" : "border-r border-border/60"}
+    >
       <SidebarContent>
         <div className={`pt-4 ${collapsed ? "px-2" : "px-4"}`}>
           <Link to="/" className="flex items-center gap-3">
@@ -137,6 +201,8 @@ function AppSidebar() {
             <Separator className="mx-3 w-auto" />
             {renderGroup("Management", managerManagementItems)}
             <Separator className="mx-3 w-auto" />
+            {renderGroup("Inventory Tracking", managerInventoryItems)}
+            <Separator className="mx-3 w-auto" />
             {renderGroup("Other", managerOtherItems)}
           </>
         )}
@@ -148,6 +214,7 @@ function AppSidebar() {
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const { user, isAdmin, logout } = useAuth();
+  const { t, language, toggleLanguage } = useLanguage();
   const initials = user?.email?.slice(0, 2).toUpperCase() || "??";
 
   return (
@@ -167,6 +234,12 @@ export default function DashboardLayout() {
             )}
             <div className="flex-1" />
             <div className="flex items-center gap-2">
+              <button 
+                onClick={toggleLanguage}
+                className="h-8 w-8 rounded-full bg-secondary/80 flex items-center justify-center text-xs font-semibold cursor-pointer transition-colors hover:bg-secondary"
+              >
+                {language === 'en' ? 'AR' : 'EN'}
+              </button>
               <NotificationsDropdown />
               <ThemeToggle />
               <DropdownMenu>

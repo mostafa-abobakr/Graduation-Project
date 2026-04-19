@@ -1,16 +1,15 @@
 import React, { useState } from "react";
-import AuthContainer from "@/components/AuthContainer";
-import AuthFooter from "@/components/AuthFooter";
-import AuthForm from "@/components/AuthForm";
 import { Link, useNavigate } from "react-router-dom";
 import { useFormik } from "formik";
 import { loginValidationSchema } from "@/schemas/auth/validations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Leaf, Loader2 } from "lucide-react";
+import {ThemeToggle} from "@/components/shared/ThemeToggle";
 
 import { useAuth } from "@/contexts/AuthContext";
-import LoginImg from "@/assets/Auth/Login.json";
 
 function Login() {
   const navigate = useNavigate();
@@ -39,58 +38,47 @@ function Login() {
   });
 
   return (
-    <AuthContainer img={LoginImg} isLottie={true}>
-      <AuthForm header="Welcome Back!" onSubmit={formik.handleSubmit}>
-        <div className="space-y-5 w-full">
-          <div className="space-y-2 relative">
-            <Label htmlFor="email" className="font-semibold text-foreground">Email Address</Label>
-            <div className="relative">
-              <span className="absolute left-3 top-[0.6rem] text-primary font-bold z-10">@</span>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="username@gmail.com"
-                className="pl-8 bg-muted/20 border-border/80 h-[3rem]"
-                {...formik.getFieldProps("email")}
-              />
-            </div>
-            {formik.touched.email && formik.errors.email && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.email}</p>}
-          </div>
-
-          <div className="space-y-2 relative">
-            <Label htmlFor="password" className="font-semibold text-foreground">Password</Label>
-            <div className="relative">
-              <svg className="absolute left-3 top-[0.7rem] w-[1.1rem] h-[1.1rem] text-primary z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="••••••••"
-                className="pl-[2.2rem] bg-muted/20 border-border/80 h-[3rem]"
-                autoComplete="current-password"
-                {...formik.getFieldProps("password")}
-              />
-            </div>
-            {formik.touched.password && formik.errors.password && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>}
-          </div>
-
-          {submitError && <div className="text-destructive text-[14px] font-medium bg-destructive/10 p-3 rounded-md">{submitError}</div>}
-
-          <Button type="submit" className="w-full h-12 mt-6 text-[1rem] shadow-md hover:shadow-lg transition-all" disabled={isSubmitting || !formik.isValid}>
-            {isSubmitting ? "Logging in..." : "Login"}
-          </Button>
-
-          <div className="flex justify-end mt-2">
-            <Link to="/login/forgot-password" className="text-[0.875rem] font-bold text-primary hover:text-primary/80 transition-colors">forgot password?</Link>
-          </div>
-
-          {/* <AuthFooter text="Don't have an account?" linkText="Sign up" onLinkClick={() => navigate("/register")} /> */}
+    <>
+      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+      <div className="w-full max-w-sm  mx-auto py-16 ">
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2.5 mb-6">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center"><Leaf className="h-4.5 w-4.5 text-primary" /></div>
+            <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>ZeroWaste</span>
+          </Link>
+          <h1 className="text-2xl font-bold text-foreground">Welcome back</h1>
+          <p className="text-sm text-muted-foreground mt-1">Log in to your dashboard</p>
         </div>
-      </AuthForm>
-    </AuthContainer>
+        <Card className="p-7 bg-card border-border/60 premium-shadow-md">
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="email" className="text-foreground text-sm">Email</Label>
+              <Input id="email" type="email" placeholder="you@restaurant.com" className="mt-1.5 bg-muted/30 border-border/60" {...formik.getFieldProps("email")} required />
+              {formik.touched.email && formik.errors.email && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.email}</p>}
+            </div>
+            <div>
+              <Label htmlFor="password" className="text-foreground text-sm">Password</Label>
+              <Input id="password" type="password" placeholder="••••••••" className="mt-1.5 bg-muted/30 border-border/60" {...formik.getFieldProps("password")} required />
+              {formik.touched.password && formik.errors.password && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>}
+            </div>
+
+            {submitError && <div className="text-destructive text-[14px] font-medium bg-destructive/10 p-3 rounded-md">{submitError}</div>}
+            
+            <div className="flex justify-end mt-2">
+              <Link to="/login/forgot-password" className="text-[0.875rem] font-bold text-primary hover:text-primary/80 transition-colors">forgot password?</Link>
+            </div>
+
+            <Button type="submit" className="w-full h-10" disabled={isSubmitting || !formik.isValid}>
+              {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Log In
+            </Button>
+          </form>
+        </Card>
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          Don't have an account? <Link to="/register" className="text-primary hover:underline font-medium">Sign up</Link>
+        </p>
+      </div>
+    </>
   );
 }
 

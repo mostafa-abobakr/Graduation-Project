@@ -75,7 +75,7 @@ function getRestIdFromToken() {
       try {
         const token = getToken();
         if (!token) return;
-        const res = await fetch("http://resturantai.runasp.net/api/Employees", {
+        const res = await fetch("https://resturantai.runasp.net/api/Employees", {
           headers: { Accept: "*/*", Authorization: `Bearer ${token}` },
         });
         if (res.ok) setEmployees(await res.json());

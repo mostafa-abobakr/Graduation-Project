@@ -15,7 +15,7 @@ export const ROUTES={
     MENU: "/dashboard/menu",
     STAFF: "/dashboard/staff",
     SCHEDULE: "/dashboard/schedule",
-    INVENTORY: "/dashboard/inventory",
+    INVENTORY: "/inventory",
     FEEDBACK: "/dashboard/feedback",
     REPORTS: "/dashboard/reports",
     SETTINGS: "/dashboard/settings",

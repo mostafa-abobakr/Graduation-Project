@@ -6,17 +6,20 @@ import {RouterProvider} from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import router from "@/routes/index.jsx";
 import { RegisterProvider } from "./contexts/Valdation";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <RegisterProvider>
+      <LanguageProvider>
       <AuthProvider>
         <Toaster />
         <Sonner />
         <RouterProvider router={router} />
       </AuthProvider>
+      </LanguageProvider>
       </RegisterProvider>
     </TooltipProvider>
   </QueryClientProvider>
