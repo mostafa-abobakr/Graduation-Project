@@ -63,6 +63,54 @@ const parseInvoiceText = (text) => {
   return items;
 };
 
+const OCR_PROMPT = `You are an advanced OCR and data extraction system specialized in inventory invoices.
+
+Your task is to extract structured data from a supplier invoice image or text.
+
+Instructions:
+- Carefully read the invoice content.
+- Identify all listed items (products/materials).
+- For each item, extract the following fields:
+  - item_name (string)
+  - quantity (number)
+  - unit (string, e.g., kg, pcs, box, liter)
+  - unit_price (number)
+  - total_price (number, if available)
+  - expiry_date (string, if available, format YYYY-MM-DD)
+  - production_date (string, if available)
+  - batch_number (string, if available)
+
+- Also extract general invoice information:
+  - invoice_number
+  - supplier_name
+  - invoice_date
+
+Rules:
+- If a field is missing, return null.
+- Do not guess values.
+- Normalize numbers (no currency symbols).
+- Output ONLY valid JSON (no explanations).
+
+Output format:
+
+{
+  "invoice_number": "",
+  "supplier_name": "",
+  "invoice_date": "",
+  "items": [
+    {
+      "item_name": "",
+      "quantity": 0,
+      "unit": "",
+      "unit_price": 0,
+      "total_price": 0,
+      "expiry_date": null,
+      "production_date": null,
+      "batch_number": null
+    }
+  ]
+}`;
+
 export default function InventoryPage() {
   const { items, settings, addItem, addItemsBulk, updateItem, deleteItem } = useInventoryStore();
   const [filter, setFilter] = useState("all");
@@ -80,10 +128,72 @@ export default function InventoryPage() {
   const [scannedItems, setScannedItems] = useState(null);
   const fileInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
       e.target.value = null; // reset input
-      handleSimulateScan();
+      
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        toast.error("VITE_GEMINI_API_KEY is missing in .env file");
+        return;
+      }
+
+      setIsScanning(true);
+      try {
+        const { GoogleGenAI } = await import('@google/genai');
+        const ai = new GoogleGenAI({ apiKey });
+        
+        const base64Data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = () => {
+            const res = reader.result;
+            resolve(res.substring(res.indexOf(',') + 1));
+          };
+          reader.onerror = (error) => reject(error);
+        });
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: [
+            {
+              role: 'user',
+              parts: [
+                { text: OCR_PROMPT },
+                {
+                  inlineData: {
+                    mimeType: file.type,
+                    data: base64Data
+                  }
+                }
+              ]
+            }
+          ]
+        });
+
+        let responseText = response.text;
+        responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const data = JSON.parse(responseText);
+        
+        if (data && data.items && data.items.length > 0) {
+          const mappedItems = data.items.map(item => ({
+            name: item.item_name || "Unknown Item",
+            quantity: item.quantity || 0,
+            unit: item.unit || "piece",
+            price: item.unit_price || 0
+          }));
+          setScannedItems(mappedItems);
+          toast.success(`Extracted ${mappedItems.length} items from ${data.supplier_name || 'invoice'}`);
+        } else {
+          throw new Error("No items found in JSON");
+        }
+      } catch (err) {
+        console.error("OCR Error:", err);
+        toast.error("Failed to parse invoice. Make sure it's a clear image or PDF.");
+      } finally {
+        setIsScanning(false);
+      }
     }
   };
 
@@ -149,19 +259,6 @@ export default function InventoryPage() {
 
   const importAi = () => { addItemsBulk(aiPreview); toast.success(`Imported ${aiPreview.length} items`); setAiOpen(false); setInvoiceText(""); setAiPreview([]); };
 
-  const handleSimulateScan = () => {
-    setIsScanning(true);
-    setTimeout(() => {
-      setIsScanning(false);
-      setScannedItems([
-        { name: "Chicken Breast", quantity: 20, unit: "kg", price: 120.00 },
-        { name: "Basmati Rice", quantity: 50, unit: "kg", price: 65.00 },
-        { name: "Olive Oil", quantity: 10, unit: "L", price: 85.00 },
-      ]);
-      toast.success("Invoice scanned successfully");
-    }, 2000);
-  };
-
   const handleSaveScanned = () => {
     const itemsToAdd = scannedItems.map(item => ({
       name: item.name,
@@ -194,7 +291,7 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in mt-4">
+    <div className="space-y-6 animate-fade-in ">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Inventory</h1>

@@ -81,13 +81,13 @@ const managerManagementItems = [
 
 
 const managerInventoryItems = [
-  { title: "Stock Overview", url: "/inventory/dashboard", icon: LayoutDashboard },
+  // { title: "Stock Overview", url: "/inventory/dashboard", icon: LayoutDashboard },
   { title: "Inventory ", url: "/inventory", icon: Package },
-  { title: "Receive Stock", url: "/inventory/add-stock", icon: PlusCircle },
+  // { title: "Receive Stock", url: "/inventory/add-stock", icon: PlusCircle },
   { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
-  { title: "Inventory Settings", url: "/inventory/settings", icon: Settings },
+  // { title: "Inventory Settings", url: "/inventory/settings", icon: Settings },
     { title: "Inventory Forecast", url: "/inventory/forecast", icon: AlertTriangle },
-  {title: "Draft", url: "/inventory/draft", icon: ChefHat }
+  // {title: "Draft", url: "/inventory/draft", icon: ChefHat }
 ];
 
 const managerOtherItems = [
