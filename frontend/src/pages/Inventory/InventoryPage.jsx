@@ -54,6 +54,7 @@ import {
   CheckCircle2,
   Save,
   PackageSearch,
+  PackagePlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -227,6 +228,32 @@ export default function InventoryPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedItems, setScannedItems] = useState(null);
   const fileInputRef = useRef(null);
+
+  // ── Restock state ──────────────────────────────────────
+  const [restockItem, setRestockItem] = useState(null);
+  const [restockQty, setRestockQty] = useState("");
+  const [restockOpen, setRestockOpen] = useState(false);
+
+  const openRestock = (item) => {
+    setRestockItem(item);
+    setRestockQty("");
+    setRestockOpen(true);
+  };
+
+  const confirmRestock = () => {
+    const qty = parseFloat(restockQty);
+    if (!qty || qty <= 0) {
+      toast.error("Enter a valid quantity");
+      return;
+    }
+    updateItem(restockItem.id, {
+      quantity: (restockItem.quantity || 0) + qty,
+      stock: (restockItem.stock || restockItem.quantity || 0) + qty,
+    });
+    toast.success(`Restocked ${restockItem.name} with +${qty} ${restockItem.unit}`);
+    setRestockOpen(false);
+    setRestockItem(null);
+  };
 
   const handleFileChange = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -1074,16 +1101,15 @@ export default function InventoryPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex justify-center gap-1">
-                          {/* <Button
-                            asChild
+                          <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 text-primary"
+                            title="Restock"
+                            onClick={() => openRestock(i)}
                           >
-                            <Link to={`/inventory/${i.id}`}>
-                              <Eye className="h-4 w-4" />
-                            </Link>
-                          </Button> */}
+                            <PackagePlus className="h-4 w-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -1136,6 +1162,62 @@ export default function InventoryPage() {
           </table>
         </div>
       </Card>
+
+      {/* ── Restock Dialog ────────────────────────────────── */}
+      <Dialog open={restockOpen} onOpenChange={setRestockOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Restock Item</DialogTitle>
+            <DialogDescription>
+              Add stock to <span className="font-semibold text-foreground">{restockItem?.name}</span>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 mt-2">
+            <div className="flex items-center justify-between p-3 bg-muted/40 rounded-lg">
+              <span className="text-sm text-muted-foreground">Current Stock</span>
+              <span className="font-mono font-semibold text-foreground">
+                {restockItem?.quantity ?? 0} {restockItem?.unit}
+              </span>
+            </div>
+
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">
+                Quantity to Add ({restockItem?.unit})
+              </Label>
+              <Input
+                type="number"
+                min="0.01"
+                step="any"
+                value={restockQty}
+                onChange={(e) => setRestockQty(e.target.value)}
+                placeholder={`e.g. 10`}
+                autoFocus
+                onKeyDown={(e) => e.key === "Enter" && confirmRestock()}
+              />
+            </div>
+
+            {restockQty && parseFloat(restockQty) > 0 && (
+              <div className="flex items-center justify-between p-3 bg-primary/10 rounded-lg">
+                <span className="text-sm text-muted-foreground">New Stock</span>
+                <span className="font-mono font-semibold text-primary">
+                  {((restockItem?.quantity ?? 0) + parseFloat(restockQty)).toFixed(1)} {restockItem?.unit}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="mt-2">
+            <Button variant="outline" onClick={() => setRestockOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmRestock} className="gap-2">
+              <PackagePlus className="h-4 w-4" />
+              Restock
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
