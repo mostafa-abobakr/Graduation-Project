@@ -19,6 +19,9 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { ViewToggler } from "@/components/shared/ViewToggler";
+import { SummaryCard } from "@/components/shared/SummaryCard";
 
 // ── Icon map identical to Alerts.jsx so styles stay consistent ──────────────
 const iconMap = {
@@ -62,25 +65,7 @@ function fmt(n) {
   }).format(n);
 }
 
-// ── Summary stat card ────────────────────────────────────────────────────────
-function StatCard({ label, value, sub, icon: Icon, accent }) {
-  return (
-    <Card className="p-5 bg-card border-border/60 premium-shadow">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-          {label}
-        </span>
-        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Icon className="h-4 w-4 text-primary" />
-        </div>
-      </div>
-      <p className="stat-number text-foreground">{value}</p>
 
-      {/* Renders the subtext at the bottom if it exists */}
-      {sub && <p className="text-xs mt-1 text-muted-foreground">{sub}</p>}
-    </Card>
-  );
-}
 
 // ── Loading skeleton ─────────────────────────────────────────────────────────
 function Skeleton({ className }) {
@@ -124,53 +109,19 @@ export default function AIInsightsPage() {
   return (
     <div className="space-y-5 animate-fade-in py-5">
       {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div
-        className=" flex 
-        flex-col sm:flex-row 
-        justify-between 
-        items-center 
-        gap-4
-        bg-background"
-      >
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Lightbulb className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">AI Insights</h1>
-            <p className="text-muted-foreground text-sm">
-              Forecast Alerts &amp; Revenue Insights Powered By AI
-            </p>
-          </div>
-        </div>
-
-        {/* ── Period toggle — glider animation ──────────────────────────── */}
-        <div className="relative flex bg-muted/60 p-1.5 rounded-xl shadow-inner border border-border/40">
-          <div
-            className="absolute top-1.5 bottom-1.5 w-[calc(50%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"
-            style={{
-              transform: `translateX(${period === "day" ? "0%" : "calc(100% - 6px)"})`,
-            }}
+      <PageHeader
+        icon={Lightbulb}
+        title="AI Insights"
+        description="Forecast Alerts & Revenue Insights Powered By AI"
+        actions={
+          <ViewToggler
+            viewMode={period}
+            setViewMode={setPeriod}
+            modes={["day", "week"]}
+            labels={["Tomorrow", "Next Week"]}
           />
-          {[
-            { id: "day", label: "Tomorrow" },
-            { id: "week", label: "Next Week" },
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setPeriod(mode.id)}
-              aria-pressed={period === mode.id}
-              className={`relative z-10 px-4 py-1 text-[13px] font-bold tracking-wide transition-colors duration-200 ${
-                period === mode.id
-                  ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {mode.label}
-            </button>
-          ))}
-        </div>
-      </div>
+        }
+      />
 
       {/* ── Summary stat cards ───────────────────────────────────────────── */}
       {isLoading ? (
@@ -185,28 +136,32 @@ export default function AIInsightsPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            label="Actual Revenue (Baseline)"
+          <SummaryCard
+            title="Actual Revenue (Baseline)"
             value={fmt(periodData?.total_actual_revenue ?? 0)}
             sub={`Based on ${periodData?.baseline_date}`}
             icon={DollarSign}
+            iconColorClass="text-primary"
+            iconWrapper
           />
-          <StatCard
-            label={
+          <SummaryCard
+            title={
               period === "day"
                 ? "Predicted Revenue (Tomorrow)"
                 : "Predicted Revenue (Next Week)"
             }
             value={fmt(periodData?.total_predicted_revenue ?? 0)}
             icon={TrendingUp}
-            accent
+            iconColorClass="text-primary"
+            iconWrapper
           />
-          <StatCard
-            label="Expected Surge"
+          <SummaryCard
+            title="Expected Surge"
             value={surgePercent !== null ? `+${surgePercent}%` : "—"}
             sub="vs baseline period"
             icon={ArrowUpRight}
-            accent
+            iconColorClass="text-primary"
+            iconWrapper
           />
         </div>
       )}

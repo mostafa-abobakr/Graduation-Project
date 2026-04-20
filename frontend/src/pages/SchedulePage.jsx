@@ -33,6 +33,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function SchedulePage() {
   const [weekOffset, setWeekOffset] = useState(0);
@@ -363,21 +364,11 @@ export default function SchedulePage() {
 
   return (
     <div className="space-y-6 animate-fade-in py-5">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <CalendarDays className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              Staff Schedule Manager
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              Create and manage weekly staff schedules
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
+      <PageHeader
+        icon={CalendarDays}
+        title="Staff Schedule Manager"
+        description="Create and manage weekly staff schedules"
+        actions={
           <Button
             variant="outline"
             className="gap-2"
@@ -386,8 +377,8 @@ export default function SchedulePage() {
             <Users className="h-4 w-4" />
             Employee List
           </Button>
-        </div>
-      </div>
+        }
+      />
       <div className="flex flex-col lg:flex-row">
         <div className="flex-1 space-y-4">
           <Card className="p-4 bg-card border-border/60">

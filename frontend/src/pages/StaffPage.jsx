@@ -23,6 +23,10 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { SummaryCard } from "@/components/shared/SummaryCard";
+
 
 const SHIFT_OPTIONS = ["Morning", "Evening", "Night"];
 
@@ -260,80 +264,48 @@ function getRestIdFromToken() {
     <div className="space-y-5 animate-fade-in py-5">
 
       {/* ── Header ──────────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <Users className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-foreground">
-                {isAdmin ? "Staff Management Dashboard" : "Staff Management"}
-              </h1>
-              {isAdmin && (
-                <Badge variant="outline" className="border-primary/30 text-primary text-xs">
-                  Admin
-                </Badge>
-              )}
-            </div>
-            <p className="text-muted-foreground text-sm">
-              {isAdmin ? "Global employee overview and directories" : "Manage your employees and schedules"}
-            </p>
-          </div>
-        </div>
-        <Button onClick={() => setIsModalOpen(true)} className="gap-2 shrink-0">
-          <Plus className="h-4 w-4" />
-          Add Employee
-        </Button>
-      </div>
+      <PageHeader
+        icon={Users}
+        title={isAdmin ? "Staff Management Dashboard" : "Staff Management"}
+        description={isAdmin ? "Global employee overview and directories" : "Manage your employees and schedules"}
+        actions={
+          <Button onClick={() => setIsModalOpen(true)} className="gap-2 shrink-0">
+            <Plus className="h-4 w-4" /> Add Employee
+          </Button>
+        }
+      >
+        {isAdmin && (
+          <Badge variant="outline" className="border-primary/30 text-primary text-xs">Admin</Badge>
+        )}
+      </PageHeader>
 
       {/* ── KPI Cards ───────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: "Total Staff",
-            value: employees.length,
-            icon: Users,
-            color: "text-foreground",
-          },
-          {
-            label: "Active Members",
-            value: active,
-            icon: UserCheck,
-            color: "text-primary",
-          },
-          {
-            label: "Weekly Hrs",
-            value: `${totalHours}h`,
-            icon: Clock,
-            color: "text-foreground",
-          },
-          {
-            label: "Monthly Salary Bill",
-            value: `$${totalSalaryBill.toLocaleString()}`,
-            icon: DollarSign,
-            color: "text-foreground",
-          },
-        ].map(({ label, value, icon: Icon, color }) => (
-          <Card
-            key={label}
-            className="bg-card border-border/60 premium-shadow overflow-hidden transition-all p-4 flex flex-col justify-center duration-300 hover:bg-muted/30"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-semibold text-muted-foreground">{label}</span>
-              <div className="p-1.5 bg-primary/10 rounded-full text-primary shrink-0">
-                <Icon className="w-4 h-4" />
-              </div>
-            </div>
-            {isLoading ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <div className={`text-xl md:text-2xl font-bold tracking-tight ${color}`}>
-                {value}
-              </div>
-            )}
-          </Card>
-        ))}
+        <SummaryCard
+          title="Total Staff"
+          value={isLoading ? <Skeleton className="h-8 w-20" /> : employees.length}
+          icon={Users}
+          iconWrapper
+        />
+        <SummaryCard
+          title="Active Members"
+          value={isLoading ? <Skeleton className="h-8 w-20" /> : active}
+          icon={UserCheck}
+          iconWrapper
+          valueColorClass="text-primary"
+        />
+        <SummaryCard
+          title="Weekly Hrs"
+          value={isLoading ? <Skeleton className="h-8 w-20" /> : `${totalHours}h`}
+          icon={Clock}
+          iconWrapper
+        />
+        <SummaryCard
+          title="Monthly Salary Bill"
+          value={isLoading ? <Skeleton className="h-8 w-20" /> : `$${totalSalaryBill.toLocaleString()}`}
+          icon={DollarSign}
+          iconWrapper
+        />
       </div>
 
       {/* ── Table Card ──────────────────────────────────────── */}
@@ -394,14 +366,15 @@ function getRestIdFromToken() {
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                      <Search className="h-8 w-8 text-muted-foreground/50" />
-                      {search
-                        ? <><p>No employees found matching "{search}".</p><Button variant="outline" size="sm" onClick={() => setSearch("")}>Clear Search</Button></>
-                        : <p>No employees found.</p>
-                      }
-                    </div>
+                  <td colSpan={7} className="p-0">
+                    <EmptyState
+                      searchQuery={search}
+                      searchItemName="employees"
+                      onAction={() => setSearch("")}
+                      icon={Users}
+                      title="No employees found"
+                      description="You don't have any employees yet."
+                    />
                   </td>
                 </tr>
               ) : (

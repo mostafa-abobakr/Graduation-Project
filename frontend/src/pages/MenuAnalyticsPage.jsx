@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUp, ArrowDown, Search, UtensilsCrossed } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function MenuAnalyticsPage() {
   const [search, setSearch] = useState("");
@@ -66,15 +68,11 @@ export default function MenuAnalyticsPage() {
   return (
     <div className="space-y-5 animate-fade-in py-5">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-          <UtensilsCrossed className="h-5 w-5 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Menu Item Performance</h1>
-          <p className="text-muted-foreground text-sm">Detailed real-time analytics for every item on your menu.</p>
-        </div>
-      </div>
+      <PageHeader
+        icon={UtensilsCrossed}
+        title="Menu Item Performance"
+        description="Detailed real-time analytics for every item on your menu."
+      />
 
       {/* Controls Row */}
       <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
@@ -169,19 +167,12 @@ export default function MenuAnalyticsPage() {
               ) : filtered.length === 0 ? (
                 // Empty State
                 <tr>
-                  <td colSpan={5} className="py-16 text-center text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <Search className="h-8 w-8 text-muted-foreground/50" />
-                      <p>No menu items found matching "{search}".</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setSearch("")}
-                        className="mt-2"
-                      >
-                        Clear Search
-                      </Button>
-                    </div>
+                  <td colSpan={5} className="p-0">
+                    <EmptyState
+                      searchQuery={search}
+                      searchItemName="menu items"
+                      onAction={() => setSearch("")}
+                    />
                   </td>
                 </tr>
               ) : (

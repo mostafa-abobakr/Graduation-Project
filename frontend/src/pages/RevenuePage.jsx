@@ -27,6 +27,9 @@ import {
   BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { ViewToggler } from "@/components/shared/ViewToggler";
+import { SummaryCard } from "@/components/shared/SummaryCard";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "#3b82f6" },
@@ -96,10 +99,12 @@ function MarginBadge({ value }) {
     value >= 70
       ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
       : value >= 40
-      ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-      : "bg-rose-500/15 text-rose-600 dark:text-rose-400";
+        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+        : "bg-rose-500/15 text-rose-600 dark:text-rose-400";
   return (
-    <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${cls}`}>
+    <span
+      className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${cls}`}
+    >
       {value.toFixed(1)}%
     </span>
   );
@@ -139,7 +144,7 @@ export default function RevenuePage() {
       if (!user?.restId) return null;
       const res = await fetch(
         `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/revenue/${user.restId}`,
-        { headers: { accept: "application/json" } }
+        { headers: { accept: "application/json" } },
       );
       if (!res.ok) throw new Error("Failed to fetch revenue data");
       return res.json();
@@ -154,8 +159,12 @@ export default function RevenuePage() {
       <div className="flex items-center justify-center min-h-[60vh] py-5">
         <Card className="p-6 bg-card border-border/60 max-w-md text-center space-y-4">
           <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
-          <p className="text-foreground font-medium">Failed to load revenue data</p>
-          <p className="text-muted-foreground text-sm">{error?.message || "Something went wrong"}</p>
+          <p className="text-foreground font-medium">
+            Failed to load revenue data
+          </p>
+          <p className="text-muted-foreground text-sm">
+            {error?.message || "Something went wrong"}
+          </p>
         </Card>
       </div>
     );
@@ -171,7 +180,7 @@ export default function RevenuePage() {
 
   const totalOrders = (currentData?.revenue_trend ?? []).reduce(
     (s, r) => s + (r.order_count ?? 0),
-    0
+    0,
   );
 
   const trendData = (currentData?.revenue_trend ?? []).map((r) => ({
@@ -192,104 +201,60 @@ export default function RevenuePage() {
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
-
       {/* ── Header + Toggle ─────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-            <DollarSign className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Revenue Analytics</h1>
-            <p className="text-muted-foreground text-sm">Revenue trends and profit analysis</p>
-          </div>
-        </div>
-
-        {/* Animated glider toggle */}
-        <div className="relative flex bg-muted/60 p-1.5 rounded-xl w-full sm:w-[380px] shadow-inner border border-border/40 shrink-0">
-          <div
-            className="absolute top-1.5 bottom-1.5 w-[calc(25%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"
-            style={{ transform: `translateX(calc(${viewIdx * 100}%))` }}
+      <PageHeader
+        icon={DollarSign}
+        title="Revenue Analytics"
+        description="Revenue trends and profit analysis"
+        actions={
+          <ViewToggler
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            modes={VIEWS.map((v) => v.id)}
+            labels={VIEWS.map((v) => v.label)}
           />
-          {VIEWS.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => setViewMode(v.id)}
-              aria-pressed={viewMode === v.id}
-              className={`relative z-10 flex-1 py-1.5 text-[13px] font-bold tracking-wide capitalize transition-colors duration-200 ${
-                viewMode === v.id ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {v.label}
-            </button>
-          ))}
-        </div>
-      </div>
+        }
+      />
 
       {/* ── KPI Cards ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Period Revenue */}
-        <Card className="bg-card border-border/60 premium-shadow overflow-hidden transition-all p-4 flex flex-col justify-center relative group duration-300 hover:bg-muted/30 h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-muted-foreground">
-              {VIEWS.find((v) => v.id === viewMode)?.label} Revenue
-            </h2>
-            <div className="p-1.5 bg-primary/10 rounded-full text-primary shrink-0">
-              <DollarSign className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-end justify-between gap-2 mt-auto">
-            <span className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
-              {formatCompact(metrics.period_revenue)}
-            </span>
-            <ChangePill value={metrics.revenue_change_pct} />
-          </div>
-        </Card>
-
-        {/* Daily Average */}
-        <Card className="bg-card border-border/60 premium-shadow overflow-hidden transition-all p-4 flex flex-col justify-center relative group duration-300 hover:bg-muted/30 h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-muted-foreground">Daily Average</h2>
-            <div className="p-1.5 bg-primary/10 rounded-full text-primary shrink-0">
-              <BarChart3 className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-end gap-2 mt-auto">
-            <span className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
-              {formatCompact(metrics.daily_average)}
-            </span>
-          </div>
-        </Card>
-
-        {/* Avg Profit Margin */}
-        <Card className="bg-card border-border/60 premium-shadow overflow-hidden transition-all p-4 flex flex-col justify-center relative group duration-300 hover:bg-muted/30 h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-muted-foreground">Avg. Profit Margin</h2>
-            <div className="p-1.5 bg-primary/10 rounded-full text-primary shrink-0">
-              <PieChart className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-end gap-2 mt-auto">
-            <span className="text-xl md:text-2xl font-bold tracking-tight text-primary">
-              {(metrics.avg_profit_margin ?? 0).toFixed(1)}%
-            </span>
-          </div>
-        </Card>
-
-        {/* Total Orders */}
-        <Card className="bg-card border-border/60 premium-shadow overflow-hidden transition-all p-4 flex flex-col justify-center relative group duration-300 hover:bg-muted/30 h-full">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-muted-foreground">Total Orders</h2>
-            <div className="p-1.5 bg-primary/10 rounded-full text-primary shrink-0">
-              <ShoppingBag className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="flex items-end gap-2 mt-auto">
-            <span className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
-              {Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(totalOrders)}
-            </span>
-          </div>
-        </Card>
+        <SummaryCard
+          title={`${VIEWS.find((v) => v.id === viewMode)?.label} Revenue`}
+          value={formatCompact(metrics.period_revenue)}
+          icon={DollarSign}
+          iconColorClass="text-primary"
+          iconWrapper
+          trend={
+            metrics.revenue_change_pct !== "N/A"
+              ? metrics.revenue_change_pct
+              : undefined
+          }
+        />
+        <SummaryCard
+          title="Daily Average"
+          value={formatCompact(metrics.daily_average)}
+          icon={BarChart3}
+          iconColorClass="text-primary"
+          iconWrapper
+        />
+        <SummaryCard
+          title="Avg. Profit Margin"
+          value={`${(metrics.avg_profit_margin ?? 0).toFixed(1)}%`}
+          icon={PieChart}
+          iconColorClass="text-primary"
+          iconWrapper
+          valueColorClass="text-primary"
+        />
+        <SummaryCard
+          title="Total Orders"
+          value={Intl.NumberFormat("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 1,
+          }).format(totalOrders)}
+          icon={ShoppingBag}
+          iconColorClass="text-primary"
+          iconWrapper
+        />
       </div>
 
       {/* ── Revenue Trend Chart ─────────────────────────────────── */}
@@ -310,41 +275,79 @@ export default function RevenuePage() {
               No trend data available for this period.
             </div>
           ) : (
-            <ChartContainer config={chartConfig} className="aspect-auto h-[280px] w-full">
-              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+            <ChartContainer
+              config={chartConfig}
+              className="aspect-auto h-[280px] w-full"
+            >
+              <AreaChart
+                data={trendData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+              >
                 <defs>
                   <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-revenue)" stopOpacity={0.35} />
-                    <stop offset="95%" stopColor="var(--color-revenue)" stopOpacity={0} />
+                    <stop
+                      offset="5%"
+                      stopColor="var(--color-revenue)"
+                      stopOpacity={0.35}
+                    />
+                    <stop
+                      offset="95%"
+                      stopColor="var(--color-revenue)"
+                      stopOpacity={0}
+                    />
                   </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} strokeDasharray="4 4" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                <CartesianGrid
+                  vertical={false}
+                  strokeDasharray="4 4"
+                  stroke="hsl(var(--border))"
+                  strokeOpacity={0.5}
+                />
                 <XAxis
                   dataKey="label"
                   axisLine={false}
                   tickLine={false}
                   minTickGap={30}
-                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 500 }}
+                  tick={{
+                    fill: "hsl(var(--muted-foreground))",
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
                   dy={10}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 500 }}
+                  tick={{
+                    fill: "hsl(var(--muted-foreground))",
+                    fontSize: 12,
+                    fontWeight: 500,
+                  }}
                   tickFormatter={(v) => formatCompact(v)}
                 />
                 <ChartTooltip
-                  cursor={{ stroke: "hsl(var(--muted))", strokeWidth: 2, strokeDasharray: "4 4" }}
+                  cursor={{
+                    stroke: "hsl(var(--muted))",
+                    strokeWidth: 2,
+                    strokeDasharray: "4 4",
+                  }}
                   content={
                     <ChartTooltipContent
                       className="bg-popover/95 backdrop-blur-md p-4 rounded-xl shadow-xl border border-border/50"
                       formatter={(value, name, item) => (
                         <>
-                          <div className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                          <div
+                            className="h-2 w-2 shrink-0 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          />
                           <div className="flex flex-1 justify-between gap-5 items-center leading-none">
-                            <span className="text-sm font-medium text-foreground capitalize">{name}</span>
+                            <span className="text-sm font-medium text-foreground capitalize">
+                              {name}
+                            </span>
                             <span className="text-sm font-bold text-foreground">
-                              {name === "Revenue" ? formatCurrency(value) : value}
+                              {name === "Revenue"
+                                ? formatCurrency(value)
+                                : value}
                             </span>
                           </div>
                         </>
@@ -370,11 +373,12 @@ export default function RevenuePage() {
 
       {/* ── Item Charts ─────────────────────────────────────────── */}
       <div className="grid lg:grid-cols-2 gap-5">
-
         {/* Revenue by Item */}
         <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
           <CardHeader className="p-6 pb-2">
-            <CardTitle className="text-base font-semibold text-foreground">Revenue by Item</CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground">
+              Revenue by Item
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-6 pt-2">
             {itemPerformance.length === 0 ? (
@@ -388,12 +392,20 @@ export default function RevenuePage() {
                   layout="vertical"
                   margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid horizontal={false} strokeDasharray="4 4" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                  <CartesianGrid
+                    horizontal={false}
+                    strokeDasharray="4 4"
+                    stroke="hsl(var(--border))"
+                    strokeOpacity={0.5}
+                  />
                   <XAxis
                     type="number"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    tick={{
+                      fill: "hsl(var(--muted-foreground))",
+                      fontSize: 11,
+                    }}
                     tickFormatter={(v) => formatCompact(v)}
                   />
                   <YAxis
@@ -402,7 +414,10 @@ export default function RevenuePage() {
                     axisLine={false}
                     tickLine={false}
                     width={110}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    tick={{
+                      fill: "hsl(var(--muted-foreground))",
+                      fontSize: 11,
+                    }}
                   />
                   <ChartTooltip
                     cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
@@ -413,15 +428,23 @@ export default function RevenuePage() {
                           <>
                             <div className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
                             <div className="flex flex-1 justify-between gap-4 items-center">
-                              <span className="text-sm font-medium text-foreground">Revenue</span>
-                              <span className="text-sm font-bold text-foreground">{formatCurrency(value)}</span>
+                              <span className="text-sm font-medium text-foreground">
+                                Revenue
+                              </span>
+                              <span className="text-sm font-bold text-foreground">
+                                {formatCurrency(value)}
+                              </span>
                             </div>
                           </>
                         )}
                       />
                     }
                   />
-                  <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[0, 4, 4, 0]}>
+                  <Bar
+                    dataKey="revenue"
+                    fill="var(--color-revenue)"
+                    radius={[0, 4, 4, 0]}
+                  >
                     {itemPerformance.map((_, i) => (
                       <Cell key={i} fillOpacity={0.85 - i * 0.04} />
                     ))}
@@ -435,7 +458,9 @@ export default function RevenuePage() {
         {/* Profit Margin by Item */}
         <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
           <CardHeader className="p-6 pb-2">
-            <CardTitle className="text-base font-semibold text-foreground">Profit Margin by Item</CardTitle>
+            <CardTitle className="text-base font-semibold text-foreground">
+              Profit Margin by Item
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-6 pt-2">
             {itemPerformance.length === 0 ? (
@@ -449,13 +474,21 @@ export default function RevenuePage() {
                   layout="vertical"
                   margin={{ top: 0, right: 16, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid horizontal={false} strokeDasharray="4 4" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                  <CartesianGrid
+                    horizontal={false}
+                    strokeDasharray="4 4"
+                    stroke="hsl(var(--border))"
+                    strokeOpacity={0.5}
+                  />
                   <XAxis
                     type="number"
                     axisLine={false}
                     tickLine={false}
                     domain={[0, 100]}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    tick={{
+                      fill: "hsl(var(--muted-foreground))",
+                      fontSize: 11,
+                    }}
                     tickFormatter={(v) => `${v}%`}
                   />
                   <YAxis
@@ -464,7 +497,10 @@ export default function RevenuePage() {
                     axisLine={false}
                     tickLine={false}
                     width={110}
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    tick={{
+                      fill: "hsl(var(--muted-foreground))",
+                      fontSize: 11,
+                    }}
                   />
                   <ChartTooltip
                     cursor={{ fill: "hsl(var(--muted))", opacity: 0.4 }}
@@ -475,8 +511,12 @@ export default function RevenuePage() {
                           <>
                             <div className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
                             <div className="flex flex-1 justify-between gap-4 items-center">
-                              <span className="text-sm font-medium text-foreground">Margin</span>
-                              <span className="text-sm font-bold text-foreground">{Number(value).toFixed(1)}%</span>
+                              <span className="text-sm font-medium text-foreground">
+                                Margin
+                              </span>
+                              <span className="text-sm font-bold text-foreground">
+                                {Number(value).toFixed(1)}%
+                              </span>
                             </div>
                           </>
                         )}
@@ -491,8 +531,8 @@ export default function RevenuePage() {
                           item.margin >= 70
                             ? "#10b981"
                             : item.margin >= 40
-                            ? "#f59e0b"
-                            : "#ef4444"
+                              ? "#f59e0b"
+                              : "#ef4444"
                         }
                         fillOpacity={0.85}
                       />
@@ -503,9 +543,7 @@ export default function RevenuePage() {
             )}
           </CardContent>
         </Card>
-
       </div>
-
     </div>
   );
 }
