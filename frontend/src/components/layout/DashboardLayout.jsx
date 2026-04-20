@@ -81,12 +81,10 @@ const managerManagementItems = [
 
 
 const managerInventoryItems = [
-  // { title: "Stock Overview", url: "/inventory/dashboard", icon: LayoutDashboard },
   { title: "Inventory ", url: "/inventory", icon: Package },
   // { title: "Receive Stock", url: "/inventory/add-stock", icon: PlusCircle },
-  { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
-  // { title: "Inventory Settings", url: "/inventory/settings", icon: Settings },
-    { title: "Inventory Forecast", url: "/inventory/forecast", icon: AlertTriangle },
+  // { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
+  { title: "Inventory Forecast", url: "/inventory/forecast", icon: AlertTriangle },
   // {title: "Draft", url: "/inventory/draft", icon: ChefHat }
 ];
 
@@ -152,7 +150,7 @@ function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <NavLink
                     to={item.url}
-                    end={item.url === "/dashboard"}
+                    end={item.url === "/dashboard" || item.url === "/inventory"}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150"
                     activeClassName="bg-primary/10 text-primary font-medium"
                   >

@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {RouterProvider} from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { InventoryProvider } from "@/contexts/InventoryContext";
 import router from "@/routes/index.jsx";
 import { RegisterProvider } from "./contexts/Valdation";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -17,7 +18,9 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
-        <RouterProvider router={router} />
+        <InventoryProvider>
+          <RouterProvider router={router} />
+        </InventoryProvider>
       </AuthProvider>
       </LanguageProvider>
       </RegisterProvider>

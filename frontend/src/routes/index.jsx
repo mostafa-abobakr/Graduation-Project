@@ -16,7 +16,6 @@ const StaffPage = lazy(() => import("../pages/StaffPage"));
 const InventoryPage = lazy(() => import("../pages/Inventory/InventoryPage"));
 const InventoryForecastPage = lazy(() => import("../pages/Inventory/InventoryForecastPage"));
 const InventoryAlertsPage = lazy(() => import("../pages/Inventory/InventoryAlertsPage"));
-const InventorySettingsPage = lazy(() => import("../pages/Inventory/InventorySettingsPage"));
 const ItemDetailsPage = lazy(() => import("../pages/Inventory/ItemDetailsPage"));
 const AddStock = lazy(() => import("../pages/draft/AddStock"));
 const ReportsPage = lazy(() => import("../pages/ReportsPage"));
@@ -33,7 +32,6 @@ import PosOptions from "@/pages/pos/ConnectPosPage";
 import SchedulePage from "@/pages/SchedulePage";
 import BillingPlans from "@/pages/Auth/Register/BillingPlans";
 import PaymentGateway from "@/pages/Auth/Register/PaymentGateway";
-import InventoryDashboardPage from "@/pages/Inventory/InventoryDashboardPage";
 import InventoryOverview from "@/pages/draft/InventoryOverview";
 
 
@@ -149,10 +147,8 @@ const Routes = [
     loader: requireAuth,
     children: [
       { index: true, element: <InventoryPage /> },
-      { path: "dashboard", element: <InventoryDashboardPage /> },
       { path: "add-stock", element: <AddStock /> },
       { path: "alerts", element: <InventoryAlertsPage /> },
-      { path: "settings", element: <InventorySettingsPage /> },
       { path: "forecast", element: <InventoryForecastPage /> },
       { path: ":id", element: <ItemDetailsPage /> },
       { path: "draft", element: <InventoryOverview/> },
