@@ -31,7 +31,8 @@ import {
   ChartContainer,
   ChartTooltip,
 } from "@/components/ui/chart";
-import { Search, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, ChevronDown, ChevronUp, Clock } from "lucide-react";
+import { EmptyState } from "@/components/shared/EmptyState";
 
 export default function ForecastTable({ items, alignment, isLoading }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -108,20 +109,13 @@ export default function ForecastTable({ items, alignment, isLoading }) {
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="py-16 text-center text-muted-foreground"
+                  className="p-0"
                 >
-                  <div className="flex flex-col items-center justify-center gap-3">
-                    <Search className="h-8 w-8 text-muted-foreground/50" />
-                    <p>No items found matching "{searchTerm}".</p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSearchTerm("")}
-                      className="mt-2"
-                    >
-                      Clear Search
-                    </Button>
-                  </div>
+                  <EmptyState
+                    searchQuery={searchTerm}
+                    searchItemName="items"
+                    onAction={() => setSearchTerm("")}
+                  />
                 </TableCell>
               </TableRow>
             ) : (

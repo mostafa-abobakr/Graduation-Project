@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-import { CalendarCheck, Ban, MoreVertical, Pencil, Search } from "lucide-react";
+import { CalendarCheck, Ban, MoreVertical, Pencil, Search, Store } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/shared/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -288,20 +289,14 @@ export default function RestaurantsTable({ restaurants, loading }) {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="py-16 text-center text-muted-foreground"
+                    className="p-0"
                   >
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <Search className="h-8 w-8 text-muted-foreground/50" />
-                      <p>No restaurants found matching "{search}".</p>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSearch("")}
-                        className="mt-2"
-                      >
-                        Clear Search
-                      </Button>
-                    </div>
+                    <EmptyState
+                      searchQuery={search}
+                      searchItemName="restaurants"
+                      onAction={() => setSearch("")}
+                      icon={Store}
+                    />
                   </TableCell>
                 </TableRow>
               ) : (
