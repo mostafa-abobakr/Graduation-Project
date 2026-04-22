@@ -83,7 +83,7 @@ const managerManagementItems = [
 const managerInventoryItems = [
   { title: "Inventory ", url: "/inventory", icon: Package },
   // { title: "Receive Stock", url: "/inventory/add-stock", icon: PlusCircle },
-  // { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
+  { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
   { title: "Inventory Forecast", url: "/inventory/forecast", icon: AlertTriangle },
   // {title: "Draft", url: "/inventory/draft", icon: ChefHat }
 ];

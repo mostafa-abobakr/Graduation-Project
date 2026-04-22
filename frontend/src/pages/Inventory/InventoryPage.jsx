@@ -232,11 +232,19 @@ export default function InventoryPage() {
   // ── Restock state ──────────────────────────────────────
   const [restockItem, setRestockItem] = useState(null);
   const [restockQty, setRestockQty] = useState("");
+  const [restockExpiry, setRestockExpiry] = useState("");
   const [restockOpen, setRestockOpen] = useState(false);
 
   const openRestock = (item) => {
     setRestockItem(item);
     setRestockQty("");
+    if (item.shelfLifeDays) {
+      const defaultExpiry = new Date();
+      defaultExpiry.setDate(defaultExpiry.getDate() + item.shelfLifeDays);
+      setRestockExpiry(defaultExpiry.toISOString().split("T")[0]);
+    } else {
+      setRestockExpiry("");
+    }
     setRestockOpen(true);
   };
 
@@ -246,9 +254,24 @@ export default function InventoryPage() {
       toast.error("Enter a valid quantity");
       return;
     }
+
+    const newBatch = {
+      batchId: Math.random().toString(36).substring(7),
+      quantity: qty,
+      expiryDate: restockExpiry
+    };
+
+    const updatedBatches = [...(restockItem.batches || []), newBatch];
+    const totalQuantity = updatedBatches.reduce((sum, b) => sum + (b.quantity || 0), 0);
+
+    // Initial root quantity might be added directly if there are no batches yet.
+    // If restockItem.quantity is > 0 and it has no batches, probably we want to carry it over or assume it's legacy
+    const finalQuantity = (restockItem.batches ? totalQuantity : (restockItem.quantity || 0) + totalQuantity);
+
     updateItem(restockItem.id, {
-      quantity: (restockItem.quantity || 0) + qty,
-      stock: (restockItem.stock || restockItem.quantity || 0) + qty,
+      batches: updatedBatches,
+      quantity: finalQuantity,
+      stock: finalQuantity,
     });
     toast.success(`Restocked ${restockItem.name} with +${qty} ${restockItem.unit}`);
     setRestockOpen(false);
@@ -1102,6 +1125,16 @@ export default function InventoryPage() {
                       <td className="py-3 px-4 text-center">
                         <div className="flex justify-center gap-1">
                           <Button
+                            asChild
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <Link to={`/inventory/${i.id}`}>
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-primary"
@@ -1194,6 +1227,17 @@ export default function InventoryPage() {
                 placeholder={`e.g. 10`}
                 autoFocus
                 onKeyDown={(e) => e.key === "Enter" && confirmRestock()}
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">
+                Expiry Date
+              </Label>
+              <Input
+                type="date"
+                value={restockExpiry}
+                onChange={(e) => setRestockExpiry(e.target.value)}
               />
             </div>
 
