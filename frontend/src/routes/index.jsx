@@ -25,8 +25,7 @@ import NotFound from "../pages/NotFound";
 import { ROUTES } from "./ROUTES";
 import Login from "@/pages/Auth/Login";
 import Register from "@/pages/Auth/Register";
-import RegisterPersonal from "@/pages/Auth/Register/RegisterPersonal";
-import RegisterRestaurant from "@/pages/Auth/Register/RegisterRestaurant";
+import RegisterPage from "@/pages/Auth/Register/RegisterPage";
 import RestaurantLocation from "@/pages/Auth/Register/RestaurantLocation";
 import PosOptions from "@/pages/pos/ConnectPosPage";
 import SchedulePage from "@/pages/SchedulePage";
@@ -58,11 +57,7 @@ const Routes = [
     children: [
       {
         index: true,
-        element: <RegisterPersonal />,
-      },
-      {
-        path: "restaurant",
-        element: <RegisterRestaurant />,
+        element: <RegisterPage />,
       },
       {
         path: "restaurant-location",

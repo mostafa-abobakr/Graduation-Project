@@ -10,7 +10,7 @@ import AuthContainer from "@/components/AuthContainer";
 import img from "@/assets/Auth/SignUp.png";
 import { signupValidationSchema } from "@/schemas/auth/validations";
 import { useRegisterContext } from "@/contexts/Valdation";
-import { Loader2 } from "lucide-react";
+import { Loader2, MapPin, Building2, Navigation, Map } from "lucide-react";
 
 const validationSchema = signupValidationSchema.pick(["address", "city"]);
 
@@ -55,6 +55,88 @@ const RestaurantLocation = () => {
 
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [autocomplete, setAutocomplete] = useState(null);
+  const [geocoder, setGeocoder] = useState(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const lastGeocodedQueryRef = React.useRef("");
+
+  React.useEffect(() => {
+    if (isLoaded && !geocoder && window.google) {
+      setGeocoder(new window.google.maps.Geocoder());
+    }
+  }, [isLoaded, geocoder]);
+
+  React.useEffect(() => {
+    if (!isLoaded || !geocoder) return;
+
+    const address = formik.values.address?.trim();
+    const city = formik.values.city?.trim();
+    const searchQuery = city
+      ? (address ? `${address}, ${city}` : city)
+      : address;
+
+    if (!searchQuery || searchQuery === lastGeocodedQueryRef.current) return;
+
+    const debounceId = setTimeout(() => {
+      geocoder.geocode({ address: searchQuery }, (results, status) => {
+        if (status === "OK" && results?.[0]?.geometry?.location) {
+          const location = results[0].geometry.location;
+          setMapCenter({ lat: location.lat(), lng: location.lng() });
+          lastGeocodedQueryRef.current = searchQuery;
+        }
+      });
+    }, 600);
+
+    return () => clearTimeout(debounceId);
+  }, [formik.values.address, formik.values.city, geocoder, isLoaded]);
+
+  const reverseGeocode = (lat, lng) => {
+    return new Promise((resolve) => {
+      if (!geocoder) return resolve();
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        if (status === "OK" && results[0]) {
+          const place = results[0];
+          formik.setFieldValue("address", place.formatted_address);
+
+          const cityComp = place.address_components?.find((c) =>
+            c.types.includes("locality") ||
+            c.types.includes("administrative_area_level_2") ||
+            c.types.includes("administrative_area_level_1")
+          );
+          if (cityComp) {
+            formik.setFieldValue("city", cityComp.long_name);
+          }
+        }
+        resolve();
+      });
+    });
+  };
+
+  const handleDragEnd = (e) => {
+    const newLat = e.latLng.lat();
+    const newLng = e.latLng.lng();
+    setMapCenter({ lat: newLat, lng: newLng });
+    reverseGeocode(newLat, newLng);
+  };
+
+  const handleLocateMe = () => {
+    if (navigator.geolocation) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          setMapCenter({ lat, lng });
+          reverseGeocode(lat, lng).finally(() => setIsLocating(false));
+        },
+        () => {
+          setSubmitError("Unable to retrieve your location.");
+          setIsLocating(false);
+        }
+      );
+    } else {
+      setSubmitError("Geolocation is not supported by this browser.");
+    }
+  };
 
   const onLoadAutocomplete = useCallback((autocompleteObj) => {
     setAutocomplete(autocompleteObj);
@@ -70,7 +152,7 @@ const RestaurantLocation = () => {
 
         // Auto-fill address and city
         formik.setFieldValue("address", place.formatted_address || place.name);
-        
+
         const cityComp = place.address_components?.find((c) =>
           c.types.includes("locality")
         );
@@ -82,21 +164,24 @@ const RestaurantLocation = () => {
   };
 
   return (
-    <AuthContainer img={img}>
+    <AuthContainer
+      title="Restaurant Location"
+      description="Select your restaurant location"
+      footerText="Already have an account?"
+      footerLinkText="Log in"
+      footerLinkTo="/login"
+    >
       <form
         onSubmit={formik.handleSubmit}
         noValidate
-        className="w-full max-w-[500px] flex flex-col gap-5 bg-card text-card-foreground p-2 md:p-6"
+        className="w-full max-w-[700px] flex flex-col gap-5 bg-card text-card-foreground p-2 md:p-6"
       >
-        <h2 className="text-2xl font-bold mb-4">Step 3: Restaurant Location</h2>
+        
 
         <div className="space-y-2 relative">
           <Label htmlFor="address" className="font-semibold">Search Address</Label>
           <div className="relative flex flex-col gap-2">
-             <svg className="absolute left-3 top-3 w-5 h-5 text-primary z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
+            <MapPin className="absolute left-3 top-3 w-5 h-5 text-primary z-10" />
             {isLoaded ? (
               <Autocomplete
                 onLoad={onLoadAutocomplete}
@@ -123,17 +208,43 @@ const RestaurantLocation = () => {
           </div>
           {formik.touched.address && formik.errors.address && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.address}</p>}
 
+          {/* Locate Me Button */}
+          <div className="flex justify-end pt-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-primary hover:bg-primary/10 h-8 px-2 text-xs"
+              onClick={handleLocateMe}
+              disabled={isLocating}
+            >
+              {isLocating ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5 mr-1.5" />}
+              {isLocating ? "Locating..." : "Locate Me"}
+            </Button>
+          </div>
+
           {/* Map Preview */}
-          {isLoaded && (
-            <div className="mt-2 border border-border/50 rounded-lg overflow-hidden shadow-sm">
+          {isLoaded ? (
+            <div className="border border-border/50 rounded-lg overflow-hidden shadow-sm relative group">
+              <div className="absolute top-2 left-2 z-10 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-medium text-muted-foreground flex items-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                <Map className="w-3 h-3 mr-1" /> Drag pin to adjust
+              </div>
               <GoogleMap
                 mapContainerStyle={mapContainerStyle}
                 center={mapCenter}
-                zoom={15}
+                zoom={16}
                 options={{ disableDefaultUI: true, zoomControl: true }}
               >
-                <Marker position={mapCenter} />
+                <Marker
+                  position={mapCenter}
+                  draggable={true}
+                  onDragEnd={handleDragEnd}
+                />
               </GoogleMap>
+            </div>
+          ) : (
+            <div className="h-[250px] w-full bg-muted/40 animate-pulse rounded-lg border border-border/50 flex items-center justify-center">
+              <MapPin className="w-8 h-8 text-muted-foreground/30" />
             </div>
           )}
         </div>
@@ -141,9 +252,7 @@ const RestaurantLocation = () => {
         <div className="space-y-2 relative mt-2">
           <Label htmlFor="city" className="font-semibold">City</Label>
           <div className="relative">
-             <svg className="absolute left-3 top-3 w-5 h-5 text-primary z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
-            </svg>
+            <Building2 className="absolute left-3 top-3 w-5 h-5 text-primary z-10" />
             <Input
               id="city"
               name="city"
@@ -162,10 +271,10 @@ const RestaurantLocation = () => {
         )}
 
         <div className="flex gap-4 mt-6">
-          <Button 
-            type="button" 
+          <Button
+            type="button"
             variant="outline"
-            className="w-full h-12 text-[1rem] shadow-sm" 
+            className="w-full h-12 text-[1rem] shadow-sm"
             onClick={() => navigate(-1)}
           >
             Back

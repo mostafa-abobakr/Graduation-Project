@@ -1,30 +1,55 @@
-import React, { useState } from "react";
-import Lottie from "lottie-react";
+import { Card } from "@/components/ui/card";
+import { Leaf } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
-function AuthContainer({ img, children, isLottie = false }) {
-  const [activeStep, setActiveStep] = useState(1);
-
+function AuthContainer({ 
+  title, 
+  description, 
+  children,
+  footerText,
+  footerLinkText,
+  footerLinkTo 
+}) {
   return (
-    <div className="w-full min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="shadow-lg rounded-xl flex flex-col md:flex-row justify-evenly items-center p-8 w-full sm:w-[90%] md:w-[90%] h-auto min-h-[90%] md:h-[95%] bg-card text-card-foreground overflow-hidden">
-        
-        <div className="hidden md:flex flex-1 justify-center items-center p-8 h-full">
-          {isLottie ? (
-            <div className="w-full max-w-[400px] hover:animate-pulse transition-all">
-              <Lottie animationData={img} />
+    <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      
+      <div className="w-full max-w-sm">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <Link to="/" className="inline-flex items-center gap-2.5 mb-6">
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Leaf className="h-4.5 w-4.5 text-primary" />
             </div>
-          ) : (
-            <img src={img} alt="Authentication" className="w-[85%] max-h-full object-contain drop-shadow-2xl hover:scale-105 transition-transform duration-700" />
-          )}
+            <span 
+              className="text-lg font-bold text-foreground" 
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
+            >
+              ZeroWaste
+            </span>
+          </Link>
+          
+          {title && <h1 className="text-2xl font-bold text-foreground">{title}</h1>}
+          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>
 
-        <div className="hidden md:flex items-center px-6 self-stretch">
-          <div className="h-full w-px bg-border"></div>
-        </div>
-
-        <div className="flex-1 p-4 md:p-8 flex flex-col justify-center w-full max-w-[500px] mx-auto">
+        {/* Card Content */}
+        <Card className="p-7 bg-card border-border/60 premium-shadow-md">
           {children}
-        </div>
+        </Card>
+
+        {/* Footer */}
+        {footerText && footerLinkText && footerLinkTo && (
+          <p className="text-center text-sm text-muted-foreground mt-6">
+            {footerText}
+            <Link to={footerLinkTo} className="text-primary hover:underline font-medium">
+              {footerLinkText}
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

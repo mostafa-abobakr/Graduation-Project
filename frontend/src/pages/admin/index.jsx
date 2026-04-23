@@ -14,7 +14,7 @@ export default function AdminDashboard() {
       const token = localStorage.getItem("authToken");
 
       const res = await axios.get(
-        "http://resturantai.runasp.net/api/admin/dashboard",
+        "https://resturantai.runasp.net/api/admin/dashboard",
         {
           headers: {
             Authorization: `Bearer ${token}`,

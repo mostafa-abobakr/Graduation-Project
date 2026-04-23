@@ -21,8 +21,9 @@ import {
   DollarSign,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SummaryCard } from "@/components/shared/SummaryCard";
@@ -32,16 +33,13 @@ const SHIFT_OPTIONS = ["Morning", "Evening", "Night"];
 
 export default function StaffPage() {
   const { isAdmin } = useAuth();
-  const [employees, setEmployees] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [refreshKey, setRefreshKey] = useState(0);
   const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
-    role: "Employee",
+    role: "cook",
     salary: "",
     phone: "",
     status: "Active",
@@ -72,105 +70,86 @@ function getRestIdFromToken() {
   return 0;
 }
 
-  /* ── Fetch employees ──────────────────────────────────── */
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      setIsLoading(true);
-      try {
-        const token = getToken();
-        if (!token) return;
-        const res = await fetch("https://resturantai.runasp.net/api/Employees", {
-          headers: { Accept: "*/*", Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) setEmployees(await res.json());
-      } catch (err) {
-        console.error("Failed to fetch employees", err);
-      } finally {
-        setIsLoading(false);
+  /* ── Fetch employees with TanStack Query ──────────────────────────────────── */
+  const { data: employees = [], isLoading, error, isError } = useQuery({
+    queryKey: ["employees"],
+    queryFn: async () => {
+      const token = getToken();
+      if (!token) throw new Error("No authentication token found");
+      
+      const response = await fetch("https://resturantai.runasp.net/api/Employees", {
+        headers: { Accept: "*/*", Authorization: `Bearer ${token}` },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch employees: ${response.status}`);
       }
-    };
-    fetchEmployees();
-  }, [refreshKey]);
+      
+      return response.json();
+    },
+    retry: 1,
+    retryDelay: 1000,
+  });
 
-  /* ── Add employee ─────────────────────────────────────── */
+  /* ── Add employee handler ─────────────────────────────────────── */
   const handleAddEmployee = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    try {
-      const token = getToken();
-      const payload = {
-        restID: getRestIdFromToken(),
-        fullName: formData.fullName,
-        role: formData.role,
-        salary: parseFloat(formData.salary) || 0,
-        phone: formData.phone,
-        status: formData.status,
-        shift: formData.shift,
-        workingHoursPerDay: parseInt(formData.workingHoursPerDay, 10) || 0,
-        workingDaysPerWeek: parseInt(formData.workingDaysPerWeek, 10) || 0,
-        email: formData.email,
-        password: formData.password,
-      };
+    
+    const payload = {
+      restID: getRestIdFromToken(),
+      fullName: formData.fullName,
+      role: formData.role,
+      salary: parseFloat(formData.salary) || 0,
+      phone: formData.phone,
+      status: formData.status,
+      shift: formData.shift,
+      workingHoursPerDay: parseInt(formData.workingHoursPerDay, 10) || 0,
+      workingDaysPerWeek: parseInt(formData.workingDaysPerWeek, 10) || 0,
+      email: formData.email,
+      password: formData.password,
+    };
 
-      const res = await fetch("http://resturantai.runasp.net/api/Employees", {
+    addEmployeeMutation.mutate(payload);
+  };
+
+  /* ── Add employee with TanStack Query Mutation ──────────────────────────────────── */
+  const addEmployeeMutation = useMutation({
+    mutationFn: async (employeeData) => {
+      const token = getToken();
+      if (!token) throw new Error("No authentication token found");
+      
+      const response = await fetch("http://resturantai.runasp.net/api/Employees", {
         method: "POST",
         headers: {
           Accept: "*/*",
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(employeeData),
       });
-
-      if (!response.ok) throw new Error("Failed to add employee");
-
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Failed to add employee: ${response.status}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
       toast.success("Employee added successfully!");
       setIsModalOpen(false);
       setFormData({
         fullName: "", role: "Employee", salary: "", phone: "", status: "Active",
         shift: "Morning", workingHoursPerDay: "8", workingDaysPerWeek: "5", email: "", password: ""
       });
-      setRefreshKey(prev => prev + 1);
-    } catch (error) {
+      // Invalidate and refetch employees query
+      queryClient.invalidateQueries({ queryKey: ["employees"] });
+    },
+    onError: (error) => {
       console.error("Error adding employee:", error);
-      toast.error("Failed to add employee.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  useEffect(() => {
-    const fetchEmployees = async () => {
-      try {
-        let token = localStorage.getItem("authToken");
-        if (!token) {
-          const storedUser = localStorage.getItem("user");
-          if (storedUser) {
-            token = JSON.parse(storedUser).token;
-          }
-        }
-
-        if (!token) return;
-
-        const response = await fetch("http://resturantai.runasp.net/api/Employees", {
-          headers: {
-            "Accept": "*/*",
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setEmployees(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch employees", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchEmployees();
-  }, [refreshKey]);
+      toast.error(error.message || "Failed to add employee.");
+    },
+  });
 
   const active = employees.filter((s) => s.status === "Active").length;
   const totalHours = employees.reduce((acc, curr) => acc + (curr.workingHoursPerDay * curr.workingDaysPerWeek), 0);
@@ -262,6 +241,22 @@ function getRestIdFromToken() {
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
+
+      {/* ── Error State ──────────────────────────────────────────── */}
+      {isError && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <p className="text-destructive font-medium">Failed to load employees</p>
+          <p className="text-destructive/70 text-sm mt-1">{error?.message || "Please try refreshing the page"}</p>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["employees"] })}
+            className="mt-2"
+          >
+            Retry
+          </Button>
+        </div>
+      )}
 
       {/* ── Header ──────────────────────────────────────────── */}
       <PageHeader
@@ -431,7 +426,7 @@ function getRestIdFromToken() {
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
                   id="fullName"
-                  placeholder="John Doe"
+                  placeholder="Enter Full Name"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
@@ -446,9 +441,11 @@ function getRestIdFromToken() {
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   >
-                    <option value="Employee">Employee</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Admin">Admin</option>
+                   <option value="casher">casher</option>
+                   <option value="Cook">Cook</option>
+                   <option value="Waiter">Waiter</option>
+                   
+                    
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -487,25 +484,29 @@ function getRestIdFromToken() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="staffEmail">Email</Label>
                 <Input
-                  id="email"
+                  id="staffEmail"
+                  name="staffEmail"
                   type="email"
-                  placeholder="john@example.com"
+                  placeholder="username@example.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
+                  autoComplete="new-password"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Initial Password</Label>
+                <Label htmlFor="staffPassword">Initial Password</Label>
                 <Input
-                  id="password"
+                  id="staffPassword"
+                  name="staffPassword"
                   type="password"
                   placeholder="Password123!"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
+                  autoComplete="new-password"
                 />
               </div>
             </div>
@@ -513,8 +514,8 @@ function getRestIdFromToken() {
               <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={addEmployeeMutation.isPending}>
+                {addEmployeeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Add Employee
               </Button>
             </DialogFooter>

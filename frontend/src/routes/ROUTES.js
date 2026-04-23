@@ -2,8 +2,6 @@ export const ROUTES={
     LANDING: "/",
     LOGIN: "/login",
     SIGNUP: "/register",
-    RegisterPersonal: "/register/RegisterPersonal",
-    RegisterRestaurant: "/register/RegisterRestaurant",
     CONNECT_POS: "/register/pos/connect-pos",
     AUTHORIZE_POS: "/register/pos/connect-pos/authorize",
     DASHBOARD: "/dashboard",

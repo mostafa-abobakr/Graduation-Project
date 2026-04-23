@@ -1,6 +1,6 @@
 import React from "react";
 
-const AuthForm = ({ header, children, onSubmit, ...props }) => {
+const AuthForm = ({ header, children, onSubmit,footer,footerLink, ...props }) => {
   return (
     <form
       onSubmit={onSubmit}
@@ -15,6 +15,7 @@ const AuthForm = ({ header, children, onSubmit, ...props }) => {
         <div className="w-full">
           {children}
         </div>
+        <p className="text-sm text-muted-foreground mt-4">{footer} <Link to={footerLink} className="text-primary">{footerLink}</Link></p>
       </div>
     </form>
   );
