@@ -78,6 +78,34 @@ export const useInventoryActions = () => {
     setFormOpen(false);
   };
 
+  const restockItem = (item, quantity, expiryDate = null) => {
+    const qty = parseFloat(quantity);
+    if (!qty || qty <= 0) {
+      toast.error("Enter a valid quantity");
+      return false;
+    }
+
+    const newBatch = {
+      batchId: Math.random().toString(36).substring(7),
+      quantity: qty,
+      expiryDate: expiryDate,
+      createdAt: new Date().toISOString(),
+    };
+
+    const updatedBatches = [...(item.batches || []), newBatch];
+    const totalQuantity = updatedBatches.reduce((sum, b) => sum + (b.quantity || 0), 0);
+    const finalQuantity = item.batches ? totalQuantity : (item.quantity || 0) + totalQuantity;
+
+    updateItem(item.id, {
+      batches: updatedBatches,
+      quantity: finalQuantity,
+      stock: finalQuantity,
+    });
+
+    toast.success(`Restocked ${item.name} with +${qty} ${item.unit}`);
+    return true;
+  };
+
   return {
     editing,
     form,
@@ -87,5 +115,6 @@ export const useInventoryActions = () => {
     openCreate,
     openEdit,
     saveItem,
+    restockItem,
   };
 };

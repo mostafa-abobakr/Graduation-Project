@@ -2,7 +2,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Pencil, Trash2, PackageSearch, PackagePlus } from "lucide-react";
+import { AlertTriangle, Pencil, Trash2, PackageSearch, PackagePlus,  Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -147,6 +148,16 @@ export function InventoryTable({
                   </td>
                   <td className="py-3 px-4 text-center">
                     <div className="flex justify-center gap-1">
+                         <Button
+                            asChild
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                          >
+                            <Link to={`/inventory/${i.id}`}>
+                              <Eye className="h-4 w-4" />
+                            </Link>
+                          </Button>
                       <Button
                         variant="ghost"
                         size="icon"

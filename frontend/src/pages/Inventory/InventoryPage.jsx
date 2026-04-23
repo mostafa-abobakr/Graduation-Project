@@ -177,17 +177,33 @@ export default function InventoryPage() {
     }
   });
 
-  const handleRestock = (qtyStr) => {
+  const handleRestock = (qtyStr, expiryDate = null) => {
     const qty = parseFloat(qtyStr);
     if (!qty || qty <= 0) {
       toast.error("Enter a valid quantity");
       return;
     }
 
-    // Optimistic update
+    // Create new batch object
+    const newBatch = {
+      batchId: Math.random().toString(36).substring(7),
+      quantity: qty,
+      expiryDate: expiryDate,
+      createdAt: new Date().toISOString(),
+    };
+
+    // Update batches and calculate totals
+    const updatedBatches = [...(restockItem.batches || []), newBatch];
+    const totalQuantity = updatedBatches.reduce((sum, b) => sum + (b.quantity || 0), 0);
+    const finalQuantity = restockItem.batches 
+      ? totalQuantity 
+      : (restockItem.quantity || 0) + totalQuantity;
+
+    // Optimistic update with batches
     updateItem(restockItem.id, {
-      quantity: (restockItem.quantity || 0) + qty,
-      stock: (restockItem.stock || restockItem.quantity || 0) + qty,
+      batches: updatedBatches,
+      quantity: finalQuantity,
+      stock: finalQuantity,
     });
 
     restockMutation.mutate({ id: restockItem.id, qty });
