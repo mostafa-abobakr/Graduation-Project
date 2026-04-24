@@ -37,8 +37,7 @@ def _get_inventory_list(restaurant_id: str) -> list:
     engine = get_engine()
     with Session(engine) as session:
         inv_list = session.query(Inventory).filter(
-            Inventory.RestID == restaurant_id,
-            Inventory.Status == 'Active'
+            Inventory.RestID == restaurant_id
         ).all()
         return [{"id": inv.InventoryID, "name": inv.ItemName, "unit": inv.Unit} for inv in inv_list]
 
@@ -99,6 +98,60 @@ def _extract_quantity(line: str) -> float:
     return 0.0
 
 
+def _extract_date(text: str) -> typing.Optional[str]:
+    """
+    Extracts the invoice date from raw OCR text.
+    Tries common date formats and returns ISO format (YYYY-MM-DD) or None.
+    """
+    from datetime import datetime
+
+    # Patterns ordered from most specific to least specific
+    date_patterns = [
+        # 2025-04-24, 2025/04/24
+        (r'(\d{4})[\-/](\d{1,2})[\-/](\d{1,2})', '%Y-%m-%d'),
+        # 24-04-2025, 24/04/2025
+        (r'(\d{1,2})[\-/](\d{1,2})[\-/](\d{4})', '%d-%m-%Y'),
+        # 24 Apr 2025, 24 April 2025
+        (r'(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})', None),
+        # Apr 24, 2025
+        (r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})', None),
+    ]
+
+    month_map = {
+        'jan': 1, 'feb': 2, 'mar': 3, 'apr': 4, 'may': 5, 'jun': 6,
+        'jul': 7, 'aug': 8, 'sep': 9, 'oct': 10, 'nov': 11, 'dec': 12
+    }
+
+    for pattern, fmt in date_patterns:
+        match = re.search(pattern, text, re.IGNORECASE)
+        if match:
+            try:
+                groups = match.groups()
+                if fmt == '%Y-%m-%d':
+                    dt = datetime(int(groups[0]), int(groups[1]), int(groups[2]))
+                elif fmt == '%d-%m-%Y':
+                    dt = datetime(int(groups[2]), int(groups[1]), int(groups[0]))
+                elif len(groups) == 3 and groups[1].lower()[:3] in month_map:
+                    # "24 Apr 2025" pattern
+                    day = int(groups[0])
+                    month = month_map[groups[1].lower()[:3]]
+                    year = int(groups[2])
+                    dt = datetime(year, month, day)
+                elif len(groups) == 3 and groups[0].lower()[:3] in month_map:
+                    # "Apr 24, 2025" pattern
+                    month = month_map[groups[0].lower()[:3]]
+                    day = int(groups[1])
+                    year = int(groups[2])
+                    dt = datetime(year, month, day)
+                else:
+                    continue
+                return dt.strftime('%Y-%m-%d')
+            except (ValueError, IndexError):
+                continue
+
+    return None
+
+
 # ===========================================================================
 # Mode 1: LOCAL OCR (Tesseract)
 # ===========================================================================
@@ -130,6 +183,9 @@ def _local_ocr_scan(image_bytes: bytes, inventory: list) -> list:
     image = Image.open(io.BytesIO(image_bytes))
     raw_text = pytesseract.image_to_string(image)
 
+    # Extract invoice date from full OCR text
+    invoice_date = _extract_date(raw_text)
+
     matched_items = []
     lines = [l.strip() for l in raw_text.split('\n') if l.strip()]
 
@@ -154,7 +210,7 @@ def _local_ocr_scan(image_bytes: bytes, inventory: list) -> list:
                 "original_invoice_name": line[:80]
             })
 
-    return matched_items
+    return matched_items, invoice_date
 
 
 # ===========================================================================
@@ -169,17 +225,22 @@ def _build_ai_prompt(inventory: list) -> str:
 Read the provided invoice image carefully.
 Extract the items and their quantities. Map each line item to the SINGLE BEST MATCH in the Inventory Database List.
 Use logical fuzzy matching (e.g. "Onions Red 10kg" maps to "Onion").
+Also extract the invoice date if visible on the document.
 
 CRITICAL: If an item DOES NOT match any item in the list, DISCARD IT completely.
 
 {context}
 
-Return ONLY a valid JSON array. No markdown, no explanation.
+Return ONLY a valid JSON object. No markdown, no explanation.
 Format:
-[
-  {{"inventory_id": 5, "quantity_to_add": 10.5, "confidence_score": 0.95, "original_invoice_name": "Premium Red Onions"}}
-]
-If no items match, return: []"""
+{{{{
+  "invoice_date": "2025-04-24",
+  "items": [
+    {{"inventory_id": 5, "quantity_to_add": 10.5, "confidence_score": 0.95, "original_invoice_name": "Premium Red Onions"}}
+  ]
+}}}}
+If no date is found, set invoice_date to null.
+If no items match, set items to []."""
 
 
 def _call_gemini(api_key, model, b64_image, mime_type, prompt):
@@ -216,8 +277,8 @@ def _call_openrouter(api_key, b64_image, mime_type, prompt):
     return result["choices"][0]["message"]["content"]
 
 
-def _cloud_ai_scan(image_bytes: bytes, inventory: list) -> list:
-    """Tries Gemini models then OpenRouter. Returns parsed items list."""
+def _cloud_ai_scan(image_bytes: bytes, inventory: list) -> tuple:
+    """Tries Gemini models then OpenRouter. Returns (parsed items list, invoice_date)."""
     img = Image.open(io.BytesIO(image_bytes))
     fmt = img.format or "PNG"
     mime_map = {"JPEG": "image/jpeg", "JPG": "image/jpeg", "PNG": "image/png",
@@ -253,8 +314,8 @@ def _cloud_ai_scan(image_bytes: bytes, inventory: list) -> list:
     raise RuntimeError(f"All cloud AI providers failed: {'; '.join(errors)}. Wait 1 min and retry.")
 
 
-def _parse_ai_json(raw_text: str) -> list:
-    """Cleans and parses AI response into list of dicts."""
+def _parse_ai_json(raw_text: str) -> tuple:
+    """Cleans and parses AI response into (items list, invoice_date)."""
     raw = raw_text.strip()
     if raw.startswith("```json"):
         raw = raw[7:]
@@ -262,64 +323,127 @@ def _parse_ai_json(raw_text: str) -> list:
         raw = raw[3:]
     if raw.endswith("```"):
         raw = raw[:-3]
-    return json.loads(raw.strip())
+    parsed = json.loads(raw.strip())
+
+    # Handle both object format {items, invoice_date} and legacy array format
+    if isinstance(parsed, dict):
+        items = parsed.get("items", [])
+        invoice_date = parsed.get("invoice_date", None)
+    else:
+        items = parsed
+        invoice_date = None
+
+    return items, invoice_date
 
 
 # ===========================================================================
-# Main Entry Point
+# Main Entry Points
 # ===========================================================================
-def analyze_invoice_and_restock(restaurant_id: str, image_bytes: bytes, mode: str = "auto") -> dict:
+def scan_invoice(restaurant_id: str, image_bytes: bytes, mode: str = "auto") -> dict:
     """
-    Scans an invoice image, maps items to inventory, and restocks.
+    Scans an invoice image and maps items to inventory.
+    Returns matched items for user review — does NOT modify the database.
     mode: "local" (Tesseract OCR), "cloud" (Gemini/OpenRouter), "auto" (try local first, fallback to cloud)
     """
     inventory = _get_inventory_list(restaurant_id)
     if not inventory:
         raise ValueError(f"Restaurant {restaurant_id} has no inventory items. Seed inventory first.")
 
+    # Build a quick lookup for enrichment
+    inv_lookup = {inv["id"]: inv for inv in inventory}
+
     matched_items = []
+    invoice_date = None
 
     if mode == "local":
-        matched_items = _local_ocr_scan(image_bytes, inventory)
+        matched_items, invoice_date = _local_ocr_scan(image_bytes, inventory)
     elif mode == "cloud":
-        raw_items = _cloud_ai_scan(image_bytes, inventory)
+        raw_items, invoice_date = _cloud_ai_scan(image_bytes, inventory)
         validated = ScannedInvoiceResult(items=raw_items)
         matched_items = [item.model_dump() for item in validated.items]
     else:  # auto
         try:
-            matched_items = _local_ocr_scan(image_bytes, inventory)
+            matched_items, invoice_date = _local_ocr_scan(image_bytes, inventory)
         except Exception:
             pass
 
         if not matched_items:
             try:
-                raw_items = _cloud_ai_scan(image_bytes, inventory)
+                raw_items, invoice_date = _cloud_ai_scan(image_bytes, inventory)
                 validated = ScannedInvoiceResult(items=raw_items)
                 matched_items = [item.model_dump() for item in validated.items]
             except Exception as e:
                 raise RuntimeError(f"Both local OCR and cloud AI failed: {str(e)}")
 
     if not matched_items:
-        return {"status": "no_matches", "restocked_items": [], "failed_matches": [],
+        return {"status": "no_matches", "invoice_date": invoice_date, "scanned_items": [],
                 "message": "No invoice items could be mapped to your inventory."}
 
-    # Execute Restocks
-    restocked_items = []
-    errors = []
+    # Enrich each matched item with current inventory details for the preview
+    enriched = []
     for item in matched_items:
+        inv_id = item["inventory_id"]
+        inv_info = inv_lookup.get(inv_id, {})
+
+        # Fetch current stock from DB for accurate preview
+        current_stock = _get_current_stock(inv_id)
+
+        enriched.append({
+            "inventory_id": inv_id,
+            "item_name": inv_info.get("name", "Unknown"),
+            "unit": inv_info.get("unit", ""),
+            "current_stock": current_stock,
+            "quantity_to_add": item["quantity_to_add"],
+            "confidence_score": item["confidence_score"],
+            "original_invoice_name": item["original_invoice_name"],
+        })
+
+    return {
+        "status": "pending_confirmation",
+        "invoice_date": invoice_date,
+        "scanned_items": enriched,
+    }
+
+
+def _get_current_stock(inventory_id: int) -> float:
+    """Fetches the current stock for a single inventory item."""
+    engine = get_engine()
+    with Session(engine) as session:
+        inv = session.query(Inventory).filter(Inventory.InventoryID == inventory_id).first()
+        return float(inv.Stock or 0) if inv else 0.0
+
+
+def confirm_invoice_restock(restaurant_id: str, items: list) -> dict:
+    """
+    Applies restocking for a list of confirmed (and possibly user-edited) items.
+    Each item dict must have: inventory_id, quantity_to_add.
+    """
+    if not items:
+        raise ValueError("No items provided to confirm.")
+
+    restocked = []
+    errors = []
+
+    for item in items:
+        inv_id = item.get("inventory_id")
+        qty = item.get("quantity_to_add", 0)
+        if not inv_id or qty <= 0:
+            errors.append({"inventory_id": inv_id, "error": "Invalid inventory_id or quantity"})
+            continue
+
         try:
-            restock_inventory(restaurant_id, item["inventory_id"], item["quantity_to_add"])
-            restocked_items.append({
-                "inventory_id": item["inventory_id"],
-                "original_invoice_name": item["original_invoice_name"],
-                "quantity_added": item["quantity_to_add"],
-                "confidence": item["confidence_score"]
+            result = restock_inventory(restaurant_id, inv_id, qty)
+            restocked.append({
+                "inventory_id": inv_id,
+                "quantity_added": qty,
+                "new_stock": result["new_stock"],
             })
         except Exception as e:
-            errors.append({"inventory_id": item["inventory_id"], "error": str(e)})
+            errors.append({"inventory_id": inv_id, "error": str(e)})
 
     return {
         "status": "success" if not errors else "partial_success",
-        "restocked_items": restocked_items,
-        "failed_matches": errors
+        "restocked_items": restocked,
+        "failed_items": errors,
     }
+

@@ -539,10 +539,19 @@ def seed_inventory_data(restaurant_id: str) -> Dict[str, Any]:
         # e.g., if multiple items need "Lettuce", we only create "Lettuce" once in Inventories.
         created_inventories: Dict[str, int] = {}
         
+        SUPPLIERS = [
+            "Fresh Farms Co.", "Metro Wholesale", "Al-Ahram Foods",
+            "Delta Distribution", "Nile Valley Produce", "Cairo Direct Supply",
+            "Golden Harvest Ltd.", "El-Salam Trading", "AlexFood Supplies",
+        ]
+        
         sql_insert_inv = text("""
-            INSERT INTO Inventories (RestID, ItemName, Unit, ReorderLevel, ReorderQuantity, Stock, CostPerUnit, Status, Category)
+            INSERT INTO Inventories (RestID, ItemName, Unit, ReorderLevel, ReorderQuantity,
+                                    Stock, CostPerUnit, Category, Description, Supplier,
+                                    ExpiryDate, LastUpdated)
             OUTPUT inserted.InventoryID
-            VALUES (:rid, :name, :unit, :rl, :rq, :stock, :cost, :status, :category)
+            VALUES (:rid, :name, :unit, :rl, :rq, :stock, :cost, :category,
+                    :description, :supplier, :expiry, :last_updated)
         """)
         
         sql_insert_mii = text("""
@@ -575,6 +584,11 @@ def seed_inventory_data(restaurant_id: str) -> Dict[str, Any]:
                         stock = round(random.uniform(1000, 3000), 1)
                         cost = round(random.uniform(0.5, 5), 2)
                         
+                    # Generate realistic dummy values for new columns
+                    supplier = random.choice(SUPPLIERS)
+                    expiry = datetime.now() + timedelta(days=random.randint(30, 365))
+                    description = f"Raw ingredient: {ing_name} ({unit})"
+                    
                     res = conn.execute(sql_insert_inv, {
                         "rid": restaurant_id,
                         "name": ing_name,
@@ -583,8 +597,11 @@ def seed_inventory_data(restaurant_id: str) -> Dict[str, Any]:
                         "rq": rq,
                         "stock": stock,
                         "cost": cost,
-                        "status": "Active",
-                        "category": category
+                        "category": category,
+                        "description": description,
+                        "supplier": supplier,
+                        "expiry": expiry,
+                        "last_updated": datetime.now()
                     }).fetchone()
                     created_inventories[ing_name] = res[0]
                     inserted_inventories += 1

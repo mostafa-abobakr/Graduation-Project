@@ -79,6 +79,9 @@ class OrderItem(Base):
 class Inventory(Base):
     """
     Tracks inventory items / raw ingredients.
+    Schema: (InventoryID, RestID, ItemName, Unit, ReorderLevel, LastUpdated,
+             Description, ImageUrl, Category, CostPerUnit, Stock, Supplier,
+             ReorderQuantity, ExpiryDate)
     """
     __tablename__ = "Inventories"
 
@@ -87,16 +90,21 @@ class Inventory(Base):
     ItemName        = Column(String(200), nullable=False)
     Unit            = Column(String(50), nullable=True)
     ReorderLevel    = Column(Float, nullable=True)
-    ReorderQuantity = Column(Float, nullable=True)
-    Stock           = Column(Float, nullable=True)
-    CostPerUnit     = Column(Float, nullable=True)
+    LastUpdated     = Column(DateTime, nullable=True)
+    Description     = Column(String(500), nullable=True)
+    ImageUrl        = Column(String(500), nullable=True)
     Category        = Column(String(100), nullable=True)
-    Status          = Column(String(50), nullable=True)
+    CostPerUnit     = Column(Float, nullable=True)
+    Stock           = Column(Float, nullable=True)
+    Supplier        = Column(String(200), nullable=True)
+    ReorderQuantity = Column(Float, nullable=True)
+    ExpiryDate      = Column(DateTime, nullable=True)
 
 
 class MenuItemIngredient(Base):
     """
     Junction mapping MenuItems to Inventories for BOM (Bill of Materials).
+    Schema: (MenuItemId, InventoryID, QuantityUsedPerItem)
     """
     __tablename__ = "MenuItemIngredients"
 
@@ -108,6 +116,8 @@ class MenuItemIngredient(Base):
 class InventoryTransaction(Base):
     """
     Audit log of inventory changes.
+    Schema: (TransactionID, InventoryID, RestID, ChangeType, QuantityChange,
+             ReferenceID, ReferenceType, CreatedAt)
     """
     __tablename__ = "InventoryTransactions"
 
@@ -119,4 +129,3 @@ class InventoryTransaction(Base):
     ReferenceID     = Column(Integer, nullable=True)
     ReferenceType   = Column(String(50), nullable=True)
     CreatedAt       = Column(DateTime, nullable=True)
-

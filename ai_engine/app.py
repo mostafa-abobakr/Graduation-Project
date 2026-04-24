@@ -88,16 +88,10 @@ from database.seeder import (
     seed_all_inventory
 )
 
-from schemas.inventory_requests import RestockRequest, RecipeIngredientRequest
 from inventory.service import (
     consume_inventory,
-    restock_inventory,
-    check_low_stock,
-    forecast_inventory_requirements,
-    get_menu_recipes,
-    add_ingredient_to_recipe,
-    get_all_inventory,
 )
+from schemas.inventory_requests import InvoiceConfirmRequest
 
 # ---------------------------------------------------------------------------
 # Application lifespan — validate config at startup
@@ -108,7 +102,18 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="ZeroBite ML Service", lifespan=lifespan)
+tags_metadata = [
+    {"name": "Health", "description": "Service health and status checks."},
+    {"name": "Seed", "description": "Generate and insert dummy POS and inventory data for testing."},
+    {"name": "Training", "description": "Train Prophet demand-forecasting models."},
+    {"name": "Forecast", "description": "Generate hourly, daily, and dashboard demand forecasts."},
+    {"name": "Metrics", "description": "Model evaluation metrics — MAE, MAPE, accuracy, and diagnostics."},
+    {"name": "Analytics", "description": "Business analytics — revenue, cost, peaks, alerts, and dashboards. Pure SQL, no ML."},
+    {"name": "Models", "description": "Manage saved ML models."},
+    {"name": "Inventory", "description": "Inventory management — stock consumption, invoice scanning, and restocking."},
+]
+
+app = FastAPI(title="ZeroBite ML Service", lifespan=lifespan, openapi_tags=tags_metadata)
 
 MIN_HOURS = 336   # 2 weeks of hourly data, enforced per item
 
@@ -116,7 +121,7 @@ MIN_HOURS = 336   # 2 weeks of hourly data, enforced per item
 # ---------------------------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------------------------
-@app.get("/")
+@app.get("/", tags=["Health"])
 def root():
     return {"status": "ZeroBite ML service running"}
 
@@ -124,7 +129,7 @@ def root():
 # ---------------------------------------------------------------------------
 # SEED DATA
 # ---------------------------------------------------------------------------
-@app.get("/seed/check/all")
+@app.get("/seed/check/all", tags=["Seed"])
 def check_all_restaurants_data():
     """
     Scan all restaurants and return those that have no seeded data (no menu items).
@@ -135,7 +140,7 @@ def check_all_restaurants_data():
         raise HTTPException(status_code=500, detail=f"Failed to scan restaurants: {str(e)}")
 
 
-@app.get("/seed/check/{restaurant_id}")
+@app.get("/seed/check/{restaurant_id}", tags=["Seed"])
 def check_restaurant_data(restaurant_id: str):
     """
     Check whether a specific restaurant already has seeded data (menu items).
@@ -147,7 +152,7 @@ def check_restaurant_data(restaurant_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to check restaurant data: {str(e)}")
 
 
-@app.post("/seed/{restaurant_id}")
+@app.post("/seed/{restaurant_id}", tags=["Seed"])
 def seed_dummy_data(restaurant_id: str):
     """
     Generate and insert 3-12 months of realistic POS dummy data for a restaurant.
@@ -161,7 +166,7 @@ def seed_dummy_data(restaurant_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to seed data: {str(e)}")
 
 
-@app.post("/seedAll")
+@app.post("/seedAll", tags=["Seed"])
 def seed_all_dummy_data():
     """
     Go through all restaurants and seed dummy data for those that don't have any menu items.
@@ -173,7 +178,7 @@ def seed_all_dummy_data():
         raise HTTPException(status_code=500, detail=f"Failed to run batch seed: {str(e)}")
 
 
-@app.post("/seed/inventory/{restaurant_id}")
+@app.post("/seed/inventory/{restaurant_id}", tags=["Seed"])
 def api_seed_inventory(restaurant_id: str):
     """
     Seed dummy inventory data and item recipes for a specific restaurant.
@@ -186,7 +191,7 @@ def api_seed_inventory(restaurant_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to seed inventory data: {str(e)}")
 
 
-@app.post("/seedAll/inventory")
+@app.post("/seedAll/inventory", tags=["Seed"])
 def api_seed_all_inventory():
     """
     Seed dummy inventory data for all restaurants without it.
@@ -199,7 +204,7 @@ def api_seed_all_inventory():
 # ---------------------------------------------------------------------------
 # TRAIN
 # ---------------------------------------------------------------------------
-@app.post("/train/{restaurant_id}")
+@app.post("/train/{restaurant_id}", tags=["Training"])
 def train_model(restaurant_id: str):
     """
     Load full history for the restaurant from SQL Server, aggregate to
@@ -238,7 +243,7 @@ def train_model(restaurant_id: str):
     }
 
 
-@app.post("/train/{restaurant_id}/{item_name}")
+@app.post("/train/{restaurant_id}/{item_name}", tags=["Training"])
 def train_single_model(restaurant_id: str, item_name: str):
     """
     Train a Prophet model for a single menu item.
@@ -276,7 +281,7 @@ def train_single_model(restaurant_id: str, item_name: str):
 # ---------------------------------------------------------------------------
 # HOURLY FORECAST
 # ---------------------------------------------------------------------------
-@app.post("/forecast/hourly/{restaurant_id}/{item_name}")
+@app.post("/forecast/hourly/{restaurant_id}/{item_name}", tags=["Forecast"])
 def hourly_forecast(
     restaurant_id: str,
     item_name: str,
@@ -299,7 +304,7 @@ def hourly_forecast(
 # ---------------------------------------------------------------------------
 # DAILY FORECAST
 # ---------------------------------------------------------------------------
-@app.post("/forecast/daily/{restaurant_id}/{item_name}")
+@app.post("/forecast/daily/{restaurant_id}/{item_name}", tags=["Forecast"])
 def daily_forecast(
     restaurant_id: str,
     item_name: str,
@@ -341,7 +346,7 @@ def daily_forecast(
 # ---------------------------------------------------------------------------
 # HOURLY FORECAST ALL
 # ---------------------------------------------------------------------------
-@app.post("/forecast/all/hourly/{restaurant_id}")
+@app.post("/forecast/all/hourly/{restaurant_id}", tags=["Forecast"])
 def hourly_forecast_all(
     restaurant_id: str,
     request: HourlyForecastRequest,
@@ -375,7 +380,7 @@ def hourly_forecast_all(
 # ---------------------------------------------------------------------------
 # DAILY FORECAST ALL
 # ---------------------------------------------------------------------------
-@app.post("/forecast/all/daily/{restaurant_id}")
+@app.post("/forecast/all/daily/{restaurant_id}", tags=["Forecast"])
 def daily_forecast_all(
     restaurant_id: str,
     request: DailyForecastRequest,
@@ -427,7 +432,7 @@ def daily_forecast_all(
 # ---------------------------------------------------------------------------
 # PEAK FORECAST ALL
 # ---------------------------------------------------------------------------
-@app.post("/forecast/all/peaks/{restaurant_id}")
+@app.post("/forecast/all/peaks/{restaurant_id}", tags=["Forecast"])
 def forecast_all_peaks(
     restaurant_id: str,
     request: DailyForecastRequest,
@@ -517,7 +522,7 @@ def forecast_all_peaks(
 # ---------------------------------------------------------------------------
 # DASHBOARD FORECASTS
 # ---------------------------------------------------------------------------
-@app.post("/forecast/dashboard/day/{restaurant_id}")
+@app.post("/forecast/dashboard/day/{restaurant_id}", tags=["Forecast"])
 def forecast_dashboard_day(
     restaurant_id: str,
     request: HourlyForecastRequest,
@@ -636,7 +641,7 @@ def forecast_dashboard_day(
     }
 
 
-@app.post("/forecast/dashboard/week/{restaurant_id}")
+@app.post("/forecast/dashboard/week/{restaurant_id}", tags=["Forecast"])
 def forecast_dashboard_week(
     restaurant_id: str,
     request: WeeklyDashboardRequest,
@@ -770,7 +775,7 @@ def forecast_dashboard_week(
 # ---------------------------------------------------------------------------
 # EVALUATION — Legacy endpoints (backward-compatible, unchanged signatures)
 # ---------------------------------------------------------------------------
-@app.get("/metrics/mae/{restaurant_id}/{item_name}")
+@app.get("/metrics/mae/{restaurant_id}/{item_name}", tags=["Metrics"])
 def get_item_mae(restaurant_id: str, item_name: str):
     """Legacy: daily MAE for one item."""
     try:
@@ -800,7 +805,7 @@ def get_item_mae(restaurant_id: str, item_name: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.get("/metrics/mae/{restaurant_id}")
+@app.get("/metrics/mae/{restaurant_id}", tags=["Metrics"])
 def get_overall_mae(restaurant_id: str):
     """Legacy: overall daily MAE across all items."""
     try:
@@ -815,7 +820,7 @@ def get_overall_mae(restaurant_id: str):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.get("/metrics/summary/{restaurant_id}/{item_name}")
+@app.get("/metrics/summary/{restaurant_id}/{item_name}", tags=["Metrics"])
 def get_model_diagnostics(restaurant_id: str, item_name: str):
     """
     Full model diagnostics: MAE + RMSE + training row count + last_ds.
@@ -875,7 +880,7 @@ def get_model_diagnostics(restaurant_id: str, item_name: str):
 # ---------------------------------------------------------------------------
 # EVALUATION — New endpoints with granularity switch
 # ---------------------------------------------------------------------------
-@app.get("/metrics/item/{restaurant_id}/{item_name}")
+@app.get("/metrics/item/{restaurant_id}/{item_name}", tags=["Metrics"])
 def get_item_metrics(
     restaurant_id: str,
     item_name: str,
@@ -908,7 +913,7 @@ def get_item_metrics(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.get("/metrics/overall/{restaurant_id}")
+@app.get("/metrics/overall/{restaurant_id}", tags=["Metrics"])
 def get_overall_metrics(
     restaurant_id: str,
     granularity: Literal["hourly", "daily"] = Query(default="daily"),
@@ -974,7 +979,7 @@ def get_overall_metrics(
     }
 
 
-@app.get("/metrics/accuracy/{restaurant_id}")
+@app.get("/metrics/accuracy/{restaurant_id}", tags=["Metrics"])
 def get_overall_accuracy(
     restaurant_id: str,
     granularity: Literal["hourly", "daily"] = Query(default="daily"),
@@ -990,7 +995,7 @@ def get_overall_accuracy(
     }
 
 
-@app.get("/metrics/temperature_sanity/{restaurant_id}/{item_name}")
+@app.get("/metrics/temperature_sanity/{restaurant_id}/{item_name}", tags=["Metrics"])
 def get_temperature_sanity(restaurant_id: str, item_name: str):
     """
     Sweep -10°C → 45°C to validate that the model's demand response
@@ -1005,7 +1010,7 @@ def get_temperature_sanity(restaurant_id: str, item_name: str):
 # ---------------------------------------------------------------------------
 # ANALYTICS — Pure SQL, no ML
 # ---------------------------------------------------------------------------
-@app.get("/analytics/cost-reduction/{restaurant_id}")
+@app.get("/analytics/cost-reduction/{restaurant_id}", tags=["Analytics"])
 def analytics_cost_reduction(restaurant_id: str):
     """
     Cost Reduction KPI comparing periods.
@@ -1020,7 +1025,7 @@ def analytics_cost_reduction(restaurant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics/sales-profit-chart/{restaurant_id}")
+@app.get("/analytics/sales-profit-chart/{restaurant_id}", tags=["Analytics"])
 def analytics_sales_profit_chart(restaurant_id: str):
     """
     Sales & Profit Trend chart data.
@@ -1036,7 +1041,7 @@ def analytics_sales_profit_chart(restaurant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics/revenue/{restaurant_id}")
+@app.get("/analytics/revenue/{restaurant_id}", tags=["Analytics"])
 def analytics_revenue(restaurant_id: str):
     """
     Aggregate revenue KPIs for a restaurant.
@@ -1051,7 +1056,7 @@ def analytics_revenue(restaurant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics/revenue/trend/{restaurant_id}")
+@app.get("/analytics/revenue/trend/{restaurant_id}", tags=["Analytics"])
 def analytics_revenue_trend(
     restaurant_id: str,
     granularity: Literal["hour", "day"] = Query(default="day"),
@@ -1069,7 +1074,7 @@ def analytics_revenue_trend(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics/menu/performance/{restaurant_id}")
+@app.get("/analytics/menu/performance/{restaurant_id}", tags=["Analytics"])
 def analytics_menu_performance(restaurant_id: str):
     """
     Per-item menu performance.
@@ -1084,7 +1089,7 @@ def analytics_menu_performance(restaurant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics/peaks/{restaurant_id}")
+@app.get("/analytics/peaks/{restaurant_id}", tags=["Analytics"])
 def analytics_peaks(restaurant_id: str):
     """
     Top 3 peak hours and top 3 peak days by order count.
@@ -1099,7 +1104,7 @@ def analytics_peaks(restaurant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics/alerts/{restaurant_id}")
+@app.get("/analytics/alerts/{restaurant_id}", tags=["Analytics"])
 def analytics_alerts(restaurant_id: str):
     """
     Rule-based business alerts.
@@ -1114,7 +1119,7 @@ def analytics_alerts(restaurant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/analytics/alerts/forecast/{restaurant_id}")
+@app.post("/analytics/alerts/forecast/{restaurant_id}", tags=["Analytics"])
 def analytics_forecast_alerts(
     restaurant_id: str,
     request: WeeklyDashboardRequest
@@ -1288,7 +1293,7 @@ def analytics_forecast_alerts(
     }
 
 
-@app.get("/analytics/dashboard/{restaurant_id}")
+@app.get("/analytics/dashboard/{restaurant_id}", tags=["Analytics"])
 def analytics_dashboard(restaurant_id: str):
     """
     Combined endpoint for the overall analytics dashboard.
@@ -1316,7 +1321,7 @@ def analytics_dashboard(restaurant_id: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/analytics/dashboard/revenue/{restaurant_id}")
+@app.get("/analytics/dashboard/revenue/{restaurant_id}", tags=["Analytics"])
 def analytics_dashboard_revenue(restaurant_id: str):
     """
     Combined endpoint for the Revenue Analytics dashboard.
@@ -1363,7 +1368,7 @@ def analytics_dashboard_revenue(restaurant_id: str):
 # ---------------------------------------------------------------------------
 # MODELS MANAGEMENT
 # ---------------------------------------------------------------------------
-@app.delete("/models/{restaurant_id}")
+@app.delete("/models/{restaurant_id}", tags=["Models"])
 def delete_all_models(restaurant_id: str):
     """
     Clear all saved models and metadata for a specific restaurant.
@@ -1387,7 +1392,7 @@ def delete_all_models(restaurant_id: str):
 # ---------------------------------------------------------------------------
 # INVENTORY MANAGEMENT
 # ---------------------------------------------------------------------------
-@app.post("/inventory/consume/{restaurant_id}/{order_id}")
+@app.post("/inventory/consume/{restaurant_id}/{order_id}", tags=["Inventory"])
 def api_consume_inventory(restaurant_id: str, order_id: int):
     """
     Deduct stock from Inventories based on consumed menu items in an Order.
@@ -1400,122 +1405,15 @@ def api_consume_inventory(restaurant_id: str, order_id: int):
         raise HTTPException(status_code=500, detail=f"Failed to consume inventory: {str(e)}")
 
 
-@app.post("/inventory/restock/{restaurant_id}")
-def api_restock_inventory(restaurant_id: str, request: RestockRequest):
-    """
-    Increase inventory stock directly.
-    """
-    try:
-        return restock_inventory(restaurant_id, request.inventory_id, request.quantity)
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to restock inventory: {str(e)}")
 
 
-@app.get("/inventory/low-stock/{restaurant_id}")
-def api_check_low_stock(restaurant_id: str):
-    """
-    Return all items where Stock <= ReorderLevel.
-    """
-    try:
-        return check_low_stock(restaurant_id)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve low stock: {str(e)}")
 
-
-@app.post("/inventory/forecast-check/{restaurant_id}")
-def api_forecast_inventory_requirements(restaurant_id: str, request: WeeklyDashboardRequest):
-    """
-    Forecast expected shortages based on Prophet predicted demand over the next 7 days.
-    """
-    if len(request.weekly_temperatures) != 7 or len(request.weekly_events) != 7:
-        raise HTTPException(
-            status_code=400,
-            detail="Must provide exactly 7 values for weekly temps/events.",
-        )
-
-    model_dir = os.path.dirname(get_model_path(restaurant_id, "dummy"))
-    if not os.path.exists(model_dir):
-        raise HTTPException(status_code=404, detail="No models found for restaurant")
-        
-    items = [f[:-4] for f in os.listdir(model_dir) if f.endswith(".pkl")]
-    if not items:
-        raise HTTPException(status_code=404, detail="No models found for restaurant")
-
-    future_temp: list[float] = []
-    future_events: list[int] = []
-    for t, e in zip(request.weekly_temperatures, request.weekly_events):
-        future_temp.extend([t] * 24)
-        future_events.extend([e] * 24)
-
-    forecast_dicts = []
-    for item_name in items:
-        try:
-            hourly = forecast(restaurant_id, item_name, future_temp, future_events)
-            if hourly.empty:
-                continue
-            
-            orders = float(hourly["predicted_demand"].sum())
-            forecast_dicts.append({"item_name": item_name, "expected_orders": orders})
-        except (FileNotFoundError, ValueError):
-            continue
-
-    if not forecast_dicts:
-        raise HTTPException(status_code=400, detail="Could not generate forecast for any items")
-
-    try:
-        return forecast_inventory_requirements(restaurant_id, forecast_dicts)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to check forecast inventory: {str(e)}")
-
-
-@app.get("/inventory/recipes/{restaurant_id}")
-def api_get_menu_recipes(restaurant_id: str):
-    """
-    Get all menu items and their currently mapped ingredient recipes for a restaurant.
-    """
-    try:
-        return get_menu_recipes(restaurant_id)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve recipes: {str(e)}")
-
-
-@app.post("/inventory/recipes/{restaurant_id}/add")
-def api_add_ingredient_to_recipe(restaurant_id: str, request: RecipeIngredientRequest):
-    """
-    Add or update an ingredient in a menu item's recipe.
-    """
-    try:
-        return add_ingredient_to_recipe(
-            rest_id=restaurant_id,
-            menu_item_id=request.menu_item_id,
-            quantity=request.quantity_used,
-            inventory_id=request.inventory_id,
-            new_name=request.new_ingredient_name,
-            new_unit=request.new_ingredient_unit
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to map recipe: {str(e)}")
-
-
-@app.get("/inventory/items/{restaurant_id}")
-def api_get_all_inventory(restaurant_id: str):
-    """
-    Get all inventory items for a restaurant with full details (stock, unit, category, status, etc.).
-    """
-    try:
-        return get_all_inventory(restaurant_id)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to retrieve inventory: {str(e)}")
-
-
-@app.post("/inventory/invoice-scan/{restaurant_id}")
+@app.post("/inventory/invoice-scan/{restaurant_id}", tags=["Inventory"])
 async def api_invoice_scan(restaurant_id: str, file: UploadFile = File(...), mode: str = Query(default="auto", enum=["auto", "local", "cloud"])):
     """
     Invoice Scanning with OCR + AI.
+    Scans the invoice and returns matched items for review — does NOT modify the database.
+    The user should review/edit the results, then call /inventory/invoice-confirm to apply.
     Modes:
       - **auto** (default): Tries local Tesseract OCR first, falls back to cloud AI.
       - **local**: Uses only Tesseract OCR (no API calls, fully offline).
@@ -1539,11 +1437,25 @@ async def api_invoice_scan(restaurant_id: str, file: UploadFile = File(...), mod
                 f"Please upload a JPG, PNG, or WEBP image of the invoice."
             )
         
-        from inventory.invoice_scanner import analyze_invoice_and_restock
-        return analyze_invoice_and_restock(restaurant_id, contents, mode=mode)
+        from inventory.invoice_scanner import scan_invoice
+        return scan_invoice(restaurant_id, contents, mode=mode)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/inventory/invoice-confirm/{restaurant_id}", tags=["Inventory"])
+def api_invoice_confirm(restaurant_id: str, request: InvoiceConfirmRequest):
+    """
+    Confirm and apply restocking from a previously scanned invoice.
+    Accepts the (possibly user-edited) list of items and applies the stock changes.
+    """
+    try:
+        from inventory.invoice_scanner import confirm_invoice_restock
+        items = [item.model_dump() for item in request.items]
+        return confirm_invoice_restock(restaurant_id, items)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
