@@ -10,6 +10,7 @@ import AuthContainer from "@/components/AuthContainer";
 import img from "@/assets/Auth/SignUp.png";
 import { signupValidationSchema } from "@/schemas/auth/validations";
 import { useRegisterContext } from "@/contexts/Valdation";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, MapPin, Building2, Navigation, Map } from "lucide-react";
 
 const validationSchema = signupValidationSchema.pick(["address", "city"]);
@@ -30,7 +31,8 @@ const RestaurantLocation = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const { formData, updateFromData } = useRegisterContext();
+  const { formData, updateFromData, resetFormData } = useRegisterContext();
+  const { register } = useAuth();
 
   const formik = useFormik({
     initialValues: {
@@ -40,9 +42,24 @@ const RestaurantLocation = () => {
     validationSchema,
     onSubmit: async (values) => {
       setIsSubmitting(true);
-      updateFromData(values);
-      navigate("/register/connect-pos");
-      setIsSubmitting(false);
+      setSubmitError("");
+      try {
+        // Merge location data with existing form data
+        const completeData = { ...formData, ...values };
+        
+        // Call register API with ALL data
+        await register(completeData);
+        
+        // Clear localStorage on success
+        resetFormData();
+        
+        // Navigate to next step
+        navigate("/register/connect-pos");
+      } catch (error) {
+        setSubmitError(error.response?.data?.message || "Registration failed. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
 
