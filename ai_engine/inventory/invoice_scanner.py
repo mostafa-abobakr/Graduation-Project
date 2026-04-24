@@ -23,10 +23,12 @@ from inventory.service import restock_inventory
 
 
 class ScannedItem(BaseModel):
-    inventory_id: int
+    inventory_id: typing.Optional[int] = None
     quantity_to_add: float
     confidence_score: float
     original_invoice_name: str
+    unit_price: typing.Optional[float] = None
+    total_price: typing.Optional[float] = None
 
 class ScannedInvoiceResult(BaseModel):
     items: typing.List[ScannedItem]
@@ -79,6 +81,10 @@ def _extract_quantity(line: str) -> float:
     Extracts a numeric quantity from an invoice line.
     Looks for patterns like '10 kg', '5.5', '200 units', etc.
     """
+    # Ignore lines that are clearly headers or metadata (like dates or invoice numbers)
+    if re.search(r'\b(?:date|time|invoice|tax id|zip code|phone|tel)\b', line, re.IGNORECASE):
+        return 0.0
+
     # Try common invoice patterns: "10 x", "qty: 10", "10 kg", standalone numbers
     patterns = [
         r'(\d+\.?\d*)\s*(?:kg|kgs|kilogram)',
@@ -98,6 +104,19 @@ def _extract_quantity(line: str) -> float:
     return 0.0
 
 
+def _extract_prices(line: str) -> tuple:
+    """
+    Extracts unit price and total price from an invoice line.
+    Finds monetary values like '12.00', '$12.00', expects rightmost values.
+    """
+    matches = re.findall(r'(?:[\$\£\€]?\s*)(\d+\.\d{2})', line)
+    if len(matches) >= 2:
+        return float(matches[-2]), float(matches[-1])
+    elif len(matches) == 1:
+        return None, float(matches[0])
+    return None, None
+
+
 def _extract_date(text: str) -> typing.Optional[str]:
     """
     Extracts the invoice date from raw OCR text.
@@ -109,8 +128,8 @@ def _extract_date(text: str) -> typing.Optional[str]:
     date_patterns = [
         # 2025-04-24, 2025/04/24
         (r'(\d{4})[\-/](\d{1,2})[\-/](\d{1,2})', '%Y-%m-%d'),
-        # 24-04-2025, 24/04/2025
-        (r'(\d{1,2})[\-/](\d{1,2})[\-/](\d{4})', '%d-%m-%Y'),
+        # 05/16/2024, 16/05/2024
+        (r'(\d{1,2})[\-/](\d{1,2})[\-/](\d{4})', 'ambiguous'),
         # 24 Apr 2025, 24 April 2025
         (r'(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})', None),
         # Apr 24, 2025
@@ -129,8 +148,17 @@ def _extract_date(text: str) -> typing.Optional[str]:
                 groups = match.groups()
                 if fmt == '%Y-%m-%d':
                     dt = datetime(int(groups[0]), int(groups[1]), int(groups[2]))
-                elif fmt == '%d-%m-%Y':
-                    dt = datetime(int(groups[2]), int(groups[1]), int(groups[0]))
+                elif fmt == 'ambiguous':
+                    g1, g2, g3 = int(groups[0]), int(groups[1]), int(groups[2])
+                    if g1 > 12 and g2 <= 12:
+                        dt = datetime(g3, g2, g1)  # DD-MM-YYYY
+                    elif g2 > 12 and g1 <= 12:
+                        dt = datetime(g3, g1, g2)  # MM-DD-YYYY
+                    elif g1 <= 12 and g2 <= 12:
+                        # Default to MM-DD-YYYY if ambiguous
+                        dt = datetime(g3, g1, g2)
+                    else:
+                        continue
                 elif len(groups) == 3 and groups[1].lower()[:3] in month_map:
                     # "24 Apr 2025" pattern
                     day = int(groups[0])
@@ -190,25 +218,41 @@ def _local_ocr_scan(image_bytes: bytes, inventory: list) -> list:
     lines = [l.strip() for l in raw_text.split('\n') if l.strip()]
 
     for line in lines:
-        best_inv, confidence = _fuzzy_match(line, inventory)
-        if best_inv is None:
-            continue
-
         quantity = _extract_quantity(line)
         if quantity <= 0:
             continue
 
-        # Avoid duplicates (take the higher confidence one)
-        existing = next((m for m in matched_items if m["inventory_id"] == best_inv["id"]), None)
-        if existing:
-            existing["quantity_to_add"] += quantity
-        else:
+        unit_price, total_price = _extract_prices(line)
+        best_inv, confidence = _fuzzy_match(line, inventory)
+
+        if best_inv is None:
+            # Unmapped new item
             matched_items.append({
-                "inventory_id": best_inv["id"],
+                "inventory_id": None,
                 "quantity_to_add": quantity,
-                "confidence_score": confidence,
-                "original_invoice_name": line[:80]
+                "unit_price": unit_price,
+                "total_price": total_price,
+                "confidence_score": 0.0,
+                "original_invoice_name": line[:80].strip()
             })
+        else:
+            # Avoid duplicates (take the higher confidence one)
+            existing = next((m for m in matched_items if m["inventory_id"] == best_inv["id"]), None)
+            if existing:
+                existing["quantity_to_add"] += quantity
+                if existing.get("total_price") and total_price:
+                    existing["total_price"] += total_price
+                elif total_price:
+                    existing["total_price"] = total_price
+            else:
+                matched_items.append({
+                    "inventory_id": best_inv["id"],
+                    "quantity_to_add": quantity,
+                    "unit_price": unit_price,
+                    "total_price": total_price,
+                    "confidence_score": confidence,
+                    "original_invoice_name": line[:80].strip()
+                })
 
     return matched_items, invoice_date
 
@@ -226,8 +270,9 @@ Read the provided invoice image carefully.
 Extract the items and their quantities. Map each line item to the SINGLE BEST MATCH in the Inventory Database List.
 Use logical fuzzy matching (e.g. "Onions Red 10kg" maps to "Onion").
 Also extract the invoice date if visible on the document.
+Extract the unit_price and total_price for each item if visible.
 
-CRITICAL: If an item DOES NOT match any item in the list, DISCARD IT completely.
+CRITICAL: If an item DOES NOT match any item in the list, STILL EXTRACT IT but set "inventory_id" to null.
 
 {context}
 
@@ -236,11 +281,13 @@ Format:
 {{{{
   "invoice_date": "2025-04-24",
   "items": [
-    {{"inventory_id": 5, "quantity_to_add": 10.5, "confidence_score": 0.95, "original_invoice_name": "Premium Red Onions"}}
+    {{"inventory_id": 5, "quantity_to_add": 10.5, "unit_price": 12.00, "total_price": 126.00, "confidence_score": 0.95, "original_invoice_name": "Premium Red Onions"}},
+    {{"inventory_id": null, "quantity_to_add": 2.0, "unit_price": null, "total_price": 5.00, "confidence_score": 0.0, "original_invoice_name": "Unknown Item X"}}
   ]
 }}}}
 If no date is found, set invoice_date to null.
-If no items match, set items to []."""
+If unit_price or total_price is missing, set to null.
+If no items are found, set items to []."""
 
 
 def _call_gemini(api_key, model, b64_image, mime_type, prompt):
@@ -376,32 +423,43 @@ def scan_invoice(restaurant_id: str, image_bytes: bytes, mode: str = "auto") -> 
                 raise RuntimeError(f"Both local OCR and cloud AI failed: {str(e)}")
 
     if not matched_items:
-        return {"status": "no_matches", "invoice_date": invoice_date, "scanned_items": [],
+        return {"status": "no_matches", "invoice_date": invoice_date, "mapped_items": [], "new_items": [],
                 "message": "No invoice items could be mapped to your inventory."}
 
-    # Enrich each matched item with current inventory details for the preview
-    enriched = []
+    mapped_items = []
+    new_items = []
+
     for item in matched_items:
-        inv_id = item["inventory_id"]
-        inv_info = inv_lookup.get(inv_id, {})
+        inv_id = item.get("inventory_id")
+        if inv_id is not None:
+            inv_info = inv_lookup.get(inv_id, {})
+            current_stock = _get_current_stock(inv_id)
 
-        # Fetch current stock from DB for accurate preview
-        current_stock = _get_current_stock(inv_id)
-
-        enriched.append({
-            "inventory_id": inv_id,
-            "item_name": inv_info.get("name", "Unknown"),
-            "unit": inv_info.get("unit", ""),
-            "current_stock": current_stock,
-            "quantity_to_add": item["quantity_to_add"],
-            "confidence_score": item["confidence_score"],
-            "original_invoice_name": item["original_invoice_name"],
-        })
+            mapped_items.append({
+                "inventory_id": inv_id,
+                "item_name": inv_info.get("name", "Unknown"),
+                "unit": inv_info.get("unit", ""),
+                "current_stock": current_stock,
+                "quantity_to_add": item.get("quantity_to_add", 0),
+                "unit_price": item.get("unit_price"),
+                "total_price": item.get("total_price"),
+                "confidence_score": item.get("confidence_score", 0),
+                "original_invoice_name": item.get("original_invoice_name", ""),
+            })
+        else:
+            new_items.append({
+                "inventory_id": None,
+                "quantity_to_add": item.get("quantity_to_add", 0),
+                "unit_price": item.get("unit_price"),
+                "total_price": item.get("total_price"),
+                "original_invoice_name": item.get("original_invoice_name", ""),
+            })
 
     return {
         "status": "pending_confirmation",
         "invoice_date": invoice_date,
-        "scanned_items": enriched,
+        "mapped_items": mapped_items,
+        "new_items": new_items,
     }
 
 
