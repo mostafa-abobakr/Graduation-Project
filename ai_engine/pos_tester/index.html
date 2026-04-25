@@ -623,23 +623,27 @@
                 
                 if (res.ok && data.status === "success") {
                     logStatus(`✅ SUCCESS! Order #${data.order_id} recorded.`);
-                    // Display deduction details
-                    if(data.inventory_consumption && data.inventory_consumption.deductions) {
-                        data.inventory_consumption.deductions.forEach(d => {
-                            logStatus(` - Consumed ${d.ingredient}: deducted ${d.qty_deducted} ${d.unit} (New stock: ${d.new_stock})`);
-                        });
-                    }
-                    if(data.inventory_consumption && data.inventory_consumption.missing_maps) {
-                        data.inventory_consumption.missing_maps.forEach(m => {
-                            logStatus(` ⚠️ Missing ingredient mapping for MenuItem ID: ${m}`, true);
-                        });
+                    if (data.inventory_consumption) {
+                        if (typeof data.inventory_consumption.ingredients_deducted === 'number') {
+                            logStatus(`Inventory updated for ${data.inventory_consumption.ingredients_deducted} ingredient rows.`);
+                        }
+                        if (Array.isArray(data.inventory_consumption.deductions)) {
+                            data.inventory_consumption.deductions.forEach(d => {
+                                logStatus(` - Consumed ${d.ingredient}: deducted ${d.qty_deducted} ${d.unit} (New stock: ${d.new_stock})`);
+                            });
+                        }
+                        if (Array.isArray(data.inventory_consumption.missing_maps)) {
+                            data.inventory_consumption.missing_maps.forEach(m => {
+                                logStatus(` ⚠️ Missing ingredient mapping for MenuItem ID: ${m}`, true);
+                            });
+                        }
                     }
                     
                     // Clear cart
                     cart = {};
                     renderCart();
                 } else {
-                    logStatus(`❌ Order submitted, but an issue occurred: ${data.message}`, true);
+                    logStatus(`❌ Order submitted, but an issue occurred: ${data.message || data.detail}`, true);
                     if (data.error_detail) logStatus(`Details: ${data.error_detail}`, true);
                 }
             } catch (err) {

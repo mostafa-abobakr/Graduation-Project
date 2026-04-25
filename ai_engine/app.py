@@ -276,8 +276,6 @@ def pos_order(restaurant_id: str, request: PosOrderRequest):
 
         order_id = int(order_result[0])
 
-        deductions = []
-        missing_maps = []
         for item in normalized_items:
             session.execute(
                 text(
@@ -292,86 +290,14 @@ def pos_order(restaurant_id: str, request: PosOrderRequest):
                 },
             )
 
-            inventory_rows = session.execute(
-                text(
-                    """
-                    SELECT
-                        i.InventoryID,
-                        i.ItemName,
-                        i.Unit,
-                        i.Stock,
-                        mii.QuantityUsedPerItem
-                    FROM MenuItemIngredients mii
-                    JOIN Inventories i ON i.InventoryID = mii.InventoryID
-                    WHERE mii.MenuItemId = :menu_item_id
-                    """
-                ),
-                {"menu_item_id": item["menu_item_id"]},
-            ).mappings().all()
-
-            if not inventory_rows:
-                missing_maps.append(item["menu_item_id"])
-                continue
-
-            for ingredient in inventory_rows:
-                qty_deducted = float(ingredient["QuantityUsedPerItem"] or 0.0) * item["quantity"]
-                new_stock = float(ingredient["Stock"] or 0.0) - qty_deducted
-                session.execute(
-                    text(
-                        """
-                        UPDATE Inventories
-                        SET Stock = :new_stock,
-                            LastUpdated = :updated_at
-                        WHERE InventoryID = :inventory_id
-                        """
-                    ),
-                    {
-                        "new_stock": new_stock,
-                        "updated_at": datetime.utcnow(),
-                        "inventory_id": ingredient["InventoryID"],
-                    },
-                )
-                session.execute(
-                    text(
-                        """
-                        INSERT INTO InventoryTransactions (
-                            InventoryID,
-                            RestID,
-                            ChangeType,
-                            QuantityChange,
-                            ReferenceID,
-                            ReferenceType,
-                            CreatedAt
-                        )
-                        VALUES (
-                            :inventory_id,
-                            :restaurant_id,
-                            'usage',
-                            :quantity_change,
-                            :order_id,
-                            'order',
-                            :created_at
-                        )
-                        """
-                    ),
-                    {
-                        "inventory_id": ingredient["InventoryID"],
-                        "restaurant_id": restaurant_id,
-                        "quantity_change": -qty_deducted,
-                        "order_id": order_id,
-                        "created_at": datetime.utcnow(),
-                    },
-                )
-                deductions.append(
-                    {
-                        "ingredient": ingredient["ItemName"],
-                        "qty_deducted": qty_deducted,
-                        "unit": ingredient["Unit"],
-                        "new_stock": new_stock,
-                    }
-                )
-
         session.commit()
+
+    try:
+        inventory_consumption = consume_inventory(restaurant_id, order_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Inventory consume failed: {exc}")
 
     return {
         "status": "success",
@@ -380,10 +306,7 @@ def pos_order(restaurant_id: str, request: PosOrderRequest):
         "restaurant_id": restaurant_id,
         "item_count": total_item_count,
         "total_order_value": round(total_order_value, 2),
-        "inventory_consumption": {
-            "deductions": deductions,
-            "missing_maps": missing_maps,
-        },
+        "inventory_consumption": inventory_consumption,
     }
 
 
