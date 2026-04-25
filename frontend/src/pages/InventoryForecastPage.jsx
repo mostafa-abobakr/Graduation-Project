@@ -40,7 +40,8 @@ export default function InventoryForecastPage() {
     if (!data?.items) return [];
     return data.items.map((r) => ({
       ...r,
-      isShort: r.shortage > 0,
+      isShort: r.status === "Shortage",
+      shortage: Math.abs(r.shortage || 0),
     }));
   }, [data]);
 
@@ -59,9 +60,9 @@ export default function InventoryForecastPage() {
     });
   }, [enriched, search, filter]);
 
-  const shortageCount = enriched.filter((r) => r.isShort).length;
-  const sufficientCount = enriched.length - shortageCount;
-  const totalShortage = enriched.reduce((s, r) => s + r.shortage, 0);
+  const shortageCount = data?.itemsShort ?? enriched.filter((r) => r.isShort).length;
+  const sufficientCount = data?.sufficient ?? (enriched.length - shortageCount);
+  const totalShortage = data?.totalShortage ?? enriched.reduce((s, r) => s + r.shortage, 0);
 
   if (error) {
     return (
@@ -234,7 +235,7 @@ export default function InventoryForecastPage() {
                         r.isShort ? "text-destructive" : "text-muted-foreground"
                       }`}
                     >
-                      {r.isShort ? `-${fmt(r.shortage)}` : "0"}
+                      {r.isShort ? `${fmt(r.shortage)}` : "0"}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
