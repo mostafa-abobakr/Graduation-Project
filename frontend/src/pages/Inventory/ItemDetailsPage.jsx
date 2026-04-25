@@ -22,15 +22,34 @@ import {
   AlertTriangle,
   AlertCircle
 } from "lucide-react";
-import { useInventoryStore } from "@/lib/inventoryStore";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
 
 export default function ItemDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { user } = useAuth();
   
-  const { items } = useInventoryStore();
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ['inventoryItems', user?.restId],
+    queryFn: async () => {
+      const response = await axios.get(`https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}`);
+      return response.data.map((item) => ({
+        id: item.inventoryID,
+        name: item.itemName,
+        category: item.category || "Other",
+        quantity: item.stock,
+        unit: item.unit,
+        reorderLevel: item.reorderLevel,
+        cost: item.costPerUnit || 0,
+        expiryDate: item.expiryDate,
+        supplier: item.supplier || "Unknown",
+        apiStatus: item.status,
+      }));
+    },
+    enabled: !!user?.restId,
+  });
 
   const item = items.find((i) => String(i.id) === String(id));
 
