@@ -151,8 +151,9 @@ def root():
     return {"status": "ZeroBite ML service running"}
 
 
-@app.get("/pos_tester", tags=["Health"])
-def pos_tester_page():
+@app.get("/pos", tags=["POS"])
+@app.get("/pos/", tags=["POS"])
+def pos_page():
     if not POS_TESTER_PATH.exists():
         raise HTTPException(status_code=404, detail="POS tester page not found.")
     return FileResponse(POS_TESTER_PATH)
