@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 
 export function RestockDialog({ open, setOpen, item, onRestock, mode = "restock" }) {
   const [qty, setQty] = useState("");
+  const [unitPrice, setUnitPrice] = useState("");
   const [productionDate, setProductionDate] = useState("");
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -25,12 +26,13 @@ export function RestockDialog({ open, setOpen, item, onRestock, mode = "restock"
   useEffect(() => {
     if (open) {
       setQty("");
+      setUnitPrice(item?.cost ?? "");
       setProductionDate(today);
     }
-  }, [open]);
+  }, [open, item]);
 
   const handleAction = () => {
-    onRestock(qty, productionDate, mode);
+    onRestock(qty, productionDate, mode, unitPrice);
   };
 
   const isDeduct = mode === "deduct";
@@ -71,6 +73,23 @@ export function RestockDialog({ open, setOpen, item, onRestock, mode = "restock"
               onKeyDown={(e) => e.key === "Enter" && handleAction()}
             />
           </div>
+
+          {!isDeduct && (
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">
+                Unit Price ($)
+              </Label>
+              <Input
+                type="number"
+                min="0.01"
+                step="any"
+                value={unitPrice}
+                onChange={(e) => setUnitPrice(e.target.value)}
+                placeholder={`e.g. 5.00`}
+                onKeyDown={(e) => e.key === "Enter" && handleAction()}
+              />
+            </div>
+          )}
 
           {!isDeduct && (
             <div>

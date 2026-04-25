@@ -20,6 +20,7 @@ import { InventoryTable } from "./InventoryTable";
 import { ItemFormDialog } from "./ItemFormDialog";
 import { ScannerDialog } from "./ScannerDialog";
 import { RestockDialog } from "./RestockDialog";
+import { CATEGORIES } from "./InventoryUtils";
 
 export default function InventoryPage() {
   const { user } = useAuth();
@@ -70,6 +71,11 @@ export default function InventoryPage() {
     () => (data || []).map((i) => ({ ...i, status: computeStatus(i, settings) })),
     [data, settings],
   );
+
+  const uniqueCategories = useMemo(() => {
+    const dataCats = (data || []).map(i => i.category).filter(Boolean);
+    return Array.from(new Set([...CATEGORIES, ...dataCats])).sort();
+  }, [data]);
 
   const filtered = useMemo(() => {
     let list = enriched;
@@ -166,7 +172,8 @@ export default function InventoryPage() {
         unit: formData.unit || "Kg",
         imageUrl: "",
         description: "",
-        expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : new Date().toISOString()
+        expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : new Date().toISOString(),
+        productionDate: formData.productionDate ? new Date(formData.productionDate).toISOString() : new Date().toISOString()
       };
       await axios.put(`https://resturantai.runasp.net/api/Inventory/${id}`, payload);
     },
@@ -218,7 +225,7 @@ export default function InventoryPage() {
     setRestockOpen(true);
   };
 
-  const handleRestock = (qtyStr, productionDate = null, mode = "restock") => {
+  const handleRestock = (qtyStr, productionDate = null, mode = "restock", unitPriceStr = "") => {
     const qty = parseFloat(qtyStr);
     if (!qty || qty <= 0) {
       toast.error("Enter a valid quantity");
@@ -243,6 +250,10 @@ export default function InventoryPage() {
     // Let's check updateMutation payload.
     if (productionDate) {
       updatedData.productionDate = productionDate;
+    }
+    
+    if (unitPriceStr !== undefined && unitPriceStr !== null && unitPriceStr !== "") {
+      updatedData.cost = parseFloat(unitPriceStr);
     }
 
     updateMutation.mutate({ id: restockItem.id, formData: updatedData });
@@ -297,6 +308,7 @@ export default function InventoryPage() {
           setCategoryFilter={setCategoryFilter} 
           search={search} 
           setSearch={setSearch} 
+          categories={uniqueCategories}
         />
         
         <InventoryTable 

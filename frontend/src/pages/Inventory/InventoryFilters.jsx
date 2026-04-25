@@ -8,8 +8,6 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { CATEGORIES } from "./InventoryUtils";
-
 export function InventoryFilters({
   filter,
   setFilter,
@@ -17,6 +15,7 @@ export function InventoryFilters({
   setCategoryFilter,
   search,
   setSearch,
+  categories = [],
 }) {
   return (
     <div className="p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border/60">
@@ -35,7 +34,7 @@ export function InventoryFilters({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All categories</SelectItem>
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <SelectItem key={c} value={c}>
                 {c}
               </SelectItem>

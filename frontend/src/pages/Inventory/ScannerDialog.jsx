@@ -235,7 +235,7 @@ export function ScannerDialog({
             stock: newStock,
             reorderLevel: existingItem.reorderLevel,
             reorderQuantity: 0,
-            costPerUnit: parseFloat(item.total_price) || existingItem.cost,
+            costPerUnit: (parseFloat(item.quantity_to_add) > 0 ? parseFloat(item.total_price) / parseFloat(item.quantity_to_add) : existingItem.cost) || existingItem.cost,
             supplier: existingItem.supplier,
             unit: existingItem.unit,
             productionDate: item.productionDate
