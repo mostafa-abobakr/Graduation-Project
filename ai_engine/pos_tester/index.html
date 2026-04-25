@@ -430,7 +430,8 @@
     <script>
         const DEFAULT_SERVER_URL = 'https://youseef-awaad-zerobite-ai-engine.hf.space/';
         const API_URL_STORAGE_KEY = 'zerobite_pos_api_url';
-        let menuItems = [];
+        const bootstrap = window.__POS_BOOTSTRAP__ || { restaurantId: '', menuItems: [] };
+        let menuItems = Array.isArray(bootstrap.menuItems) ? bootstrap.menuItems : [];
         let cart = {}; // key: MenuItemId, value: { item, qty }
 
         function normalizeApiUrl(rawUrl) {
@@ -456,6 +457,7 @@
             const input = document.getElementById('apiUrl');
             const savedUrl = localStorage.getItem(API_URL_STORAGE_KEY);
             input.value = savedUrl || DEFAULT_SERVER_URL;
+            document.getElementById('restId').value = bootstrap.restaurantId || 'rest_1';
         }
 
         function getApiBaseUrl() {
@@ -478,59 +480,46 @@
             document.getElementById('logOverlay').classList.toggle('active');
         }
 
-        async function loadMenu() {
-            const apiUrl = getApiBaseUrl();
-            const restId = document.getElementById('restId').value;
-            const btn = document.getElementById('btnLoad');
+        function renderMenu(restId) {
             const grid = document.getElementById('menuGrid');
             const title = document.getElementById('menuTitle');
-            
-            if(!restId) return alert("Please enter Restaurant ID");
+            title.textContent = restId ? `Menu / ${restId}` : 'Menu / Choose Items';
+            grid.innerHTML = '';
 
-            btn.textContent = "Loading...";
-            btn.disabled = true;
-            logStatus(`Fetching menu for ${restId}...`);
-
-            try {
-                const res = await fetch(`${apiUrl}/pos/menu/${restId}`);
-                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-                menuItems = await res.json();
-                
-                logStatus(`Loaded ${menuItems.length} items from database.`);
-                title.textContent = `Menu / ${restId}`;
-                
-                // Render Menu
-                grid.innerHTML = '';
-                if(menuItems.length === 0) {
-                    grid.innerHTML = '<div class="empty-state">No items found for this restaurant. Did you seed the DB?</div>';
-                } else {
-                    menuItems.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = 'menu-item';
-                        // Use a fallback colored square if no image URL
-                        const imgHtml = item.ImageUrl 
-                            ? `<img src="${item.ImageUrl}" class="menu-item-img" />`
-                            : `<div class="menu-item-img" style="background: hsl(${(item.MenuItemId * 43) % 360}, 60%, 25%)">${item.ItemName.charAt(0)}</div>`;
-                            
-                        div.innerHTML = `
-                            ${imgHtml}
-                            <div class="menu-item-details">
-                                <div class="menu-item-title" title="${item.ItemName}">${item.ItemName}</div>
-                                <div class="menu-item-price">$${Number(item.Price).toFixed(2)}</div>
-                            </div>
-                        `;
-                        div.onclick = () => addToCart(item);
-                        grid.appendChild(div);
-                    });
-                }
-            } catch (err) {
-                console.error(err);
-                logStatus(`Error fetching menu from ${apiUrl}: ${err.message}`, true);
-                grid.innerHTML = '<div class="empty-state" style="color:var(--danger-color)">Failed to load menu. Is the backend running?</div>';
-            } finally {
-                btn.textContent = "Load Menu";
-                btn.disabled = false;
+            if (menuItems.length === 0) {
+                grid.innerHTML = restId
+                    ? '<div class="empty-state">No items found for this restaurant. Did you seed the DB?</div>'
+                    : '<div class="empty-state"><p>Click "Load Menu" to fetch items from the backend.</p></div>';
+                return;
             }
+
+            menuItems.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'menu-item';
+                const imgHtml = item.ImageUrl
+                    ? `<img src="${item.ImageUrl}" class="menu-item-img" />`
+                    : `<div class="menu-item-img" style="background: hsl(${(item.MenuItemId * 43) % 360}, 60%, 25%)">${item.ItemName.charAt(0)}</div>`;
+
+                div.innerHTML = `
+                    ${imgHtml}
+                    <div class="menu-item-details">
+                        <div class="menu-item-title" title="${item.ItemName}">${item.ItemName}</div>
+                        <div class="menu-item-price">$${Number(item.Price).toFixed(2)}</div>
+                    </div>
+                `;
+                div.onclick = () => addToCart(item);
+                grid.appendChild(div);
+            });
+        }
+
+        function loadMenu() {
+            const apiUrl = getApiBaseUrl();
+            const restId = document.getElementById('restId').value.trim();
+
+            if (!restId) return alert("Please enter Restaurant ID");
+
+            const targetUrl = `${apiUrl}/pos/?restaurant_id=${encodeURIComponent(restId)}`;
+            window.location.href = targetUrl;
         }
 
         function addToCart(item) {
@@ -600,6 +589,7 @@
             const btn = document.getElementById('btnCheckout');
             
             const payload = {
+                restaurant_id: restId,
                 items: Object.values(cart).map(v => ({
                     menu_item_id: v.item.MenuItemId,
                     quantity: v.qty,
@@ -613,7 +603,7 @@
             document.getElementById('logOverlay').classList.add('active');
 
             try {
-                const res = await fetch(`${apiUrl}/pos/order/${restId}`, {
+                const res = await fetch(`${apiUrl}/pos/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -668,6 +658,10 @@
         }
 
         initializeApiUrl();
+        renderMenu(document.getElementById('restId').value.trim());
+        if (bootstrap.restaurantId) {
+            logStatus(`Loaded ${menuItems.length} items from database.`);
+        }
     </script>
 </body>
 </html>

@@ -44,7 +44,7 @@ import numpy as np
 import pandas as pd
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Path, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -140,27 +140,11 @@ class PosOrderItemRequest(BaseModel):
 
 
 class PosOrderRequest(BaseModel):
+    restaurant_id: str
     items: List[PosOrderItemRequest]
 
 
-# ---------------------------------------------------------------------------
-# Health Check
-# ---------------------------------------------------------------------------
-@app.get("/", tags=["Health"])
-def root():
-    return {"status": "ZeroBite ML service running"}
-
-
-@app.get("/pos", tags=["POS"])
-@app.get("/pos/", tags=["POS"])
-def pos_page():
-    if not POS_TESTER_PATH.exists():
-        raise HTTPException(status_code=404, detail="POS tester page not found.")
-    return FileResponse(POS_TESTER_PATH)
-
-
-@app.get("/pos/menu/{restaurant_id}", tags=["POS"])
-def pos_menu(restaurant_id: str):
+def _load_pos_menu_items(restaurant_id: str) -> list[dict]:
     engine = get_engine()
     with engine.connect() as conn:
         rows = conn.execute(
@@ -190,8 +174,38 @@ def pos_menu(restaurant_id: str):
     ]
 
 
-@app.post("/pos/order/{restaurant_id}", tags=["POS"])
-def pos_order(restaurant_id: str, request: PosOrderRequest):
+# ---------------------------------------------------------------------------
+# Health Check
+# ---------------------------------------------------------------------------
+@app.get("/", tags=["Health"])
+def root():
+    return {"status": "ZeroBite ML service running"}
+
+
+@app.get("/pos", tags=["POS"])
+@app.get("/pos/", tags=["POS"])
+def pos_page(restaurant_id: str | None = Query(default=None)):
+    if not POS_TESTER_PATH.exists():
+        raise HTTPException(status_code=404, detail="POS tester page not found.")
+    html = POS_TESTER_PATH.read_text(encoding="utf-8")
+    bootstrap = {
+        "restaurantId": restaurant_id or "",
+        "menuItems": _load_pos_menu_items(restaurant_id) if restaurant_id else [],
+    }
+    html = html.replace(
+        "<script>",
+        f"<script>window.__POS_BOOTSTRAP__ = {json.dumps(bootstrap)};</script>\n    <script>",
+        1,
+    )
+    return HTMLResponse(content=html)
+
+
+@app.post("/pos", tags=["POS"])
+@app.post("/pos/", tags=["POS"])
+def pos_submit(request: PosOrderRequest):
+    restaurant_id = request.restaurant_id.strip()
+    if not restaurant_id:
+        raise HTTPException(status_code=400, detail="Restaurant ID is required.")
     if not request.items:
         raise HTTPException(status_code=400, detail="Order must contain at least one item.")
 
