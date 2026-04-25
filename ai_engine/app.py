@@ -36,13 +36,18 @@ Seed / Data Generation
   GET  /seed/check/all                 ← list all restaurants with no data
 """
 from contextlib import asynccontextmanager
+from datetime import datetime
+from pathlib import Path as FilePath
 from typing import Literal
 
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Path, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 from typing import Dict, Any, List
 import json
 import os
@@ -104,6 +109,7 @@ async def lifespan(app: FastAPI):
 
 tags_metadata = [
     {"name": "Health", "description": "Service health and status checks."},
+    {"name": "POS", "description": "Simple POS menu and order endpoints used by the POS tester."},
     {"name": "Seed", "description": "Generate and insert dummy POS and inventory data for testing."},
     {"name": "Training", "description": "Train Prophet demand-forecasting models."},
     {"name": "Forecast", "description": "Generate hourly, daily, and dashboard demand forecasts."},
@@ -115,7 +121,26 @@ tags_metadata = [
 
 app = FastAPI(title="ZeroBite ML Service", lifespan=lifespan, openapi_tags=tags_metadata)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 MIN_HOURS = 336   # 2 weeks of hourly data, enforced per item
+POS_TESTER_PATH = FilePath(__file__).resolve().parent / "pos_tester" / "index.html"
+
+
+class PosOrderItemRequest(BaseModel):
+    menu_item_id: int
+    quantity: int
+    unit_price: float
+
+
+class PosOrderRequest(BaseModel):
+    items: List[PosOrderItemRequest]
 
 
 # ---------------------------------------------------------------------------
@@ -124,6 +149,242 @@ MIN_HOURS = 336   # 2 weeks of hourly data, enforced per item
 @app.get("/", tags=["Health"])
 def root():
     return {"status": "ZeroBite ML service running"}
+
+
+@app.get("/pos_tester", tags=["Health"])
+def pos_tester_page():
+    if not POS_TESTER_PATH.exists():
+        raise HTTPException(status_code=404, detail="POS tester page not found.")
+    return FileResponse(POS_TESTER_PATH)
+
+
+@app.get("/pos/menu/{restaurant_id}", tags=["POS"])
+def pos_menu(restaurant_id: str):
+    engine = get_engine()
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                """
+                SELECT
+                    MenuItemId,
+                    ItemName,
+                    Price,
+                    ImageUrl
+                FROM MenuItems
+                WHERE RestaurantId = :restaurant_id
+                ORDER BY ItemName
+                """
+            ),
+            {"restaurant_id": restaurant_id},
+        ).mappings().all()
+
+    return [
+        {
+            "MenuItemId": row["MenuItemId"],
+            "ItemName": row["ItemName"],
+            "Price": float(row["Price"] or 0.0),
+            "ImageUrl": row["ImageUrl"],
+        }
+        for row in rows
+    ]
+
+
+@app.post("/pos/order/{restaurant_id}", tags=["POS"])
+def pos_order(restaurant_id: str, request: PosOrderRequest):
+    if not request.items:
+        raise HTTPException(status_code=400, detail="Order must contain at least one item.")
+
+    engine = get_engine()
+    with Session(engine) as session:
+        requested_ids = sorted({item.menu_item_id for item in request.items})
+        placeholders = ", ".join(f":menu_id_{idx}" for idx in range(len(requested_ids)))
+        menu_rows = session.execute(
+            text(
+                f"""
+                SELECT MenuItemId, ItemName, Price
+                FROM MenuItems
+                WHERE RestaurantId = :restaurant_id
+                  AND MenuItemId IN ({placeholders})
+                """
+            ),
+            {
+                "restaurant_id": restaurant_id,
+                **{f"menu_id_{idx}": menu_id for idx, menu_id in enumerate(requested_ids)},
+            },
+        ).mappings().all()
+
+        menu_lookup = {row["MenuItemId"]: row for row in menu_rows}
+        missing_ids = [menu_id for menu_id in requested_ids if menu_id not in menu_lookup]
+        if missing_ids:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Menu items not found for restaurant {restaurant_id}: {missing_ids}",
+            )
+
+        normalized_items = []
+        total_item_count = 0
+        total_order_value = 0.0
+        for item in request.items:
+            if item.quantity <= 0:
+                raise HTTPException(status_code=400, detail="Item quantity must be greater than zero.")
+
+            menu_item = menu_lookup[item.menu_item_id]
+            unit_price = float(menu_item["Price"] or item.unit_price or 0.0)
+            line_total = round(unit_price * item.quantity, 2)
+            total_item_count += item.quantity
+            total_order_value += line_total
+            normalized_items.append(
+                {
+                    "menu_item_id": item.menu_item_id,
+                    "item_name": menu_item["ItemName"],
+                    "quantity": item.quantity,
+                    "unit_price": unit_price,
+                    "line_total": line_total,
+                }
+            )
+
+        order_result = session.execute(
+            text(
+                """
+                INSERT INTO Orders (
+                    RestaurantId,
+                    OrderTimestamp,
+                    TemperatureCelsius,
+                    EventDay,
+                    ItemCount,
+                    TotalOrderValue
+                )
+                OUTPUT inserted.OrderId
+                VALUES (
+                    :restaurant_id,
+                    :order_timestamp,
+                    NULL,
+                    0,
+                    :item_count,
+                    :total_order_value
+                )
+                """
+            ),
+            {
+                "restaurant_id": restaurant_id,
+                "order_timestamp": datetime.utcnow(),
+                "item_count": total_item_count,
+                "total_order_value": round(total_order_value, 2),
+            },
+        ).first()
+
+        order_id = int(order_result[0])
+
+        deductions = []
+        missing_maps = []
+        for item in normalized_items:
+            session.execute(
+                text(
+                    """
+                    INSERT INTO OrderItems (OrderId, MenuItemId, Quantity, UnitPrice, LineTotal)
+                    VALUES (:order_id, :menu_item_id, :quantity, :unit_price, :line_total)
+                    """
+                ),
+                {
+                    "order_id": order_id,
+                    **item,
+                },
+            )
+
+            inventory_rows = session.execute(
+                text(
+                    """
+                    SELECT
+                        i.InventoryID,
+                        i.ItemName,
+                        i.Unit,
+                        i.Stock,
+                        mii.QuantityUsedPerItem
+                    FROM MenuItemIngredients mii
+                    JOIN Inventories i ON i.InventoryID = mii.InventoryID
+                    WHERE mii.MenuItemId = :menu_item_id
+                    """
+                ),
+                {"menu_item_id": item["menu_item_id"]},
+            ).mappings().all()
+
+            if not inventory_rows:
+                missing_maps.append(item["menu_item_id"])
+                continue
+
+            for ingredient in inventory_rows:
+                qty_deducted = float(ingredient["QuantityUsedPerItem"] or 0.0) * item["quantity"]
+                new_stock = float(ingredient["Stock"] or 0.0) - qty_deducted
+                session.execute(
+                    text(
+                        """
+                        UPDATE Inventories
+                        SET Stock = :new_stock,
+                            LastUpdated = :updated_at
+                        WHERE InventoryID = :inventory_id
+                        """
+                    ),
+                    {
+                        "new_stock": new_stock,
+                        "updated_at": datetime.utcnow(),
+                        "inventory_id": ingredient["InventoryID"],
+                    },
+                )
+                session.execute(
+                    text(
+                        """
+                        INSERT INTO InventoryTransactions (
+                            InventoryID,
+                            RestID,
+                            ChangeType,
+                            QuantityChange,
+                            ReferenceID,
+                            ReferenceType,
+                            CreatedAt
+                        )
+                        VALUES (
+                            :inventory_id,
+                            :restaurant_id,
+                            'usage',
+                            :quantity_change,
+                            :order_id,
+                            'order',
+                            :created_at
+                        )
+                        """
+                    ),
+                    {
+                        "inventory_id": ingredient["InventoryID"],
+                        "restaurant_id": restaurant_id,
+                        "quantity_change": -qty_deducted,
+                        "order_id": order_id,
+                        "created_at": datetime.utcnow(),
+                    },
+                )
+                deductions.append(
+                    {
+                        "ingredient": ingredient["ItemName"],
+                        "qty_deducted": qty_deducted,
+                        "unit": ingredient["Unit"],
+                        "new_stock": new_stock,
+                    }
+                )
+
+        session.commit()
+
+    return {
+        "status": "success",
+        "message": "Order recorded successfully.",
+        "order_id": order_id,
+        "restaurant_id": restaurant_id,
+        "item_count": total_item_count,
+        "total_order_value": round(total_order_value, 2),
+        "inventory_consumption": {
+            "deductions": deductions,
+            "missing_maps": missing_maps,
+        },
+    }
+
 
 
 # ---------------------------------------------------------------------------
