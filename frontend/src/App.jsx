@@ -8,7 +8,15 @@ import { InventoryProvider } from "@/contexts/InventoryContext";
 import router from "@/routes/index.jsx";
 import { RegisterProvider } from "./contexts/Valdation";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes — data won't auto-refetch until stale
+      refetchOnWindowFocus: false, // don't refetch when switching browser tabs
+      refetchOnReconnect: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
