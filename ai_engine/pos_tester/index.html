@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroBite - POS Flow Tester</title>
+    <!-- Use Inter font for a clean, modern aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent-color: #10b981;
+            --text-color: #f8fafc;
+            --text-muted: #cbd5e1;
+            --danger-color: #ef4444;
+            --border-color: #334155;
+            --radius: 12px;
+            --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Sidebar & Configuration --- */
+        .sidebar {
+            width: 300px;
+            background: var(--surface-color);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            z-index: 10;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.2);
+        }
+
+        .brand {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .config-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--border-color);
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        /* --- Main Content (Menu) --- */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-color);
+            position: relative;
+        }
+
+        .header {
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .menu-grid {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            align-content: start;
+        }
+
+        .menu-item {
+            background: transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-item:active {
+            transform: translateY(0);
+        }
+
+        .menu-item-img {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 16px;
+            object-fit: cover;
+            background: #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: var(--transition);
+        }
+        
+        .menu-item:hover .menu-item-img {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            border-color: rgba(59, 130, 246, 0.5);
+        }
+
+        .menu-item-details {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            padding: 0 8px;
+        }
+
+        .menu-item-title {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+            color: var(--text-color);
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .menu-item-price {
+            color: var(--accent-color);
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        /* --- Cart Panel --- */
+        .cart-panel {
+            width: 380px;
+            background: var(--surface-color);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .cart-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+        }
+
+        .cart-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        
+        .cart-item-info {
+            flex: 1;
+        }
+
+        .cart-item-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .cart-item-price {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .cart-item-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-color);
+            border-radius: 20px;
+            padding: 4px 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .qty-btn {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .qty-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .qty-label {
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .cart-footer {
+            padding: 24px;
+            border-top: 1px solid var(--border-color);
+            background: rgba(30, 41, 59, 0.95);
+        }
+
+        .cart-total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .btn-checkout {
+            background: var(--accent-color);
+            color: white;
+            font-size: 16px;
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .btn-checkout:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-checkout:disabled {
+            background: var(--border-color);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Terminal Overlay */
+        .log-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: #020617;
+            border-top: 1px solid var(--border-color);
+            padding: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #10b981;
+            overflow-y: auto;
+            transform: translateY(100%);
+            transition: var(--transition);
+            z-index: 20;
+        }
+        .log-overlay.active {
+            transform: translateY(0);
+        }
+        .log-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: var(--text-muted);
+            margin-top: 50px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="brand">ZeroBite POS</div>
+        
+        <div class="config-group">
+            <label>API Base URL</label>
+            <input type="text" id="apiUrl" value="https://youseef-awaad-zerobite-ai-engine.hf.space/docs" />
+        </div>
+        
+        <div class="config-group">
+            <label>Restaurant ID</label>
+            <input type="text" id="restId" value="rest_1" />
+        </div>
+        
+        <button class="btn-primary" onclick="loadMenu()" id="btnLoad">Load Menu</button>
+        
+        <div style="flex:1"></div>
+        <button class="btn-secondary" onclick="toggleLogs()">Show Server Logs</button>
+    </div>
+
+    <!-- MAIN MENU -->
+    <div class="main-content">
+        <div class="header">
+            <h1 id="menuTitle">Menu / Choose Items</h1>
+        </div>
+        
+        <div class="menu-grid" id="menuGrid">
+            <div class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:16px; opacity:0.5;">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p>Click "Load Menu" to fetch items from the backend.</p>
+            </div>
+        </div>
+
+        <div class="log-overlay" id="logOverlay">
+            <button class="log-close" onclick="toggleLogs()">X</button>
+            <div id="logContent"></div>
+        </div>
+    </div>
+
+    <!-- CART -->
+    <div class="cart-panel">
+        <div class="cart-header">
+            <h2>Current Order</h2>
+        </div>
+        
+        <div class="cart-items" id="cartItems">
+            <div class="empty-state" style="margin-top: 20px;">Cart is empty</div>
+        </div>
+        
+        <div class="cart-footer">
+            <div class="cart-total-row">
+                <span>Total</span>
+                <span id="cartTotal">$0.00</span>
+            </div>
+            <button class="btn-checkout" id="btnCheckout" onclick="submitOrder()" disabled>Submit Order</button>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_SERVER_URL = 'https://youseef-awaad-zerobite-ai-engine.hf.space/docs';
+        const API_URL_STORAGE_KEY = 'zerobite_pos_api_url';
+        let menuItems = [];
+        let cart = {}; // key: MenuItemId, value: { item, qty }
+
+        function normalizeApiUrl(rawUrl) {
+            const fallback = new URL(DEFAULT_SERVER_URL);
+            const source = (rawUrl || '').trim() || DEFAULT_SERVER_URL;
+
+            try {
+                const url = new URL(source);
+                let path = url.pathname.replace(/\/+$/, '');
+                if (path.endsWith('/docs')) {
+                    path = path.slice(0, -5);
+                }
+                if (!path || path === '/') {
+                    path = '';
+                }
+                return `${url.origin}${path}`;
+            } catch (err) {
+                return fallback.origin;
+            }
+        }
+
+        function initializeApiUrl() {
+            const input = document.getElementById('apiUrl');
+            const savedUrl = localStorage.getItem(API_URL_STORAGE_KEY);
+            input.value = savedUrl || DEFAULT_SERVER_URL;
+        }
+
+        function getApiBaseUrl() {
+            const input = document.getElementById('apiUrl');
+            const normalized = normalizeApiUrl(input.value);
+            localStorage.setItem(API_URL_STORAGE_KEY, input.value.trim() || DEFAULT_SERVER_URL);
+            input.value = input.value.trim() || DEFAULT_SERVER_URL;
+            return normalized;
+        }
+
+        function logStatus(msg, isError = false) {
+            const logs = document.getElementById('logContent');
+            const color = isError ? '#ef4444' : '#10b981';
+            const time = new Date().toLocaleTimeString();
+            logs.innerHTML += `<div style="color: ${color}; margin-bottom: 4px;">[${time}] ${msg}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+        }
+
+        function toggleLogs() {
+            document.getElementById('logOverlay').classList.toggle('active');
+        }
+
+        async function loadMenu() {
+            const apiUrl = getApiBaseUrl();
+            const restId = document.getElementById('restId').value;
+            const btn = document.getElementById('btnLoad');
+            const grid = document.getElementById('menuGrid');
+            const title = document.getElementById('menuTitle');
+            
+            if(!restId) return alert("Please enter Restaurant ID");
+
+            btn.textContent = "Loading...";
+            btn.disabled = true;
+            logStatus(`Fetching menu for ${restId}...`);
+
+            try {
+                const res = await fetch(`${apiUrl}/pos/menu/${restId}`);
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                menuItems = await res.json();
+                
+                logStatus(`Loaded ${menuItems.length} items from database.`);
+                title.textContent = `Menu / ${restId}`;
+                
+                // Render Menu
+                grid.innerHTML = '';
+                if(menuItems.length === 0) {
+                    grid.innerHTML = '<div class="empty-state">No items found for this restaurant. Did you seed the DB?</div>';
+                } else {
+                    menuItems.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'menu-item';
+                        // Use a fallback colored square if no image URL
+                        const imgHtml = item.ImageUrl 
+                            ? `<img src="${item.ImageUrl}" class="menu-item-img" />`
+                            : `<div class="menu-item-img" style="background: hsl(${(item.MenuItemId * 43) % 360}, 60%, 25%)">${item.ItemName.charAt(0)}</div>`;
+                            
+                        div.innerHTML = `
+                            ${imgHtml}
+                            <div class="menu-item-details">
+                                <div class="menu-item-title" title="${item.ItemName}">${item.ItemName}</div>
+                                <div class="menu-item-price">$${Number(item.Price).toFixed(2)}</div>
+                            </div>
+                        `;
+                        div.onclick = () => addToCart(item);
+                        grid.appendChild(div);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                logStatus(`Error fetching menu from ${apiUrl}: ${err.message}`, true);
+                grid.innerHTML = '<div class="empty-state" style="color:var(--danger-color)">Failed to load menu. Is the backend running?</div>';
+            } finally {
+                btn.textContent = "Load Menu";
+                btn.disabled = false;
+            }
+        }
+
+        function addToCart(item) {
+            if(cart[item.MenuItemId]) {
+                cart[item.MenuItemId].qty++;
+            } else {
+                cart[item.MenuItemId] = { item: item, qty: 1 };
+            }
+            renderCart();
+        }
+
+        function updateQty(id, delta) {
+            if(cart[id]) {
+                cart[id].qty += delta;
+                if(cart[id].qty <= 0) {
+                    delete cart[id];
+                }
+            }
+            renderCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cartItems');
+            const totalEl = document.getElementById('cartTotal');
+            const btnCheckout = document.getElementById('btnCheckout');
+            
+            const keys = Object.keys(cart);
+            
+            if(keys.length === 0) {
+                container.innerHTML = '<div class="empty-state" style="margin-top: 20px;">Cart is empty</div>';
+                totalEl.textContent = '$0.00';
+                btnCheckout.disabled = true;
+                return;
+            }
+
+            btnCheckout.disabled = false;
+            container.innerHTML = '';
+            let total = 0;
+
+            keys.forEach(k => {
+                const row = cart[k];
+                const lineTotal = row.qty * row.item.Price;
+                total += lineTotal;
+
+                const div = document.createElement('div');
+                div.className = 'cart-item';
+                div.innerHTML = `
+                    <div class="cart-item-info">
+                        <div class="cart-item-title">${row.item.ItemName}</div>
+                        <div class="cart-item-price">$${row.item.Price.toFixed(2)} ea</div>
+                    </div>
+                    <div class="cart-item-actions">
+                        <button class="qty-btn" onclick="updateQty(${k}, -1)">–</button>
+                        <span class="qty-label">${row.qty}</span>
+                        <button class="qty-btn" onclick="updateQty(${k}, 1)">+</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            totalEl.textContent = `$${total.toFixed(2)}`;
+        }
+
+        async function submitOrder() {
+            const apiUrl = getApiBaseUrl();
+            const restId = document.getElementById('restId').value;
+            const btn = document.getElementById('btnCheckout');
+            
+            const payload = {
+                items: Object.values(cart).map(v => ({
+                    menu_item_id: v.item.MenuItemId,
+                    quantity: v.qty,
+                    unit_price: v.item.Price
+                }))
+            };
+
+            btn.textContent = "Processing...";
+            btn.disabled = true;
+            logStatus(`Submitting order...`);
+            document.getElementById('logOverlay').classList.add('active');
+
+            try {
+                const res = await fetch(`${apiUrl}/pos/order/${restId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok && data.status === "success") {
+                    logStatus(`✅ SUCCESS! Order #${data.order_id} recorded.`);
+                    // Display deduction details
+                    if(data.inventory_consumption && data.inventory_consumption.deductions) {
+                        data.inventory_consumption.deductions.forEach(d => {
+                            logStatus(` - Consumed ${d.ingredient}: deducted ${d.qty_deducted} ${d.unit} (New stock: ${d.new_stock})`);
+                        });
+                    }
+                    if(data.inventory_consumption && data.inventory_consumption.missing_maps) {
+                        data.inventory_consumption.missing_maps.forEach(m => {
+                            logStatus(` ⚠️ Missing ingredient mapping for MenuItem ID: ${m}`, true);
+                        });
+                    }
+                    
+                    // Clear cart
+                    cart = {};
+                    renderCart();
+                } else {
+                    logStatus(`❌ Order submitted, but an issue occurred: ${data.message}`, true);
+                    if (data.error_detail) logStatus(`Details: ${data.error_detail}`, true);
+                }
+            } catch (err) {
+                console.error(err);
+                logStatus(`❌ Fatal Error submitting order to ${apiUrl}: ${err.message}`, true);
+            } finally {
+                btn.textContent = "Submit Order";
+                btn.disabled = false;
+            }
+        }
+
+        initializeApiUrl();
+    </script>
+</body>
+</html>
