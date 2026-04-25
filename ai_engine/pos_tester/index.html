@@ -619,7 +619,19 @@
                     body: JSON.stringify(payload)
                 });
                 
-                const data = await res.json();
+                const rawBody = await res.text();
+                let data = null;
+
+                try {
+                    data = rawBody ? JSON.parse(rawBody) : {};
+                } catch (parseErr) {
+                    const bodyPreview = rawBody
+                        ? rawBody.replace(/\s+/g, ' ').trim().slice(0, 240)
+                        : '(empty response body)';
+                    logStatus(`Non-JSON response from server (HTTP ${res.status}).`, true);
+                    logStatus(`Body preview: ${bodyPreview}`, true);
+                    return;
+                }
                 
                 if (res.ok && data.status === "success") {
                     logStatus(`✅ SUCCESS! Order #${data.order_id} recorded.`);
@@ -643,7 +655,7 @@
                     cart = {};
                     renderCart();
                 } else {
-                    logStatus(`❌ Order submitted, but an issue occurred: ${data.message || data.detail}`, true);
+                    logStatus(`❌ Order submitted, but an issue occurred: ${data.message || data.detail || `HTTP ${res.status}`}`, true);
                     if (data.error_detail) logStatus(`Details: ${data.error_detail}`, true);
                 }
             } catch (err) {
