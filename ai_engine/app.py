@@ -174,6 +174,22 @@ def _load_pos_menu_items(restaurant_id: str) -> list[dict]:
     ]
 
 
+def _get_pos_order_temperature(session: Session, restaurant_id: str) -> float:
+    latest_temp = session.execute(
+        text(
+            """
+            SELECT TOP 1 TemperatureCelsius
+            FROM Orders
+            WHERE RestaurantId = :restaurant_id
+              AND TemperatureCelsius IS NOT NULL
+            ORDER BY OrderTimestamp DESC, OrderId DESC
+            """
+        ),
+        {"restaurant_id": restaurant_id},
+    ).scalar()
+    return float(latest_temp) if latest_temp is not None else 25.0
+
+
 # ---------------------------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------------------------
@@ -212,6 +228,7 @@ def pos_submit(request: PosOrderRequest):
     engine = get_engine()
     with Session(engine) as session:
         requested_ids = sorted({item.menu_item_id for item in request.items})
+        order_temperature = _get_pos_order_temperature(session, restaurant_id)
         placeholders = ", ".join(f":menu_id_{idx}" for idx in range(len(requested_ids)))
         menu_rows = session.execute(
             text(
@@ -273,7 +290,7 @@ def pos_submit(request: PosOrderRequest):
                 VALUES (
                     :restaurant_id,
                     :order_timestamp,
-                    NULL,
+                    :temperature_celsius,
                     0,
                     :item_count,
                     :total_order_value
@@ -283,6 +300,7 @@ def pos_submit(request: PosOrderRequest):
             {
                 "restaurant_id": restaurant_id,
                 "order_timestamp": datetime.utcnow(),
+                "temperature_celsius": order_temperature,
                 "item_count": total_item_count,
                 "total_order_value": round(total_order_value, 2),
             },
