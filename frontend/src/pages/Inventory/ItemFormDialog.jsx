@@ -84,6 +84,13 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
             {isEditing ? "Update item details." : "Add a new item manually."}
           </DialogDescription>
         </DialogHeader>
+        
+        <datalist id="form-category-list">
+          {CATEGORIES.map((c) => (
+            <option key={c} value={c} />
+          ))}
+        </datalist>
+
         <div className="grid gap-4 mt-2 max-h-[60vh] overflow-y-auto p-1">
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">
@@ -100,21 +107,12 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
               <Label className="text-xs text-muted-foreground mb-1 block">
                 Category
               </Label>
-              <Select
+              <Input
                 value={form.category}
-                onValueChange={(v) => setForm({ ...form, category: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIES.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                list="form-category-list"
+                placeholder="Select or type..."
+              />
             </div>
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">

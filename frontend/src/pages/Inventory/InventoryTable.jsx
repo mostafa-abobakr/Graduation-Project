@@ -2,7 +2,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertTriangle, Pencil, Trash2, PackageSearch, PackagePlus,  Eye } from "lucide-react";
+import {
+  AlertTriangle,
+  Pencil,
+  Trash2,
+  PackageSearch,
+  PackagePlus,
+  PackageMinus,
+  Eye,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   AlertDialog,
@@ -35,6 +43,7 @@ export function InventoryTable({
   search,
   setSearch,
   openRestock,
+  openDeduct,
   openEdit,
   deleteItem,
 }) {
@@ -46,17 +55,17 @@ export function InventoryTable({
             <th className="text-start py-3 px-4 text-muted-foreground font-medium">
               Item
             </th>
-            <th className="text-center py-3 px-4 text-muted-foreground font-medium">
+            <th className="text-center py-3 px-4 text-muted-foreground font-medium hidden sm:table-cell">
               Category
             </th>
             <th className="text-center py-3 px-4 text-muted-foreground font-medium">
               Quantity
             </th>
-            <th className="text-center py-3 px-4 text-muted-foreground font-medium">
-              Expiry
+            <th className="text-center py-3 px-4 text-muted-foreground font-medium hidden md:table-cell">
+              Status
             </th>
             <th className="text-center py-3 px-4 text-muted-foreground font-medium">
-              Status
+              Stock
             </th>
             <th className="text-center py-3 px-4 text-muted-foreground font-medium">
               Actions
@@ -68,20 +77,24 @@ export function InventoryTable({
             Array.from({ length: 5 }).map((_, i) => (
               <tr key={i} className="border-b border-border/40">
                 <td className="py-3 px-4">
-                  <Skeleton className="h-4 w-32 mx-auto" />
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-20 mt-1" />
                 </td>
-                <td className="py-3 px-4">
+                <td className="py-3 px-4 hidden sm:table-cell">
                   <Skeleton className="h-4 w-24 mx-auto" />
                 </td>
                 <td className="py-3 px-4">
                   <Skeleton className="h-4 w-16 mx-auto" />
                 </td>
-                <td className="py-3 px-4">
-                  <Skeleton className="h-4 w-24 mx-auto" />
-                </td>
-                <td className="py-3 px-4">
+                <td className="py-3 px-4 hidden md:table-cell">
                   <div className="flex justify-center">
                     <Skeleton className="h-6 w-20 rounded-full" />
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="flex justify-center gap-1">
+                    <Skeleton className="h-8 w-8 rounded-md" />
+                    <Skeleton className="h-8 w-8 rounded-md" />
                   </div>
                 </td>
                 <td className="py-3 px-4">
@@ -108,56 +121,53 @@ export function InventoryTable({
             </tr>
           ) : (
             filtered.map((i) => {
-              const isCritical =
-                i.status === "critical" || i.status === "out";
+              const isCritical = i.status === "critical" || i.status === "out";
               return (
                 <tr
                   key={i.id}
-                  className={`border-b border-border/40 hover:bg-muted/30 transition ${isCritical ? "bg-destructive/5" : ""}`}
+                  className={`border-b border-border/40 hover:bg-muted/30 transition ${
+                    isCritical ? "bg-destructive/5" : ""
+                  }`}
                 >
-                  <td className="py-3 px-4 font-medium text-foreground text-start">
-                    {i.name}
+                  {/* Item name – clickable, navigates to details */}
+                  <td className="py-3 px-4">
+                    <Link
+                      to={`/inventory/${i.id}`}
+                      className="font-medium text-foreground hover:text-primary transition-colors"
+                    >
+                      {i.name}
+                    </Link>
+                    {/* Show category inline on small screens */}
+                    <div className="text-xs text-muted-foreground sm:hidden mt-0.5">
+                      {i.category}
+                    </div>
                   </td>
-                  <td className="py-3 px-4 text-muted-foreground text-center">
+
+                  <td className="py-3 px-4 text-muted-foreground text-center hidden sm:table-cell">
                     {i.category}
                   </td>
+
                   <td className="py-3 px-4 text-center font-mono">
-                    <span
-                      className={
-                        isCritical ? "text-destructive font-semibold" : ""
-                      }
-                    >
+                    <span className={isCritical ? "text-destructive font-semibold" : ""}>
                       {Math.floor(i.quantity)} {formatUnit(i.unit)}
                     </span>
                     <div className="text-xs text-muted-foreground">
                       reorder ≤ {i.reorderLevel}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-muted-foreground text-center">
-                    {i.expiryDate || "—"}
-                  </td>
-                  <td className="py-3 px-4">
+
+                  <td className="py-3 px-4 hidden md:table-cell">
                     <div className="flex justify-center">
                       <Badge className={statusMeta[i.status].class + " border-0"}>
-                        {isCritical && (
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                        )}
+                        {isCritical && <AlertTriangle className="h-3 w-3 mr-1" />}
                         {statusMeta[i.status].label}
                       </Badge>
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-center">
+
+                  {/* Stock actions: Restock + Deduct */}
+                  <td className="py-3 px-4">
                     <div className="flex justify-center gap-1">
-                         <Button
-                            asChild
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
-                            <Link to={`/inventory/${i.id}`}>
-                              <Eye className="h-4 w-4" />
-                            </Link>
-                          </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -166,6 +176,26 @@ export function InventoryTable({
                         onClick={() => openRestock(i)}
                       >
                         <PackagePlus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        title="Deduct Stock"
+                        onClick={() => openDeduct(i)}
+                      >
+                        <PackageMinus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </td>
+
+                  {/* CRUD actions: View, Edit, Delete */}
+                  <td className="py-3 px-4">
+                    <div className="flex justify-center gap-1">
+                      <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                        <Link to={`/inventory/${i.id}`}>
+                          <Eye className="h-4 w-4" />
+                        </Link>
                       </Button>
                       <Button
                         variant="ghost"
@@ -187,9 +217,7 @@ export function InventoryTable({
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Delete "{i.name}"?
-                            </AlertDialogTitle>
+                            <AlertDialogTitle>Delete "{i.name}"?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This permanently removes the item from inventory.
                             </AlertDialogDescription>
