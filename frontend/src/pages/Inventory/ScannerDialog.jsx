@@ -213,6 +213,7 @@ export function ScannerDialog({
       return;
     }
 
+    const restId = user?.restId || 2;
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -221,37 +222,29 @@ export function ScannerDialog({
     try {
       const promises = [];
 
+      // Matched items → new batch restock
       for (const item of mappedItems) {
+        const qty = parseFloat(item.quantity_to_add) || 0;
+        const total = parseFloat(item.total_price) || 0;
+        const unitCost = qty > 0 ? total / qty : 0;
+
         const existingItem = existingInventory.find(
           (i) => i.id === item.inventory_id,
         );
-        if (existingItem) {
-          const newStock =
-            (existingItem.quantity || 0) +
-            (parseFloat(item.quantity_to_add) || 0);
+        if (existingItem && qty > 0) {
           const payload = {
-            itemName: existingItem.name,
-            category: existingItem.category,
-            stock: newStock,
-            reorderLevel: existingItem.reorderLevel,
-            reorderQuantity: 0,
-            costPerUnit: (parseFloat(item.quantity_to_add) > 0 ? parseFloat(item.total_price) / parseFloat(item.quantity_to_add) : existingItem.cost) || existingItem.cost,
-            supplier: existingItem.supplier,
-            unit: existingItem.unit,
+            inventoryID: item.inventory_id,
+            quantity: qty,
+            unitCost: unitCost || existingItem.cost || 0,
             productionDate: item.productionDate
               ? new Date(item.productionDate).toISOString()
               : new Date().toISOString(),
-            imageUrl: "",
-            description: "",
-            expiryDate: new Date().toISOString(),
           };
           promises.push(
-            axios.put(
-              `https://resturantai.runasp.net/api/Inventory/${item.inventory_id}`,
+            axios.post(
+              `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/restock`,
               payload,
-              {
-                headers,
-              },
+              { headers },
             ),
           );
         }
@@ -260,63 +253,51 @@ export function ScannerDialog({
       for (const item of newItems) {
         const qty = parseFloat(item.quantity_to_add) || 0;
         const total = parseFloat(item.total_price) || 0;
-        const costPerUnit = qty > 0 ? total / qty : 0;
+        const unitCost = qty > 0 ? total / qty : 0;
 
         if (item.action === "map" && item.mappedInventoryId) {
-          const existingItem = existingInventory.find(
-            (i) => i.id === parseInt(item.mappedInventoryId),
-          );
-          if (existingItem) {
-            const newStock = (existingItem.quantity || 0) + qty;
+          // Map to existing item → new batch restock
+          if (qty > 0) {
             const payload = {
-              itemName: existingItem.name,
-              category: existingItem.category,
-              stock: newStock,
-              reorderLevel: existingItem.reorderLevel,
-              reorderQuantity: 0,
-              costPerUnit: costPerUnit || existingItem.cost,
-              supplier: existingItem.supplier,
-              unit: existingItem.unit,
+              inventoryID: parseInt(item.mappedInventoryId),
+              quantity: qty,
+              unitCost: unitCost || 0,
               productionDate: item.productionDate
                 ? new Date(item.productionDate).toISOString()
                 : new Date().toISOString(),
-              imageUrl: "",
-              description: "",
-              expiryDate: new Date().toISOString(),
             };
             promises.push(
-              axios.put(
-                `https://resturantai.runasp.net/api/Inventory/${item.mappedInventoryId}`,
+              axios.post(
+                `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/restock`,
                 payload,
-                {
-                  headers,
-                },
+                { headers },
               ),
             );
           }
         } else if (item.action === "create") {
-          const payload = {
-            restID: parseInt(user?.restId || 2),
+          // Create new inventory item — the backend automatically creates the
+          // first batch from stock/productionDate, so no extra restock call needed.
+          const createPayload = {
+            restID: parseInt(restId),
             itemName: item.itemName || "Unknown Item",
             category: item.category || "General",
             stock: qty,
             reorderLevel: parseFloat(item.reorderLevel) || 0,
             reorderQuantity: 0,
-            costPerUnit: costPerUnit,
+            costPerUnit: unitCost,
             supplier: "Unknown",
             unit: item.unit || "Kg",
-            shelfLifeDays: parseFloat(item.shelfLifeDays) || null,
+            imageUrl: "string",
+            description: "string",
+            shelfLife: parseFloat(item.shelfLifeDays) || null,
             productionDate: item.productionDate
               ? new Date(item.productionDate).toISOString()
               : new Date().toISOString(),
-            imageUrl: "",
-            description: "",
-            expiryDate: new Date().toISOString(),
           };
           promises.push(
             axios.post(
               `https://resturantai.runasp.net/api/Inventory`,
-              payload,
+              createPayload,
               { headers },
             ),
           );

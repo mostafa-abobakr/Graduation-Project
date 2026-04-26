@@ -27,9 +27,11 @@ export default function InventoryPage() {
   const { settings, addItemsBulk } = useInventoryStore();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['inventoryItems', user?.restId],
+    queryKey: ["inventoryItems", user?.restId],
     queryFn: async () => {
-      const response = await axios.get(`https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}`);
+      const response = await axios.get(
+        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}`,
+      );
       return response.data.map((item) => ({
         id: item.inventoryID,
         name: item.itemName,
@@ -38,7 +40,8 @@ export default function InventoryPage() {
         unit: item.unit,
         reorderLevel: item.reorderLevel,
         cost: item.costPerUnit || 0,
-        expiryDate: item.expiryDate,
+        shelfLife: item.shelfLife ?? null,
+        batchesCount: item.batchesCount ?? 0,
         supplier: item.supplier || "Unknown",
         apiStatus: item.status,
       }));
@@ -68,12 +71,13 @@ export default function InventoryPage() {
   const [restockMode, setRestockMode] = useState("restock");
 
   const enriched = useMemo(
-    () => (data || []).map((i) => ({ ...i, status: computeStatus(i, settings) })),
+    () =>
+      (data || []).map((i) => ({ ...i, status: computeStatus(i, settings) })),
     [data, settings],
   );
 
   const uniqueCategories = useMemo(() => {
-    const dataCats = (data || []).map(i => i.category).filter(Boolean);
+    const dataCats = (data || []).map((i) => i.category).filter(Boolean);
     return Array.from(new Set([...CATEGORIES, ...dataCats])).sort();
   }, [data]);
 
@@ -144,51 +148,67 @@ export default function InventoryPage() {
         costPerUnit: formData.cost || 0,
         supplier: formData.supplier || "Unknown",
         unit: formData.unit || "Kg",
-        imageUrl: "",
-        description: "",
-        expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : new Date().toISOString()
+        imageUrl: "string",
+        description: "string",
+        shelfLife: formData.isNonPerishable
+          ? null
+          : parseInt(formData.shelfLifeDays, 10) || null,
+        productionDate: formData.productionDate
+          ? new Date(formData.productionDate).toISOString()
+          : new Date().toISOString(),
       };
-      await axios.post("https://resturantai.runasp.net/api/Inventory", payload);
+      const response = await axios.post(
+        "https://resturantai.runasp.net/api/Inventory",
+        payload,
+      );
+      return response.data;
     },
-    onSuccess: () => {
-      toast.success("Item added");
+    onSuccess: (responseData) => {
+      const message = responseData?.message || "Item added";
+      toast.success(message);
       refetch();
     },
     onError: (err) => {
       toast.error(err.message || "Failed to add item");
-    }
+    },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, formData }) => {
       const payload = {
-        itemName: formData.name,
+        itemName: formData.name || formData.itemName || "",
         category: formData.category || "General",
-        stock: formData.quantity || 0,
         reorderLevel: formData.reorderLevel || 0,
-        reorderQuantity: 0,
-        costPerUnit: formData.cost || 0,
         supplier: formData.supplier || "Unknown",
         unit: formData.unit || "Kg",
-        imageUrl: "",
-        description: "",
-        expiryDate: formData.expiryDate ? new Date(formData.expiryDate).toISOString() : new Date().toISOString(),
-        productionDate: formData.productionDate ? new Date(formData.productionDate).toISOString() : new Date().toISOString()
+        imageUrl: formData.imageUrl || "string",
+        description: formData.description || "string",
+        shelfLife: formData.isNonPerishable
+          ? 0
+          : parseInt(formData.shelfLifeDays, 10) || formData.shelfLife || 0,
+        costPerUnit: formData.cost ?? formData.costPerUnit ?? 0,
       };
-      await axios.put(`https://resturantai.runasp.net/api/Inventory/${id}`, payload);
+      const response = await axios.put(
+        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}/${id}`,
+        payload,
+      );
+      return response.data;
     },
-    onSuccess: () => {
-      toast.success("Item updated");
+    onSuccess: (responseData) => {
+      const message = responseData?.message || "Item updated";
+      toast.success(message);
       refetch();
     },
     onError: (err) => {
       toast.error(err.message || "Failed to update item");
-    }
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await axios.delete(`https://resturantai.runasp.net/api/Inventory/${id}`);
+      await axios.delete(
+        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}/${id}`,
+      );
     },
     onSuccess: () => {
       toast.success("Item deleted");
@@ -196,7 +216,7 @@ export default function InventoryPage() {
     },
     onError: (err) => {
       toast.error(err.message || "Failed to delete item");
-    }
+    },
   });
 
   const handleSaveItem = (formData, isEditing) => {
@@ -206,6 +226,7 @@ export default function InventoryPage() {
       addMutation.mutate(formData);
     }
     setFormOpen(false);
+    setEditingItem(null);
   };
 
   const openEdit = (item) => {
@@ -225,41 +246,61 @@ export default function InventoryPage() {
     setRestockOpen(true);
   };
 
-  const handleRestock = (qtyStr, productionDate = null, mode = "restock", unitPriceStr = "") => {
+  const handleRestock = async (
+    qtyStr,
+    productionDate = null,
+    mode = "restock",
+    unitPriceStr = "",
+  ) => {
     const qty = parseFloat(qtyStr);
     if (!qty || qty <= 0) {
       toast.error("Enter a valid quantity");
       return;
     }
 
-    const currentQty = restockItem.quantity || 0;
-    const finalQuantity = mode === "deduct" ? currentQty - qty : currentQty + qty;
-
-    if (finalQuantity < 0) {
-      toast.error("Cannot deduct more than current stock");
-      return;
-    }
-
-    const updatedData = {
-      ...restockItem,
-      quantity: finalQuantity,
+    const token = user?.token || localStorage.getItem("authToken");
+    const restId = user?.restId || 2;
+    const headers = {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
-    
-    // In our backend, productionDate needs to be passed
-    // updateMutation's mutationFn uses formData.expiryDate and formData.productionDate?
-    // Let's check updateMutation payload.
-    if (productionDate) {
-      updatedData.productionDate = productionDate;
-    }
-    
-    if (unitPriceStr !== undefined && unitPriceStr !== null && unitPriceStr !== "") {
-      updatedData.cost = parseFloat(unitPriceStr);
-    }
 
-    updateMutation.mutate({ id: restockItem.id, formData: updatedData });
-
-    setRestockOpen(false);
-    setRestockItem(null);
+    try {
+      if (mode === "deduct") {
+        if (qty > (restockItem.quantity || 0)) {
+          toast.error("Cannot deduct more than current stock");
+          return;
+        }
+        await axios.post(
+          `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/item/${restockItem.id}/withdraw?quantity=${qty}`,
+          "",
+          { headers },
+        );
+        toast.success("Stock deducted successfully");
+      } else {
+        const payload = {
+          inventoryID: restockItem.id,
+          quantity: qty,
+          unitCost: parseFloat(unitPriceStr) || restockItem.cost || 0,
+          productionDate: productionDate
+            ? new Date(productionDate).toISOString()
+            : new Date().toISOString(),
+        };
+        await axios.post(
+          `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/restock`,
+          payload,
+          { headers },
+        );
+        toast.success("Stock restocked successfully");
+      }
+      refetch();
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Operation failed");
+    } finally {
+      setRestockOpen(false);
+      setRestockItem(null);
+    }
   };
 
   const handleBulkImport = (newItems) => {
@@ -280,53 +321,53 @@ export default function InventoryPage() {
               Export PDF
             </Button>
 
-            <ScannerDialog 
-              open={scannerOpen} 
-              setOpen={setScannerOpen} 
+            <ScannerDialog
+              open={scannerOpen}
+              setOpen={setScannerOpen}
               existingInventory={data || []}
               onSuccess={() => refetch()}
             />
 
-            <ItemFormDialog 
-              open={formOpen} 
+            <ItemFormDialog
+              open={formOpen}
               setOpen={(open) => {
                 setFormOpen(open);
                 if (!open) setEditingItem(null);
-              }} 
-              editingItem={editingItem} 
-              onSave={handleSaveItem} 
+              }}
+              editingItem={editingItem}
+              onSave={handleSaveItem}
             />
           </div>
         }
       />
 
       <Card className="bg-card border-border/60 overflow-hidden">
-        <InventoryFilters 
-          filter={filter} 
-          setFilter={setFilter} 
-          categoryFilter={categoryFilter} 
-          setCategoryFilter={setCategoryFilter} 
-          search={search} 
-          setSearch={setSearch} 
+        <InventoryFilters
+          filter={filter}
+          setFilter={setFilter}
+          categoryFilter={categoryFilter}
+          setCategoryFilter={setCategoryFilter}
+          search={search}
+          setSearch={setSearch}
           categories={uniqueCategories}
         />
-        
-        <InventoryTable 
-          filtered={filtered} 
-          loading={isLoading} 
-          search={search} 
-          setSearch={setSearch} 
-          openRestock={openRestock} 
+
+        <InventoryTable
+          filtered={filtered}
+          loading={isLoading}
+          search={search}
+          setSearch={setSearch}
+          openRestock={openRestock}
           openDeduct={openDeduct}
-          openEdit={openEdit} 
-          deleteItem={(id) => deleteMutation.mutate(id)} 
+          openEdit={openEdit}
+          deleteItem={(id) => deleteMutation.mutate(id)}
         />
       </Card>
 
-      <RestockDialog 
-        open={restockOpen} 
-        setOpen={setRestockOpen} 
-        item={restockItem} 
+      <RestockDialog
+        open={restockOpen}
+        setOpen={setRestockOpen}
+        item={restockItem}
         onRestock={handleRestock}
         mode={restockMode}
       />

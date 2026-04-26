@@ -24,7 +24,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { statusMeta } from "@/lib/inventoryStore";
-import { toast } from "sonner";
 
 const formatUnit = (unit) => {
   const u = (unit || "").toLowerCase();
@@ -227,7 +226,6 @@ export function InventoryTable({
                             <AlertDialogAction
                               onClick={() => {
                                 deleteItem(i.id);
-                                toast.success("Item deleted");
                               }}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
