@@ -1,36 +1,65 @@
-import React, { useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { GoogleMap, useJsApiLoader, Marker, Autocomplete } from "@react-google-maps/api";
-
 import AuthContainer from "@/components/AuthContainer";
-import img from "@/assets/Auth/SignUp.png";
 import { signupValidationSchema } from "@/schemas/auth/validations";
 import { useRegisterContext } from "@/contexts/Valdation";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, MapPin, Building2, Navigation, Map } from "lucide-react";
+import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const validationSchema = signupValidationSchema.pick(["address", "city"]);
+const defaultCenter = { lat: 30.0444, lng: 31.2357 };
+const markerIcon = L.icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+const OSM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
+const OSM_REVERSE_URL = "https://nominatim.openstreetmap.org/reverse";
+const extractCity = (address) =>
+  address.city || address.town || address.village || address.state || "";
 
-const libraries = ["places"];
-const mapContainerStyle = {
-  width: "100%",
-  height: "250px",
-  borderRadius: "0.5rem",
-};
+const DraggableMarker = ({ position, onDragEnd }) => {
+  const map = useMapEvents({});
 
-const defaultCenter = {
-  lat: 30.0444, // Cairo default
-  lng: 31.2357
+  useEffect(() => {
+    map.setView(position, map.getZoom(), { animate: true });
+  }, [map, position]);
+
+  return (
+    <Marker
+      icon={markerIcon}
+      draggable
+      position={position}
+      eventHandlers={{
+        dragend: (event) => {
+          const { lat, lng } = event.target.getLatLng();
+          onDragEnd(lat, lng);
+        },
+      }}
+    />
+  );
 };
 
 const RestaurantLocation = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const { formData, updateFromData } = useRegisterContext();
+  const [isLocating, setIsLocating] = useState(false);
+  const [mapCenter, setMapCenter] = useState(defaultCenter);
+  const [suggestions, setSuggestions] = useState([]);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const { formData, resetFormData } = useRegisterContext();
+  const { register } = useAuth();
 
   const formik = useFormik({
     initialValues: {
@@ -40,127 +69,163 @@ const RestaurantLocation = () => {
     validationSchema,
     onSubmit: async (values) => {
       setIsSubmitting(true);
-      updateFromData(values);
-      navigate("/register/connect-pos");
-      setIsSubmitting(false);
+      setSubmitError("");
+      try {
+        const completeData = { ...formData, ...values };
+        await register(completeData);
+        resetFormData();
+        navigate("/register/connect-pos");
+      } catch (error) {
+        setSubmitError(error.response?.data?.message || "Registration failed. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
     },
   });
 
-  // Google Maps
-  const { isLoaded } = useJsApiLoader({
-    id: "google-map-script",
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-    libraries,
-  });
+  const searchText = useMemo(
+    () => formik.values.address?.trim() || formik.values.city?.trim() || "",
+    [formik.values.address, formik.values.city]
+  );
 
-  const [mapCenter, setMapCenter] = useState(defaultCenter);
-  const [autocomplete, setAutocomplete] = useState(null);
-  const [geocoder, setGeocoder] = useState(null);
-  const [isLocating, setIsLocating] = useState(false);
-  const lastGeocodedQueryRef = React.useRef("");
-
-  React.useEffect(() => {
-    if (isLoaded && !geocoder && window.google) {
-      setGeocoder(new window.google.maps.Geocoder());
+  useEffect(() => {
+    if (!searchText || searchText.length < 3) {
+      setSuggestions([]);
+      return;
     }
-  }, [isLoaded, geocoder]);
 
-  React.useEffect(() => {
-    if (!isLoaded || !geocoder) return;
-
-    const address = formik.values.address?.trim();
-    const city = formik.values.city?.trim();
-    const searchQuery = city
-      ? (address ? `${address}, ${city}` : city)
-      : address;
-
-    if (!searchQuery || searchQuery === lastGeocodedQueryRef.current) return;
-
-    const debounceId = setTimeout(() => {
-      geocoder.geocode({ address: searchQuery }, (results, status) => {
-        if (status === "OK" && results?.[0]?.geometry?.location) {
-          const location = results[0].geometry.location;
-          setMapCenter({ lat: location.lat(), lng: location.lng() });
-          lastGeocodedQueryRef.current = searchQuery;
-        }
-      });
-    }, 600);
-
-    return () => clearTimeout(debounceId);
-  }, [formik.values.address, formik.values.city, geocoder, isLoaded]);
-
-  const reverseGeocode = (lat, lng) => {
-    return new Promise((resolve) => {
-      if (!geocoder) return resolve();
-      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-        if (status === "OK" && results[0]) {
-          const place = results[0];
-          formik.setFieldValue("address", place.formatted_address);
-
-          const cityComp = place.address_components?.find((c) =>
-            c.types.includes("locality") ||
-            c.types.includes("administrative_area_level_2") ||
-            c.types.includes("administrative_area_level_1")
-          );
-          if (cityComp) {
-            formik.setFieldValue("city", cityComp.long_name);
+    const controller = new AbortController();
+    const timerId = setTimeout(async () => {
+      try {
+        setIsSearchingAddress(true);
+        const response = await fetch(
+          `${OSM_SEARCH_URL}?format=jsonv2&addressdetails=1&limit=6&q=${encodeURIComponent(searchText)}`,
+          { signal: controller.signal, headers: { Accept: "application/json" } }
+        );
+        const data = await response.json();
+        const nextSuggestions = Array.isArray(data) ? data : [];
+        setSuggestions(nextSuggestions);
+        setShowSuggestions(true);
+        if (nextSuggestions[0]) {
+          const lat = Number(nextSuggestions[0].lat);
+          const lng = Number(nextSuggestions[0].lon);
+          if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+            setMapCenter({ lat, lng });
           }
         }
-        resolve();
-      });
-    });
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          setSuggestions([]);
+        }
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    }, 500);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timerId);
+    };
+  }, [searchText]);
+
+  const reverseGeocode = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `${OSM_REVERSE_URL}?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1`,
+        { headers: { Accept: "application/json" } }
+      );
+      const data = await response.json();
+      if (data?.display_name) {
+        formik.setFieldValue("address", data.display_name);
+      }
+      const city = extractCity(data?.address || {});
+      if (city) {
+        formik.setFieldValue("city", city);
+      }
+    } catch {
+      // Keep map movement even when reverse geocoding fails.
+    }
   };
 
-  const handleDragEnd = (e) => {
-    const newLat = e.latLng.lat();
-    const newLng = e.latLng.lng();
-    setMapCenter({ lat: newLat, lng: newLng });
-    reverseGeocode(newLat, newLng);
+  const handleSuggestionSelect = (item) => {
+    const lat = Number(item.lat);
+    const lng = Number(item.lon);
+    formik.setFieldValue("address", item.display_name || "");
+    const city = extractCity(item.address || {});
+    if (city) {
+      formik.setFieldValue("city", city);
+    }
+    if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+      setMapCenter({ lat, lng });
+    }
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  const handleDragEnd = (lat, lng) => {
+    setMapCenter({ lat, lng });
+    reverseGeocode(lat, lng);
+  };
+
+  const retryGeolocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const lat = coords.latitude;
+        const lng = coords.longitude;
+        setMapCenter({ lat, lng });
+        reverseGeocode(lat, lng).finally(() => setIsLocating(false));
+      },
+      (error) => {
+        setSubmitError(getGeolocationErrorMessage(error));
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 300000 }
+    );
+  };
+
+  const getGeolocationErrorMessage = (error) => {
+    if (!error) return "Unable to retrieve your location.";
+    if (error.code === error.PERMISSION_DENIED) {
+      return "Location permission denied. Allow location access in browser settings.";
+    }
+    if (error.code === error.POSITION_UNAVAILABLE) {
+      return "Location is unavailable. Try moving to an open area and retry.";
+    }
+    if (error.code === error.TIMEOUT) {
+      return "Location request timed out. Please try again.";
+    }
+    return "Unable to retrieve your location.";
   };
 
   const handleLocateMe = () => {
-    if (navigator.geolocation) {
-      setIsLocating(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          setMapCenter({ lat, lng });
-          reverseGeocode(lat, lng).finally(() => setIsLocating(false));
-        },
-        () => {
-          setSubmitError("Unable to retrieve your location.");
-          setIsLocating(false);
-        }
-      );
-    } else {
+    if (!window.isSecureContext) {
+      setSubmitError("Locate Me works only on HTTPS (or localhost).");
+      return;
+    }
+    if (!navigator.geolocation) {
       setSubmitError("Geolocation is not supported by this browser.");
+      return;
     }
-  };
 
-  const onLoadAutocomplete = useCallback((autocompleteObj) => {
-    setAutocomplete(autocompleteObj);
-  }, []);
-
-  const onPlaceChanged = () => {
-    if (autocomplete !== null) {
-      const place = autocomplete.getPlace();
-      if (place.geometry && place.geometry.location) {
-        const lat = place.geometry.location.lat();
-        const lng = place.geometry.location.lng();
+    setSubmitError("");
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => {
+        const lat = coords.latitude;
+        const lng = coords.longitude;
         setMapCenter({ lat, lng });
-
-        // Auto-fill address and city
-        formik.setFieldValue("address", place.formatted_address || place.name);
-
-        const cityComp = place.address_components?.find((c) =>
-          c.types.includes("locality")
-        );
-        if (cityComp) {
-          formik.setFieldValue("city", cityComp.long_name);
+        reverseGeocode(lat, lng).finally(() => setIsLocating(false));
+      },
+      (error) => {
+        if (error?.code === error.POSITION_UNAVAILABLE || error?.code === error.TIMEOUT) {
+          retryGeolocation();
+          return;
         }
-      }
-    }
+        setSubmitError(getGeolocationErrorMessage(error));
+        setIsLocating(false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
   return (
@@ -174,41 +239,12 @@ const RestaurantLocation = () => {
       <form
         onSubmit={formik.handleSubmit}
         noValidate
-        className="w-full max-w-[700px] flex flex-col gap-5 bg-card text-card-foreground p-2 md:p-6"
+        className="w-full max-w-[700px] flex flex-col gap-5 bg-card text-card-foreground "
       >
-        
-
         <div className="space-y-2 relative">
-          <Label htmlFor="address" className="font-semibold">Search Address</Label>
-          <div className="relative flex flex-col gap-2">
-            <MapPin className="absolute left-3 top-3 w-5 h-5 text-primary z-10" />
-            {isLoaded ? (
-              <Autocomplete
-                onLoad={onLoadAutocomplete}
-                onPlaceChanged={onPlaceChanged}
-                className="w-full"
-              >
-                <Input
-                  id="address"
-                  name="address"
-                  placeholder="Search and select your address"
-                  className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem] w-full"
-                  {...formik.getFieldProps("address")}
-                />
-              </Autocomplete>
-            ) : (
-              <Input
-                id="address"
-                name="address"
-                placeholder="Address"
-                className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem]"
-                {...formik.getFieldProps("address")}
-              />
-            )}
-          </div>
-          {formik.touched.address && formik.errors.address && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.address}</p>}
-
-          {/* Locate Me Button */}
+          <Label htmlFor="address" className="font-semibold">
+            Search Address
+          </Label>
           <div className="flex justify-end pt-1">
             <Button
               type="button"
@@ -218,39 +254,75 @@ const RestaurantLocation = () => {
               onClick={handleLocateMe}
               disabled={isLocating}
             >
-              {isLocating ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Navigation className="w-3.5 h-3.5 mr-1.5" />}
+              {isLocating ? (
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+              ) : (
+                <Navigation className="w-3.5 h-3.5 mr-1.5" />
+              )}
               {isLocating ? "Locating..." : "Locate Me"}
             </Button>
           </div>
 
-          {/* Map Preview */}
-          {isLoaded ? (
-            <div className="border border-border/50 rounded-lg overflow-hidden shadow-sm relative group">
-              <div className="absolute top-2 left-2 z-10 bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-medium text-muted-foreground flex items-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                <Map className="w-3 h-3 mr-1" /> Drag pin to adjust
+          <div className="relative flex flex-col gap-2">
+            <MapPin className="absolute left-3 top-3 w-5 h-5 text-primary z-10 pointer-events-none" />
+            <Input
+              id="address"
+              name="address"
+              placeholder="Search and select your address"
+              className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem] w-full"
+              value={formik.values.address}
+              onChange={(event) => {
+                formik.setFieldValue("address", event.target.value);
+                setShowSuggestions(true);
+              }}
+              onBlur={formik.handleBlur}
+            />
+            {showSuggestions && (suggestions.length > 0 || isSearchingAddress) && (
+              <div className="absolute top-[3.2rem] z-20 w-full rounded-md border border-border bg-background shadow-md">
+                {isSearchingAddress ? (
+                  <p className="px-3 py-2 text-sm text-muted-foreground">Searching...</p>
+                ) : (
+                  suggestions.map((item) => (
+                    <button
+                      key={`${item.place_id}-${item.lat}-${item.lon}`}
+                      type="button"
+                      className="block w-full px-3 py-2 text-left text-sm hover:bg-muted/70"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => handleSuggestionSelect(item)}
+                    >
+                      {item.display_name}
+                    </button>
+                  ))
+                )}
               </div>
-              <GoogleMap
-                mapContainerStyle={mapContainerStyle}
-                center={mapCenter}
-                zoom={16}
-                options={{ disableDefaultUI: true, zoomControl: true }}
-              >
-                <Marker
-                  position={mapCenter}
-                  draggable={true}
-                  onDragEnd={handleDragEnd}
-                />
-              </GoogleMap>
-            </div>
-          ) : (
-            <div className="h-[250px] w-full bg-muted/40 animate-pulse rounded-lg border border-border/50 flex items-center justify-center">
-              <MapPin className="w-8 h-8 text-muted-foreground/30" />
-            </div>
+            )}
+          </div>
+          {formik.touched.address && formik.errors.address && (
+            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.address}</p>
           )}
+
+          <div className="border border-border/50 rounded-lg overflow-hidden shadow-sm relative group">
+            <div className="absolute top-2 left-2 z-[500] bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-medium text-muted-foreground flex items-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+              <Map className="w-3 h-3 mr-1" /> Drag pin to adjust
+            </div>
+            <MapContainer
+              center={mapCenter}
+              zoom={16}
+              style={{ width: "100%", height: "250px", borderRadius: "0.5rem" }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <DraggableMarker position={mapCenter} onDragEnd={handleDragEnd} />
+            </MapContainer>
+          </div>
         </div>
 
         <div className="space-y-2 relative mt-2">
-          <Label htmlFor="city" className="font-semibold">City</Label>
+          <Label htmlFor="city" className="font-semibold">
+            City
+          </Label>
           <div className="relative">
             <Building2 className="absolute left-3 top-3 w-5 h-5 text-primary z-10" />
             <Input
@@ -261,7 +333,9 @@ const RestaurantLocation = () => {
               {...formik.getFieldProps("city")}
             />
           </div>
-          {formik.touched.city && formik.errors.city && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.city}</p>}
+          {formik.touched.city && formik.errors.city && (
+            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.city}</p>
+          )}
         </div>
 
         {submitError && (
@@ -279,7 +353,11 @@ const RestaurantLocation = () => {
           >
             Back
           </Button>
-          <Button type="submit" className="w-full h-12 text-[1rem] shadow-md" disabled={isSubmitting}>
+          <Button
+            type="submit"
+            className="w-full h-12 text-[1rem] shadow-md"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? <Loader2 className="animate-spin" /> : "Next Step"}
           </Button>
         </div>
