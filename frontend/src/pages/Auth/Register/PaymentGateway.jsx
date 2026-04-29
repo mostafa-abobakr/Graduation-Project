@@ -3,12 +3,14 @@ import { Loader2, CreditCard, Lock, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+
+
 export default function PaymentGateway() {
     const { login } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const plan = searchParams.get("plan") || "Pro";
-    
+
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
     const [formData, setFormData] = useState({
@@ -24,22 +26,22 @@ export default function PaymentGateway() {
     const handlePayment = async (e) => {
         e.preventDefault();
         setLoading(true);
-        
+
         // Simulating Payment Gateway Delay
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         setSuccess(true);
         setLoading(false);
-        
+
         // Simulating login and redirect
         setTimeout(async () => {
             try {
                 const stored = localStorage.getItem("register");
-                if(stored) {
+                if (stored) {
                     const parsed = JSON.parse(stored);
                     const { email, password } = parsed;
-                    if(login && email && password) {
-                         await login(email, password);
+                    if (login && email && password) {
+                        await login(email, password);
                     }
                 }
             } catch (err) {
@@ -70,7 +72,7 @@ export default function PaymentGateway() {
     return (
         <div className="min-h-screen bg-gray-50 flex py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-5xl w-full mx-auto grid lg:grid-cols-2 gap-12 items-start animate-in slide-in-from-bottom-8 fade-in duration-700">
-                
+
                 {/* Payment Form */}
                 <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
                     <div className="mb-8">
@@ -80,25 +82,25 @@ export default function PaymentGateway() {
                         </h2>
                         <p className="text-gray-500 mt-1">Enter your card details securely.</p>
                     </div>
-                    
+
                     <form onSubmit={handlePayment} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Name on Card</label>
-                            <input 
+                            <input
                                 required={price > 0}
                                 type="text"
                                 placeholder="John Doe"
                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:text-gray-400"
                                 value={formData.name}
-                                onChange={e => setFormData({...formData, name: e.target.value})}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 disabled={price === 0}
                             />
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
                             <div className="relative">
-                                <input 
+                                <input
                                     required={price > 0}
                                     type="text"
                                     placeholder="0000 0000 0000 0000"
@@ -108,18 +110,18 @@ export default function PaymentGateway() {
                                     onChange={e => {
                                         let val = e.target.value.replace(/\D/g, '');
                                         val = val.replace(/(.{4})/g, '$1 ').trim();
-                                        setFormData({...formData, cardNumber: val});
+                                        setFormData({ ...formData, cardNumber: val });
                                     }}
                                     disabled={price === 0}
                                 />
                                 <CreditCard className="absolute left-3 top-3.5 text-gray-400 w-5 h-5" />
                             </div>
                         </div>
-                        
+
                         <div className="grid grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                                <input 
+                                <input
                                     required={price > 0}
                                     type="text"
                                     placeholder="MM/YY"
@@ -128,22 +130,22 @@ export default function PaymentGateway() {
                                     value={formData.expiry}
                                     onChange={e => {
                                         let val = e.target.value.replace(/\D/g, '');
-                                        if (val.length > 2) val = val.substring(0,2) + '/' + val.substring(2,4);
-                                        setFormData({...formData, expiry: val});
+                                        if (val.length > 2) val = val.substring(0, 2) + '/' + val.substring(2, 4);
+                                        setFormData({ ...formData, expiry: val });
                                     }}
                                     disabled={price === 0}
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                                <input 
+                                <input
                                     required={price > 0}
                                     type="password"
                                     placeholder="123"
                                     maxLength="4"
                                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:text-gray-400"
                                     value={formData.cvv}
-                                    onChange={e => setFormData({...formData, cvv: e.target.value.replace(/\D/g, '')})}
+                                    onChange={e => setFormData({ ...formData, cvv: e.target.value.replace(/\D/g, '') })}
                                     disabled={price === 0}
                                 />
                             </div>
@@ -170,7 +172,7 @@ export default function PaymentGateway() {
                 {/* Order Summary */}
                 <div className="bg-gray-900 text-white rounded-3xl shadow-xl p-8 sticky top-12">
                     <h3 className="text-2xl font-bold mb-6">Order Summary</h3>
-                    
+
                     <div className="space-y-4 mb-6 border-b border-gray-700 pb-6">
                         <div className="flex justify-between items-center text-gray-300">
                             <span>{plan} Plan (Monthly)</span>
@@ -181,7 +183,7 @@ export default function PaymentGateway() {
                             <span className="font-semibold text-white">$0.00</span>
                         </div>
                     </div>
-                    
+
                     <div className="flex justify-between items-center mb-8">
                         <span className="text-lg font-medium">Total</span>
                         <div className="text-right">
@@ -189,7 +191,7 @@ export default function PaymentGateway() {
                             <p className="text-sm text-gray-400">per month</p>
                         </div>
                     </div>
-                    
+
                     <div className="bg-gray-800 rounded-xl p-4 text-sm text-gray-300">
                         <strong className="text-white block mb-1">Guaranteed Satisfaction</strong>
                         Change your plan or cancel at any time. We'll prorate your billing automatically.

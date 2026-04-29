@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { CheckCircle, Shield, Database } from "lucide-react";
+import { CheckCircle, Shield, Database, Loader2 } from "lucide-react";
 import { useState } from "react";
 import {  useNavigate } from "react-router-dom";
 

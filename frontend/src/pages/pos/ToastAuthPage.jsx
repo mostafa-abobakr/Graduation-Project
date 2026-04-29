@@ -48,12 +48,15 @@ export default function PosAuthorizePage() {
         
         try {
             const stored = localStorage.getItem("register");
+
             if (!stored) {
                 console.error("No registration data found. Please log in.");
                 navigate("/login");
                 return;
             }
+
             const formData = JSON.parse(stored);
+            console.log("formData:",formData)
             if (!formData || !formData.email || !formData.password) {
                 console.error("Incomplete login credentials. Please log in again.");
                 navigate("/login");
@@ -61,7 +64,7 @@ export default function PosAuthorizePage() {
             }
 
             try {
-                await axios.post("http://resturantai.runasp.net/api/Auth/register", formData);
+                await axios.post("https://resturantai.runasp.net/api/Auth/register", formData);
             } catch (err) {
                 const errorData = err.response?.data;
                 const msg = typeof errorData === "string" ? errorData : errorData?.message || errorData?.title;

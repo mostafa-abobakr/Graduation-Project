@@ -32,6 +32,7 @@ import SchedulePage from "@/pages/SchedulePage";
 import BillingPlans from "@/pages/Auth/Register/BillingPlans";
 import PaymentGateway from "@/pages/Auth/Register/PaymentGateway";
 import InventoryOverview from "@/pages/draft/InventoryOverview";
+import PaymentStripe from "@/pages/Auth/Register/PaymentStripe";
 
 
 const requireAuth = () => {
@@ -50,6 +51,10 @@ const Routes = [
   {
     path: ROUTES.LOGIN,
     element: <Login />,
+  },
+  {
+    path: "stripe",
+    element: <PaymentStripe />,
   },
   {
     path: "/register",
@@ -74,6 +79,10 @@ const Routes = [
       {
         path: "payment",
         element: <PaymentGateway />,
+      },
+      {
+        path: "stripe",
+        element: <PaymentStripe />,
       },
     ],
   },
@@ -146,7 +155,7 @@ const Routes = [
       { path: "alerts", element: <InventoryAlertsPage /> },
       { path: "forecast", element: <InventoryForecastPage /> },
       { path: ":id", element: <ItemDetailsPage /> },
-      { path: "draft", element: <InventoryOverview/> },
+      { path: "draft", element: <InventoryOverview /> },
     ]
   },
   {

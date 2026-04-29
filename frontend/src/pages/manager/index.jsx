@@ -11,23 +11,18 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const ManagerDashboard = () => {
   const [viewMode, setViewMode] = useState("today");
-  const {user} = useAuth();
-  console.log(user);
-  
+  const { user } = useAuth();
+  // console.log(user);
+
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboardData"],
     queryFn: async () => {
       const token = localStorage.getItem("authToken");
-      
+
       const res = await fetch(
         `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restId}`,
-        {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-          },
-        },
+        { method: "GET", headers: { accept: "application/json", }, },
       );
       if (!res.ok) {
         throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
@@ -52,15 +47,16 @@ const ManagerDashboard = () => {
 
         <div className="pt-5 space-y-4 md:space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
-            {Array.from({length: 5}).map((_, i) => <Skeleton key={i} className="h-[120px] w-full rounded-xl" />)}
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-[120px] w-full rounded-xl" />)}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 items-stretch">
-             <Skeleton className="h-[400px] w-full rounded-xl" />
-             <Skeleton className="h-[400px] w-full rounded-xl" />
+            <Skeleton className="h-[400px] w-full rounded-xl" />
+            <Skeleton className="h-[400px] w-full rounded-xl" />
           </div>
         </div>
       </div>
     );
+
   if (error)
     return (
       <div className="p-8 text-center text-destructive">
@@ -76,6 +72,7 @@ const ManagerDashboard = () => {
     return "day";
   };
   const dashboardData = data?.data?.[getViewKey()];
+  console.log("dashboardData", dashboardData)
 
   const statistics = dashboardData?.revenue;
   const costReduction = dashboardData?.cost_reduction;

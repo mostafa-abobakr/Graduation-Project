@@ -38,8 +38,9 @@ export default function BillingPlans() {
     const navigate = useNavigate();
     const [selectedPlan, setSelectedPlan] = useState("Pro");
 
-    const handleContinue = () => {
-        navigate(`/register/payment?plan=${selectedPlan}`);
+    const handleContinue = (planName) => {
+        // navigate(`/register/payment?plan=${selectedPlan}`);
+        navigate(`/register/stripe?plan=${planName}`);
     };
 
     return (
@@ -48,11 +49,11 @@ export default function BillingPlans() {
                 <h1 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">Choose the right plan for your restaurant</h1>
                 <p className="text-lg text-gray-500">Upgrade your restaurant's efficiency with our powerful features. Select a plan to continue your setup.</p>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8 max-w-6xl w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
                 {plans.map((plan) => (
-                    <div 
-                        key={plan.name} 
+                    <div
+                        key={plan.name}
                         className={`relative rounded-2xl shadow-xl flex flex-col p-8 cursor-pointer transition-transform transform hover:-translate-y-2 ${plan.bg} ${plan.border || 'border border-gray-100'} ${selectedPlan === plan.name ? 'ring-2 ring-orange-500' : ''}`}
                         onClick={() => setSelectedPlan(plan.name)}
                     >
@@ -75,9 +76,13 @@ export default function BillingPlans() {
                                 </li>
                             ))}
                         </ul>
-                        <button 
+                        <button
                             className={`w-full py-4 rounded-xl font-bold text-lg transition-colors flex items-center justify-center gap-2 ${plan.button}`}
-                            onClick={(e) => { e.stopPropagation(); setSelectedPlan(plan.name); handleContinue(); }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPlan(plan.name);
+                                handleContinue(plan.name);
+                            }}
                         >
                             Select {plan.name} <ArrowRight size={20} />
                         </button>

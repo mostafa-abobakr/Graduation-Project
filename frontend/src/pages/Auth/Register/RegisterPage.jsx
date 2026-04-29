@@ -9,13 +9,14 @@ import { Loader2 } from "lucide-react";
 
 import AuthContainer from "@/components/AuthContainer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRegisterContext } from "@/contexts/Valdation";
 
 const validationSchema = Yup.object({
   fullName: Yup.string().required("Full Name is required"),
   email: Yup.string()
     .email("Invalid email address")
     .required("Email is required"),
-  regPhone: Yup.string()
+  userPhone: Yup.string()
     .matches(/^[0-9]+$/, "Phone must contain only numbers")
     .min(11, "Phone Number must be at least 11 digits")
     .required("Phone is required"),
@@ -32,11 +33,14 @@ const RegisterPage = () => {
   const [submitError, setSubmitError] = useState("");
   const { register } = useAuth();
 
+    const { formData, updateFromData } = useRegisterContext();
+  
+
   const formik = useFormik({
     initialValues: {
       fullName: "",
       email: "",
-      regPhone: "",
+      userPhone: "",
       password: "",
       restaurantName: "",
       restaurantPhone: "",
@@ -47,6 +51,7 @@ const RegisterPage = () => {
       setSubmitError("");
       try {
         // await register(values);
+            updateFromData(values);
         navigate("/register/restaurant-location");
       } catch (error) {
         setSubmitError(error.message || "Registration failed. Please try again.");
@@ -103,31 +108,34 @@ const RegisterPage = () => {
         </div>
 
         <div>
-          <Label htmlFor="regPhone" className="text-foreground text-sm">Phone</Label>
+          <Label htmlFor="userPhone" className="text-foreground text-sm">Phone</Label>
           <Input
-             id="regPhone"
-              name="regPhone"
+            id="userPhone"
+            name="userPhone"
             type="tel"
             placeholder="01xxxxxxxxx"
-            value={formik.values.regPhone}
-            onChange={formik.handleChange}
+            value={formik.values.userPhone}
+            onChange={(e) => {
+              // console.log("PHONE:", e.target.value);
+              formik.handleChange(e);
+            }}
             onBlur={formik.handleBlur}
             className="mt-1.5 bg-muted/30 border-border/60"
             autoComplete="tel"
           />
           {/* <Input
-              id="regPhone"
-              name="regPhone"
+              id="userPhone"
+              name="userPhone"
               type="tel"
               placeholder="01xxxxxxxxx"
               className=" bg-muted/20 border-border/80 "
-              value={formik.values.regPhone}
+              value={formik.values.userPhone}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
               autoComplete="tel"
             /> */}
-          {formik.touched.regPhone && formik.errors.regPhone && (
-            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.regPhone}</p>
+          {formik.touched.userPhone && formik.errors.userPhone && (
+            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.userPhone}</p>
           )}
         </div>
 
@@ -180,22 +188,22 @@ const RegisterPage = () => {
               <p className="text-sm font-medium text-destructive mt-1">{formik.errors.city}</p>
             )}
           </div> */}
-          <div>
-            <Label htmlFor="restaurantPhone" className="text-foreground text-sm">Restaurant Phone</Label>
-            <Input
-              id="restaurantPhone"
-              name="restaurantPhone"
-              type="tel"
-              placeholder="Restaurant Phone"
-              value={formik.values.restaurantPhone}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              className="mt-1.5 bg-muted/30 border-border/60"
-            />
-            {formik.touched.restaurantPhone && formik.errors.restaurantPhone && (
-              <p className="text-sm font-medium text-destructive mt-1">{formik.errors.restaurantPhone}</p>
-            )}
-          </div>
+        <div>
+          <Label htmlFor="restaurantPhone" className="text-foreground text-sm">Restaurant Phone</Label>
+          <Input
+            id="restaurantPhone"
+            name="restaurantPhone"
+            type="tel"
+            placeholder="Restaurant Phone"
+            value={formik.values.restaurantPhone}
+            onChange={formik.handleChange}
+            onBlur={formik.handleBlur}
+            className="mt-1.5 bg-muted/30 border-border/60"
+          />
+          {formik.touched.restaurantPhone && formik.errors.restaurantPhone && (
+            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.restaurantPhone}</p>
+          )}
+        </div>
         {/* </div> */}
 
         {/* <div>
