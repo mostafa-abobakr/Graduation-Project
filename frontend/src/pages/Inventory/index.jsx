@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/api/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -25,6 +25,7 @@ import { CATEGORIES } from "./InventoryUtils";
 export default function InventoryPage() {
   const { user } = useAuth();
   const { settings, addItemsBulk } = useInventoryStore();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["inventoryItems", user?.restId],
@@ -161,7 +162,9 @@ export default function InventoryPage() {
     onSuccess: (responseData) => {
       const message = responseData?.message || "Item added";
       toast.success(message);
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
     },
     onError: (err) => {
       toast.error(err.message || "Failed to add item");
@@ -192,7 +195,9 @@ export default function InventoryPage() {
     onSuccess: (responseData) => {
       const message = responseData?.message || "Item updated";
       toast.success(message);
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
     },
     onError: (err) => {
       toast.error(err.message || "Failed to update item");
@@ -205,7 +210,9 @@ export default function InventoryPage() {
     },
     onSuccess: () => {
       toast.success("Item deleted");
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
     },
     onError: (err) => {
       toast.error(err.message || "Failed to delete item");
@@ -279,7 +286,9 @@ export default function InventoryPage() {
         );
         toast.success("Stock restocked successfully");
       }
-      refetch();
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
     } catch (err) {
       console.error(err);
       toast.error(err?.response?.data?.message || "Operation failed");

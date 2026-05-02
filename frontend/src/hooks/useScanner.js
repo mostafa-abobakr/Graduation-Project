@@ -116,8 +116,9 @@ export function useScanner({ onSuccess }) {
     },
     onSuccess: () => {
       toast.success("Inventory updated successfully from invoice");
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems", user?.restId] });
-      queryClient.invalidateQueries({ queryKey: ["inventoryBatches"] });
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
       if (onSuccess) onSuccess();
     },
     onError: (err) => {
