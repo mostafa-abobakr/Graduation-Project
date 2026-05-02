@@ -1,7 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "@/api/axios";
 
 import DashboardCards from "./DashboardCards";
 import RestaurantsTable from "./RestaurantsTable";
@@ -13,8 +13,8 @@ export default function AdminDashboard() {
     try {
       const token = localStorage.getItem("authToken");
 
-      const res = await axios.get(
-        "https://resturantai.runasp.net/api/admin/dashboard",
+      const res = await api.get(
+        "/admin/dashboard",
         {
           headers: {
             Authorization: `Bearer ${token}`,

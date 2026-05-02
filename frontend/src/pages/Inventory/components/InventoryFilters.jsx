@@ -23,8 +23,8 @@ export function InventoryFilters({
         <ViewToggler
           viewMode={filter}
           setViewMode={setFilter}
-          modes={["all", "critical", "low", "expiring", "good"]}
-          labels={["All", "Critical", "Low", "Expiring", "In stock"]}
+          modes={["all", "critical", "low", "good"]}
+          labels={["All", "Critical", "Low", "In stock"]}
         />
       </div>
       <div className="flex gap-2 items-center">

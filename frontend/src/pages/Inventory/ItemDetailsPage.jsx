@@ -37,6 +37,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft,
   Package,
@@ -54,11 +55,76 @@ import {
   CalendarIcon,
   DollarSign,
   Hash,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
+import { 
+  useInventoryItems, 
+  useBatchDetails, 
+  useItemTransactions, 
+  useDeleteBatch, 
+  useUpdateBatch 
+} from "@/hooks/useInventory";
+import api from "@/api/axios";
 import { toast } from "sonner";
+
+// ─── Consume Group Row ────────────────────────────────────────────────────────
+function ConsumeGroupRow({ event, itemUnit }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-2 relative group w-full">
+      <div 
+        className="flex gap-4 cursor-pointer hover:bg-muted/30 p-2 rounded-lg transition-colors"
+        onClick={() => setExpanded(!expanded)}
+      >
+        <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-muted/50 text-muted-foreground z-10">
+          <TrendingDown className="h-4 w-4" />
+        </div>
+        <div className="flex-1">
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="font-medium text-foreground flex items-center gap-2">
+                Daily Consumption
+              </p>
+              <div className="flex items-center text-xs text-muted-foreground mt-1 gap-1">
+                <CalendarDays className="h-3 w-3" />
+                {new Date(event.dateStr).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="font-mono font-medium text-rose-400">
+                -{event.totalQuantity} {itemUnit}
+              </div>
+              {expanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="ml-12 pl-4 border-l-2 border-border/50 space-y-3 pb-2 pt-1 animate-fade-in">
+          {event.deductions.sort((a, b) => new Date(b.transactionDate).getTime() - new Date(a.transactionDate).getTime()).map(d => (
+            <div key={d.transactionId} className="flex justify-between items-center text-sm">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="h-3 w-3" />
+                {new Date(d.transactionDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                <Badge variant="outline" className="text-[10px] py-0 h-4 bg-muted/20 ml-2">
+                  Batch #{d.batchId}
+                </Badge>
+              </div>
+              <div className="font-mono text-xs text-rose-400/80 mr-11">
+                -{d.quantity} {itemUnit}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Batch Edit Dialog ───────────────────────────────────────────────────────
 function BatchEditDialog({ batch, restId, itemId, open, onClose, token, shelfLife }) {
@@ -86,36 +152,21 @@ function BatchEditDialog({ batch, restId, itemId, open, onClose, token, shelfLif
     return d;
   }, [prodDate, shelfLife]);
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        quantity: parseFloat(qty) || 0,
-        unitCost: parseFloat(unitCost) || 0,
-        productionDate: prodDate
-          ? new Date(prodDate).toISOString()
-          : new Date().toISOString(),
-      };
-      await axios.put(
-        `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/batch/${batch.batchId}`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        },
-      );
-    },
-    onSuccess: () => {
-      toast.success(`Batch #${batch.batchId} updated`);
-      queryClient.invalidateQueries(["batchDetails", restId, itemId]);
-      queryClient.invalidateQueries(["inventoryItems", restId]);
-      onClose();
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to update batch");
-    },
-  });
+  const updateBatchMutation = useUpdateBatch();
+  
+  const handleUpdate = () => {
+    const payload = {
+      quantity: parseFloat(qty) || 0,
+      unitCost: parseFloat(unitCost) || 0,
+      productionDate: prodDate
+        ? new Date(prodDate).toISOString()
+        : new Date().toISOString(),
+    };
+    updateBatchMutation.mutate(
+      { restId, batchId: batch.batchId, payload },
+      { onSuccess: () => onClose() }
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -221,11 +272,11 @@ function BatchEditDialog({ batch, restId, itemId, open, onClose, token, shelfLif
             Cancel
           </Button>
           <Button
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
+            onClick={handleUpdate}
+            disabled={updateBatchMutation.isPending}
             className="gap-2"
           >
-            {mutation.isPending && (
+            {updateBatchMutation.isPending && (
               <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
             )}
             Save Changes
@@ -249,74 +300,21 @@ export default function ItemDetailsPage() {
 
   const queryClient = useQueryClient();
 
-  const deleteBatchMutation = useMutation({
-    mutationFn: async (batchId) => {
-      await axios.delete(
-        `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/batch/${batchId}`,
-        {
-          headers: {
-            accept: "*/*",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        },
-      );
-    },
-    onSuccess: () => {
-      toast.success(`Batch #${deletingBatch?.batchId} deleted`);
-      queryClient.invalidateQueries(["batchDetails", restId, id]);
-      queryClient.invalidateQueries(["inventoryItems", restId]);
-      setDeletingBatch(null);
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to delete batch");
-      setDeletingBatch(null);
-    },
-  });
+  const deleteBatchMutation = useDeleteBatch();
 
-  // Fetch inventory list (for item meta: name, category, unit, reorderLevel…)
-  const { data: items = [], isLoading: itemsLoading } = useQuery({
-    queryKey: ["inventoryItems", user?.restId],
-    queryFn: async () => {
-      const response = await axios.get(
-        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}`,
-      );
-      return response.data.map((item) => ({
-        id: item.inventoryID,
-        name: item.itemName,
-        category: item.category || "Other",
-        quantity: item.stock,
-        unit: item.unit,
-        reorderLevel: item.reorderLevel,
-        cost: item.costPerUnit || 0,
-        shelfLife: item.shelfLife ?? null,
-        batchesCount: item.batchesCount ?? 0,
-        supplier: item.supplier || "Unknown",
-        apiStatus: item.status,
-      }));
-    },
-    enabled: !!user?.restId,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
-  });
+  const handleDeleteBatch = () => {
+    if (!deletingBatch) return;
+    deleteBatchMutation.mutate(
+      { restId, batchId: deletingBatch.batchId },
+      {
+        onSettled: () => setDeletingBatch(null)
+      }
+    );
+  };
 
-  // Fetch live batch details from the dedicated batch endpoint
-  const {
-    data: batchData,
-    isLoading: batchesLoading,
-    isError: batchesError,
-  } = useQuery({
-    queryKey: ["batchDetails", restId, id],
-    queryFn: async () => {
-      const res = await axios.get(
-        `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/item/${id}`,
-        { headers: { accept: "*/*" } },
-      );
-      return res.data;
-    },
-    enabled: !!id && !!restId,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
-  });
+  const { data: items = [], isLoading: itemsLoading } = useInventoryItems(restId);
+  const { data: batchData, isLoading: batchesLoading, isError: batchesError } = useBatchDetails(restId, id);
+  const { data: transactions = [], isLoading: transactionsLoading, isError: transactionsError } = useItemTransactions(restId, id);
 
   const item = items.find((i) => String(i.id) === String(id));
 
@@ -327,72 +325,84 @@ export default function ItemDetailsPage() {
     return new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime();
   });
 
-  const transactionHistory = React.useMemo(() => {
-    if (!batches || batches.length === 0) return [];
-    
-    const logs = [];
-    
-    batches.forEach(batch => {
-      const dateVal = batch.createdAt || batch.productionDate || batch.expiryDate;
-      const rawDate = dateVal ? new Date(dateVal).getTime() : 0;
-      const dateStr = dateVal 
-        ? new Date(dateVal).toLocaleDateString() 
-        : "Unknown Date";
+  const timelineEvents = React.useMemo(() => {
+    if (!transactions || transactions.length === 0) return [];
 
-      let additionAmount = batch.quantity;
-      let hasFakeDeduction = false;
-      let fakeDeductionDate = null;
-      let fakeAmount = 0;
+    const adds = [];
+    const consumes = [];
+    const cutoffTime = new Date();
+    cutoffTime.setDate(cutoffTime.getDate() - 30);
+    const cutoffMs = cutoffTime.getTime();
 
-      // Simulated deduction for visual completeness
-      if (rawDate > 0) {
-        // Deterministic offset: +1 to +3 days based on batchId
-        const offsetDays = ((batch.batchId || 1) % 3) + 1;
-        fakeDeductionDate = new Date(rawDate + (offsetDays * 86400000));
-        
-        // Only show the simulated deduction if the fake date is in the past
-        if (fakeDeductionDate.getTime() < Date.now()) {
-          hasFakeDeduction = true;
-          // Deterministic fake amount (~20% of current quantity)
-          fakeAmount = Math.max(1, Math.floor((batch.quantity || 10) * 0.2)); 
-          
-          // Original addition should be current quantity + deducted amount so the math works out
-          additionAmount = batch.quantity + fakeAmount;
-        }
-      }
-      
-      // Push original addition log
-      logs.push({
-        type: "add",
-        date: dateStr,
-        amount: additionAmount,
-        batchId: batch.batchId,
-        rawDate: rawDate
-      });
+    transactions.forEach(t => {
+      if (!t.transactionDate || new Date(t.transactionDate).getTime() < cutoffMs) return;
 
-      // Push simulated deduction log
-      if (hasFakeDeduction) {
-         logs.push({
-            type: "use",
-            date: fakeDeductionDate.toLocaleDateString(),
-            amount: fakeAmount,
-            batchId: batch.batchId,
-            rawDate: fakeDeductionDate.getTime()
-          });
+      if (t.transactionType === "AddBatch") {
+        adds.push(t);
+      } else if (t.transactionType === "ConsumeBatch") {
+        consumes.push(t);
       }
     });
 
-    return logs.sort((a, b) => b.rawDate - a.rawDate);
-  }, [batches]);
+    const groupedConsumes = {};
+    consumes.forEach(c => {
+      if (!c.transactionDate) return;
+      const dateStr = c.transactionDate.split("T")[0]; 
+      if (!groupedConsumes[dateStr]) {
+        groupedConsumes[dateStr] = {
+          type: "consumeGroup",
+          dateStr: dateStr,
+          rawDate: new Date(dateStr).getTime(),
+          totalQuantity: 0,
+          deductions: []
+        };
+      }
+      groupedConsumes[dateStr].totalQuantity += c.quantity;
+      groupedConsumes[dateStr].deductions.push(c);
+    });
+
+    const events = [
+      ...adds.map(a => ({
+        type: "add",
+        dateStr: a.transactionDate, 
+        rawDate: new Date(a.transactionDate).getTime(),
+        data: a
+      })),
+      ...Object.values(groupedConsumes)
+    ];
+
+    return events.sort((a, b) => b.rawDate - a.rawDate);
+  }, [transactions]);
 
   const totalQuantity = batchData?.totalQuantity ?? item?.quantity ?? 0;
 
   // ── Loading state ──
   if (itemsLoading) {
     return (
-      <div className="flex items-center justify-center h-64 gap-3 text-muted-foreground">
-        <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-        Loading item…
+      <div className="space-y-6 max-w-5xl mx-auto py-6 animate-fade-in">
+        {/* Header Skeleton */}
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+          <div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-9 w-48" />
+              <Skeleton className="h-6 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-64 mt-2" />
+          </div>
+        </div>
+
+        {/* KPI Cards Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-32 w-full rounded-xl" />
+        </div>
+
+        {/* Bottom Grid Skeleton */}
+        <div className="flex flex-col gap-6">
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </div>
       </div>
     );
   }
@@ -540,13 +550,13 @@ export default function ItemDetailsPage() {
       </div>
 
       {/* ── Bottom Grid: Batches + History ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="flex flex-col gap-6">
         {/* Active Batches */}
         <Card className="border-border/50 shadow-sm bg-card h-full">
           <CardHeader className="flex flex-row items-center justify-between pb-4">
             <div className="space-y-1">
               <CardTitle className="text-lg flex items-center gap-2">
-                <Layers className="h-5 w-5 text-primary" />
+                <Layers className="h-5 w-5 text-primary" strokeWidth={2.5} />
                 Active Batches
               </CardTitle>
               <CardDescription>
@@ -573,22 +583,25 @@ export default function ItemDetailsPage() {
             ) : sortedBatches.length > 0 ? (
               <div className="rounded-md border border-border/50 overflow-hidden">
                 <table className="w-full text-xs">
-                  <thead className="bg-muted/50 border-b border-border/50">
+                  <thead className="bg-muted/50 border-b border-gray-700/50">
                     <tr>
-                      <th className="py-2.5 px-3 text-left font-medium text-muted-foreground">
+                      <th className="py-2.5 px-3 text-left font-medium text-slate-300">
                         Batch
                       </th>
-                      <th className="py-2.5 px-3 text-right font-medium text-muted-foreground">
+                      <th className="py-2.5 px-3 text-center font-medium text-slate-300">
                         Qty
                       </th>
-                      <th className="py-2.5 px-3 text-right font-medium text-muted-foreground">
+                      <th className="py-2.5 px-3 text-right font-medium text-slate-300">
                         Cost/u
                       </th>
-                      <th className="py-2.5 px-3 text-center font-medium text-muted-foreground">
+                      <th className="py-2.5 px-3 text-center font-medium text-slate-300">
                         Expiry
                       </th>
-                      <th className="py-2.5 px-3 text-center font-medium text-muted-foreground">
+                      <th className="py-2.5 px-3 text-center font-medium text-slate-300">
                         Status
+                      </th>
+                      <th className="py-2.5 px-5 text-right font-medium text-slate-300">
+                        Actions
                       </th>
                     </tr>
                   </thead>
@@ -602,32 +615,14 @@ export default function ItemDetailsPage() {
                           key={batch.batchId ?? idx}
                           className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors group"
                         >
-                          {/* Batch ID + edit button */}
+                          {/* Batch ID */}
                           <td className="py-2.5 px-3">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-medium text-muted-foreground">
-                                #{batch.batchId ?? "—"}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-blue-500 hover:bg-blue-500/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                onClick={() => setEditingBatch(batch)}
-                              >
-                                <Pencil className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6 text-destructive hover:bg-destructive/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                onClick={() => setDeletingBatch(batch)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
+                            <span className="font-medium text-muted-foreground">
+                              #{batch.batchId ?? "—"}
+                            </span>
                           </td>
                           {/* Qty */}
-                          <td className="py-2.5 px-3 text-right">
+                          <td className="py-2.5 px-3 text-center">
                             <span className="font-mono font-semibold text-sm">
                               {batch.quantity}
                             </span>
@@ -660,6 +655,27 @@ export default function ItemDetailsPage() {
                               {isExpired ? "Expired" : "Active"}
                             </Badge>
                           </td>
+                          {/* Actions */}
+                          <td className="py-2.5 px-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-gray-500 hover:text-blue-500 hover:bg-blue-500/10 rounded-full transition-colors shrink-0"
+                                onClick={() => setEditingBatch(batch)}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-gray-500 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors shrink-0"
+                                onClick={() => setDeletingBatch(batch)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}
@@ -682,68 +698,81 @@ export default function ItemDetailsPage() {
         <Card className="border-border/50 shadow-sm bg-card h-full">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
-              <History className="h-5 w-5 text-primary" />
+              <History className="h-5 w-5 text-primary" strokeWidth={2.5} />
               Transaction History
             </CardTitle>
             <CardDescription>
-              Log of all additions, usages, and waste for this item.
+              Log of all additions and daily consumptions.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-6">
-              {transactionHistory && transactionHistory.length > 0 ? (
-                transactionHistory.map((log, idx) => (
-                  <div key={idx} className="flex gap-4 relative">
-                    {idx !== transactionHistory.length - 1 && (
-                      <div className="absolute left-4 top-8 bottom-[-24px] w-px bg-border/50" />
-                    )}
-                    <div
-                      className={`h-8 w-8 rounded-full shrink-0 flex items-center justify-center relative z-10 ${
-                        log.type === "add"
-                          ? "bg-primary/10 text-primary"
-                          : "bg-warning/10 text-warning"
-                      }`}
-                    >
-                      {log.type === "add" ? (
-                        <TrendingUp className="h-4 w-4" />
-                      ) : (
-                        <TrendingDown className="h-4 w-4" />
+            {transactionsLoading ? (
+              <div className="flex items-center justify-center py-10 gap-2 text-muted-foreground">
+                <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+                Loading history...
+              </div>
+            ) : transactionsError ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center bg-destructive/5 rounded-lg border border-dashed border-destructive/20">
+                <AlertCircle className="h-8 w-8 text-destructive mb-3 opacity-70" />
+                <p className="font-medium text-foreground">
+                  Could not load transactions
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {timelineEvents && timelineEvents.length > 0 ? (
+                  timelineEvents.map((event, idx) => (
+                    <div key={idx} className="flex gap-4 relative">
+                      {idx !== timelineEvents.length - 1 && (
+                        <div className="absolute left-4 top-10 bottom-[-16px] w-px bg-border/50" />
                       )}
-                    </div>
-                    <div className="flex-1 pb-6">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-medium text-foreground flex items-center gap-2">
-                            {log.type === "add" ? "Stock Added" : "Stock Used"}
-                            {log.batchId && (
-                              <Badge variant="outline" className="text-[10px] py-0 h-4 bg-muted/50">
-                                Batch #{log.batchId}
-                              </Badge>
-                            )}
-                          </p>
-                          <div className="flex items-center text-xs text-muted-foreground mt-1 gap-1">
-                            <CalendarDays className="h-3 w-3" />
-                            {log.date}
+                      
+                      {event.type === "add" ? (
+                        <div className="flex gap-4 p-2 w-full">
+                          <div className="h-8 w-8 rounded-full shrink-0 flex items-center justify-center bg-primary/10 text-primary z-10">
+                            <TrendingUp className="h-4 w-4" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium text-foreground flex items-center gap-2">
+                                  Restock
+                                  {event.data.batchId && (
+                                    <Badge variant="outline" className="text-[10px] py-0 h-4 bg-primary/5 text-primary border-primary/20">
+                                      Batch #{event.data.batchId}
+                                    </Badge>
+                                  )}
+                                </p>
+                                <div className="flex items-center text-xs text-muted-foreground mt-1 gap-1">
+                                  <CalendarDays className="h-3 w-3" />
+                                  {new Date(event.dateStr).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-mono font-medium text-primary">
+                                  +{event.data.quantity} {item?.unit}
+                                </div>
+                                {(event.data.price > 0) && (
+                                  <div className="text-xs text-muted-foreground mt-1 font-mono">
+                                    ${event.data.price.toFixed(2)} / unit
+                                  </div>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div
-                          className={`font-mono font-medium ${
-                            log.type === "add" ? "text-primary" : "text-warning"
-                          }`}
-                        >
-                          {log.type === "add" ? "+" : "-"}
-                          {log.amount} {item.unit}
-                        </div>
-                      </div>
+                      ) : (
+                        <ConsumeGroupRow event={event} itemUnit={item?.unit} />
+                      )}
                     </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-center text-muted-foreground py-8 border border-dashed border-border/50 rounded-lg bg-muted/10">
-                  No history recorded for this item.
-                </p>
-              )}
-            </div>
+                  ))
+                ) : (
+                  <p className="text-center text-muted-foreground py-8 border border-dashed border-border/50 rounded-lg bg-muted/10">
+                    No history recorded for this item.
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -782,9 +811,7 @@ export default function ItemDetailsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() =>
-                deleteBatchMutation.mutate(deletingBatch?.batchId)
-              }
+              onClick={handleDeleteBatch}
               disabled={deleteBatchMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
             >

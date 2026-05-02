@@ -3,6 +3,9 @@ import { ToastIcon } from "./ConnectPosPage";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthorizationSuccess from "./AuthorizationSuccess";
+import { registerUser } from "@/services/authService";
+import { useAuth } from "@/contexts/AuthContext";
+import api from "@/api/axios";
 
 
 const permissions =
@@ -46,9 +49,41 @@ export default function PosAuthorizePage() {
         setErrorMap("");
         
         try {
-            await new Promise((resolve) => setTimeout(resolve, 1500));
+            const stored = localStorage.getItem("register");
+
+            if (!stored) {
+                console.error("No registration data found. Please log in.");
+                navigate("/login");
+                return;
+            }
+
+            const formData = JSON.parse(stored);
+            console.log("formData:",formData)
+            if (!formData || !formData.email || !formData.password) {
+                console.error("Incomplete login credentials. Please log in again.");
+                navigate("/login");
+                return;
+            }
+
+            try {
+                await api.post("/Auth/register", formData);
+            } catch (err) {
+                const errorData = err.response?.data;
+                const msg = typeof errorData === "string" ? errorData : errorData?.message || errorData?.title;
+                if (msg !== "Email already exists" && msg !== "User already exists") {
+                    setErrorMap(msg || "Failed to register account.");
+                    setIsLoading(false);
+                    return;
+                }
+            }
+
             
-            setIsSuccess(true);
+            const success = await login(formData.email, formData.password);
+            if (success) {
+                navigate("/dashboard");
+            } else {
+                navigate("/login");
+            }
         } catch (error) {
             setErrorMap("Failed to connect to Toast. Please try again.");
         } finally {

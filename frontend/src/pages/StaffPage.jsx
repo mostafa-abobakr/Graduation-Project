@@ -24,6 +24,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import api from "@/api/axios";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SummaryCard } from "@/components/shared/SummaryCard";
@@ -77,15 +78,8 @@ function getRestIdFromToken() {
       const token = getToken();
       if (!token) throw new Error("No authentication token found");
       
-      const response = await fetch("https://resturantai.runasp.net/api/Employees", {
-        headers: { Accept: "*/*", Authorization: `Bearer ${token}` },
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch employees: ${response.status}`);
-      }
-      
-      return response.json();
+      const response = await api.get("/Employees");
+      return response.data;
     },
     retry: 1,
     retryDelay: 1000,
@@ -118,22 +112,8 @@ function getRestIdFromToken() {
       const token = getToken();
       if (!token) throw new Error("No authentication token found");
       
-      const response = await fetch("http://resturantai.runasp.net/api/Employees", {
-        method: "POST",
-        headers: {
-          Accept: "*/*",
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(employeeData),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `Failed to add employee: ${response.status}`);
-      }
-      
-      return response.json();
+      const response = await api.post("/Employees", employeeData);
+      return response.data;
     },
     onSuccess: () => {
       toast.success("Employee added successfully!");
