@@ -15,12 +15,12 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
-import { InventoryFilters } from "./components/InventoryFilters";
-import { InventoryTable } from "./components/InventoryTable";
-import { ItemFormDialog } from "./components/ItemFormDialog";
+import { InventoryFilters } from "./InventoryFilters";
+import { InventoryTable } from "./InventoryTable";
+import { ItemFormDialog } from "./ItemFormDialog";
 import { ScannerDialog } from "./ScannerDialog";
-import { RestockDialog } from "./components/RestockDialog";
-import { CATEGORIES } from "./components/InventoryUtils";
+import { RestockDialog } from "./RestockDialog";
+import { CATEGORIES } from "./InventoryUtils";
 
 export default function InventoryPage() {
   const { user } = useAuth();
@@ -251,12 +251,7 @@ export default function InventoryPage() {
       return;
     }
 
-    const token = user?.token || localStorage.getItem("authToken");
     const restId = user?.restId || 2;
-    const headers = {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
 
     try {
       if (mode === "deduct") {
@@ -266,8 +261,7 @@ export default function InventoryPage() {
         }
         await api.post(
           `/InventoryBatch/restaurant/${restId}/item/${restockItem.id}/withdraw?quantity=${qty}`,
-          "",
-          { headers },
+          ""
         );
         toast.success("Stock deducted successfully");
       } else {
@@ -281,8 +275,7 @@ export default function InventoryPage() {
         };
         await api.post(
           `/InventoryBatch/restaurant/${restId}/restock`,
-          payload,
-          { headers },
+          payload
         );
         toast.success("Stock restocked successfully");
       }

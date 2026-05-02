@@ -4,9 +4,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Scan, Save } from "lucide-react";
 import { useScanner } from "@/hooks/useScanner";
 
-import { InvoiceUploader } from "./components/Scanner/InvoiceUploader";
-import { MatchedItemsTable } from "./components/Scanner/MatchedItemsTable";
-import { UnmatchedItemsTable } from "./components/Scanner/UnmatchedItemsTable";
+import { InvoiceUploader } from "./InvoiceUploader";
+import { MatchedItemsTable } from "./MatchedItemsTable";
+import { UnmatchedItemsTable } from "./UnmatchedItemsTable";
 
 export function ScannerDialog({ open, setOpen, existingInventory = [], onSuccess }) {
   const [mappedItems, setMappedItems] = useState([]);
