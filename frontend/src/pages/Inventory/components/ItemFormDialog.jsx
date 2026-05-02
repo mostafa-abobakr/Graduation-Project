@@ -28,7 +28,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CATEGORIES, UNITS, emptyForm } from "./InventoryUtils";
+import { CATEGORIES, UNITS, emptyForm } from "../utils/InventoryUtils";
 import { toast } from "sonner";
 
 const todayStr = () => format(new Date(), "yyyy-MM-dd");

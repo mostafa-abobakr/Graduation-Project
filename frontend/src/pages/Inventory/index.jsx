@@ -15,12 +15,12 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
-import { InventoryFilters } from "./InventoryFilters";
-import { InventoryTable } from "./InventoryTable";
-import { ItemFormDialog } from "./ItemFormDialog";
+import { InventoryFilters } from "./components/InventoryFilters";
+import { InventoryTable } from "./components/InventoryTable";
+import { ItemFormDialog } from "./components/ItemFormDialog";
 import { ScannerDialog } from "./ScannerDialog";
-import { RestockDialog } from "./RestockDialog";
-import { CATEGORIES } from "./InventoryUtils";
+import { RestockDialog } from "./components/RestockDialog";
+import { CATEGORIES } from "./utils/InventoryUtils";
 
 export default function InventoryPage() {
   const { user } = useAuth();
