@@ -147,7 +147,11 @@ export function InventoryTable({
                   </td>
 
                   <td className="py-3 px-4 text-center font-mono">
-                    <span className={isCritical ? "text-destructive font-semibold" : ""}>
+                    <span
+                      className={
+                        isCritical ? "text-destructive font-semibold" : ""
+                      }
+                    >
                       {Math.floor(i.quantity)} {formatUnit(i.unit)}
                     </span>
                     <div className="text-xs text-muted-foreground">
@@ -157,8 +161,12 @@ export function InventoryTable({
 
                   <td className="py-3 px-4 hidden md:table-cell">
                     <div className="flex justify-center">
-                      <Badge className={statusMeta[i.status].class + " border-0"}>
-                        {isCritical && <AlertTriangle className="h-3 w-3 mr-1" />}
+                      <Badge
+                        className={statusMeta[i.status].class + " border-0"}
+                      >
+                        {isCritical && (
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                        )}
                         {statusMeta[i.status].label}
                       </Badge>
                     </div>
@@ -191,7 +199,13 @@ export function InventoryTable({
                   {/* CRUD actions: View, Edit, Delete */}
                   <td className="py-3 px-4">
                     <div className="flex justify-center gap-1">
-                      <Button asChild variant="ghost" size="icon" className="h-8 w-8">
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="icon"
+                        title="Details"
+                        className="h-7 w-7 text-gray-500 hover:text-white hover:bg-white/10 transition-colors shrink-0"
+                      >
                         <Link to={`/inventory/${i.id}`}>
                           <Eye className="h-4 w-4" />
                         </Link>
@@ -199,7 +213,8 @@ export function InventoryTable({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        title="Edit"
+                        className="h-7 w-7 text-gray-500 hover:text-blue-500 hover:bg-blue-500/10 transition-colors shrink-0"
                         onClick={() => openEdit(i)}
                       >
                         <Pencil className="h-4 w-4" />
@@ -209,14 +224,17 @@ export function InventoryTable({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-destructive"
+                            title="Delete"
+                            className="h-7 w-7 text-gray-500 hover:text-red-500 hover:bg-red-500/10 transition-colors shrink-0"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete "{i.name}"?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              Delete "{i.name}"?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
                               This permanently removes the item from inventory.
                             </AlertDialogDescription>
