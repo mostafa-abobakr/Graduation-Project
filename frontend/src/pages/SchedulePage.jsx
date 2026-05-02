@@ -35,8 +35,10 @@ import {
 import { toast } from "sonner";
 import api from "@/api/axios";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function SchedulePage() {
+  const { user } = useAuth();
   const [weekOffset, setWeekOffset] = useState(0);
   const [viewMode, setViewMode] = useState("week");
   const [isPublishing, setIsPublishing] = useState(false);
@@ -58,23 +60,7 @@ export default function SchedulePage() {
     shiftType: "Morning"
   });
 
-  const getRestId = () => {
-    try {
-      let token = localStorage.getItem("authToken");
-      if (!token) {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) token = JSON.parse(storedUser).token;
-      }
 
-      if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return parseInt(payload.RestID || payload.restId || payload.restID || "0", 10);
-      }
-    } catch (e) {
-      console.error("Could not parse token", e);
-    }
-    return 0;
-  };
 
   const handleAddShiftClick = (date) => {
     const formattedDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString();
@@ -124,15 +110,9 @@ export default function SchedulePage() {
 
     setIsSubmitting(true);
     try {
-      let token = localStorage.getItem("authToken");
-      if (!token) {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) token = JSON.parse(storedUser).token;
-      }
-
       const payload = {
         empID: parseInt(formData.empID, 10),
-        restID: getRestId(),
+        restID: user?.restId || 0,
         day: selectedDate,
         startTime: formData.startTime + ":00",
         endTime: formData.endTime + ":00",
@@ -169,12 +149,6 @@ export default function SchedulePage() {
 
     setIsDeleting(true);
     try {
-      let token = localStorage.getItem("authToken");
-      if (!token) {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) token = JSON.parse(storedUser).token;
-      }
-
       await api.delete(`/Schedule/${editingShiftId}`);
       
       toast.success("Shift deleted successfully!");
@@ -211,19 +185,6 @@ export default function SchedulePage() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        let token = localStorage.getItem("authToken");
-        if (!token) {
-          const storedUser = localStorage.getItem("user");
-          if (storedUser) {
-            token = JSON.parse(storedUser).token;
-          }
-        }
-        
-        if (!token) {
-          console.warn("No authentication token found. Please log in.");
-          return;
-        }
-
         const response = await api.get("/Employees");
         const data = response.data;
         
@@ -277,12 +238,6 @@ export default function SchedulePage() {
 
       setIsLoadingShifts(true);
       try {
-        let token = localStorage.getItem("authToken");
-        if (!token) {
-          const storedUser = localStorage.getItem("user");
-          if (storedUser) token = JSON.parse(storedUser).token;
-        }
-
         const url = `/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`;
         const response = await api.get(url);
         const data = response.data;

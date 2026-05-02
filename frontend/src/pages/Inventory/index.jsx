@@ -20,7 +20,7 @@ import { InventoryTable } from "./components/InventoryTable";
 import { ItemFormDialog } from "./components/ItemFormDialog";
 import { ScannerDialog } from "./ScannerDialog";
 import { RestockDialog } from "./components/RestockDialog";
-import { CATEGORIES } from "./utils/InventoryUtils";
+import { CATEGORIES } from "./components/InventoryUtils";
 
 export default function InventoryPage() {
   const { user } = useAuth();
@@ -29,9 +29,7 @@ export default function InventoryPage() {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["inventoryItems", user?.restId],
     queryFn: async () => {
-      const response = await api.get(
-        `/Inventory/restaurant/${user.restId}`,
-      );
+      const response = await api.get(`/Inventory/restaurant/${user.restId}`);
       return response.data.map((item) => ({
         id: item.inventoryID,
         name: item.itemName,
@@ -157,10 +155,7 @@ export default function InventoryPage() {
           ? new Date(formData.productionDate).toISOString()
           : new Date().toISOString(),
       };
-      const response = await api.post(
-        "/Inventory",
-        payload,
-      );
+      const response = await api.post("/Inventory", payload);
       return response.data;
     },
     onSuccess: (responseData) => {
@@ -206,9 +201,7 @@ export default function InventoryPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await api.delete(
-        `/Inventory/restaurant/${user.restId}/${id}`,
-      );
+      await api.delete(`/Inventory/restaurant/${user.restId}/${id}`);
     },
     onSuccess: () => {
       toast.success("Item deleted");

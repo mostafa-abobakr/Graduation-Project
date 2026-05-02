@@ -33,7 +33,7 @@ import { SummaryCard } from "@/components/shared/SummaryCard";
 const SHIFT_OPTIONS = ["Morning", "Evening", "Night"];
 
 export default function StaffPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
 
@@ -51,33 +51,12 @@ export default function StaffPage() {
     password: ""
   });
 
-function getToken() {
-  let token = localStorage.getItem("authToken");
-  if (!token) {
-    const stored = localStorage.getItem("user");
-    if (stored) token = JSON.parse(stored).token;
-  }
-  return token;
-}
 
-function getRestIdFromToken() {
-  try {
-    const token = getToken();
-    if (token) {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return parseInt(payload.RestID || payload.restId || payload.restID || "0", 10);
-    }
-  } catch { /* ignore */ }
-  return 0;
-}
 
   /* ── Fetch employees with TanStack Query ──────────────────────────────────── */
   const { data: employees = [], isLoading, error, isError } = useQuery({
     queryKey: ["employees"],
     queryFn: async () => {
-      const token = getToken();
-      if (!token) throw new Error("No authentication token found");
-      
       const response = await api.get("/Employees");
       return response.data;
     },
@@ -90,7 +69,7 @@ function getRestIdFromToken() {
     e.preventDefault();
     
     const payload = {
-      restID: getRestIdFromToken(),
+      restID: user?.restId || 0,
       fullName: formData.fullName,
       role: formData.role,
       salary: parseFloat(formData.salary) || 0,
@@ -109,9 +88,6 @@ function getRestIdFromToken() {
   /* ── Add employee with TanStack Query Mutation ──────────────────────────────────── */
   const addEmployeeMutation = useMutation({
     mutationFn: async (employeeData) => {
-      const token = getToken();
-      if (!token) throw new Error("No authentication token found");
-      
       const response = await api.post("/Employees", employeeData);
       return response.data;
     },
