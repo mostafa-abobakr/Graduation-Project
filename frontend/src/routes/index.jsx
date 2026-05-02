@@ -52,10 +52,7 @@ const Routes = [
     path: ROUTES.LOGIN,
     element: <Login />,
   },
-  {
-    path: "stripe",
-    element: <PaymentStripe />,
-  },
+ 
   {
     path: "/register",
     element: <Register />,

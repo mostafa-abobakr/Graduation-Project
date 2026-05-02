@@ -21,7 +21,7 @@ const {login} = useAuth();
         // Navigate to billing plan selection rather than dashboard
         setTimeout(() => {
             navigate("/register/plans");
-        }, 500);
+        }, 1000);
     }
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
@@ -97,16 +97,16 @@ const {login} = useAuth();
                 </div>
 
                 {/* Redirect Box */}
-                {/* <div className="bg-blue-50 p-4 rounded-xl text-sm text-blue-600 mb-6">
+                {loading && <div className="bg-blue-50 p-4 rounded-xl text-sm text-blue-600 mb-6">
                     Redirecting... You will be redirected shortly
-                </div> */}
+                </div>}
 
                 {/* Button */}
                 <button
                     onClick={signInHandler}
                     className={`w-full py-3 rounded-xl text-white font-medium ${bgColor}`}
                 >
-                    {loading ? <Loader2 className="animate-spin" /> : "Continue"}
+                    {loading ? <Loader2 className="animate-spin mx-auto" /> : "Continue"}
                 </button>
 
                 {/* Footer */}

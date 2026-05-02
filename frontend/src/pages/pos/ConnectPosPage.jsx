@@ -102,9 +102,9 @@ export default function ConnectPOS() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background  p-6">
       {/* Title */}
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">
+      <h1 className="text-3xl font-bold  mb-2">
         Connect Your POS System
       </h1>
       <p className="text-gray-500 mb-10">
@@ -143,7 +143,7 @@ export default function ConnectPOS() {
               </div>
 
              
-              <h3 className="text-md font-bold text-black">{pos.name}</h3>
+              <h3 className="text-md font-bold ">{pos.name}</h3>
             </div>
           );
         })}
@@ -157,7 +157,7 @@ export default function ConnectPOS() {
       >
         {loading ? "Connecting..." : "Connect to POS →"}
       </button>
-
+        
       {/* Footer */}
       <p className="text-gray-400 text-sm mt-6 text-center">
         Secure OAuth 2.0 authentication • Your credentials are never stored

@@ -58,7 +58,7 @@ const RestaurantLocation = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const { formData, resetFormData } = useRegisterContext();
+  const { formData, updateFromData } = useRegisterContext();
   const { register } = useAuth();
 
   const formik = useFormik({
@@ -71,10 +71,10 @@ const RestaurantLocation = () => {
       setIsSubmitting(true);
       setSubmitError("");
       try {
+        updateFromData(values); // 1. Save data to local storage
         const completeData = { ...formData, ...values };
-        await register(completeData);
-        resetFormData();
-        navigate("/register/connect-pos");
+        await register(completeData); // 2. Register
+        navigate("/register/connect-pos"); // 3. Navigate
       } catch (error) {
         setSubmitError(error.response?.data?.message || "Registration failed. Please try again.");
       } finally {
