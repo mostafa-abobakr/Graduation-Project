@@ -28,7 +28,7 @@ export default function InventoryForecastPage() {
     queryKey: ["inventoryForecast", user?.restId],
     queryFn: async () => {
       const res = await fetch(
-        `https://resturantai.runasp.net/api/InventoryForecast/restaurant/${user.restId}`,
+        `/InventoryForecast/restaurant/${user.restId}`,
       );
       if (!res.ok) throw new Error("Failed to fetch inventory forecast");
       return res.json();

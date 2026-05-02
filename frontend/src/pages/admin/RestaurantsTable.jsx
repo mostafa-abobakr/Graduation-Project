@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import api from "@/api/axios";
 import { CalendarCheck, Ban, MoreVertical, Pencil, Search, Store } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -114,8 +114,8 @@ export default function RestaurantsTable({ restaurants, loading }) {
     }
     try {
       const token = localStorage.getItem("authToken");
-      await axios.post(
-        "http://resturantai.runasp.net/api/Restaurant",
+      await api.post(
+        "/Restaurant",
         {
           restaurantName: formData.restaurantName,
           ownerEmail: formData.ownerEmail,
@@ -142,8 +142,8 @@ export default function RestaurantsTable({ restaurants, loading }) {
   const handleUpdateSubmit = async (formData) => {
     try {
       const token = localStorage.getItem("authToken");
-      await axios.put(
-        `http://resturantai.runasp.net/api/admin/restaurants/${restaurantToUpdate.restaurantId}`,
+      await api.put(
+        `/admin/restaurants/${restaurantToUpdate.restaurantId}`,
         {
           restaurantName: formData.restaurantName,
           isActive: formData.status === "Active",
@@ -174,8 +174,8 @@ export default function RestaurantsTable({ restaurants, loading }) {
         targets.map(async (id) => {
           const restaurant = restaurants?.find((r) => r.restaurantId === id);
           if (restaurant) {
-            await axios.put(
-              `http://resturantai.runasp.net/api/admin/restaurants/${id}`,
+            await api.put(
+              `/admin/restaurants/${id}`,
               {
                 restaurantName: restaurant.restaurantName,
                 isActive,

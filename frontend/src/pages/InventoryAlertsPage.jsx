@@ -265,7 +265,7 @@ export default function InventoryAlertsPage() {
     queryKey: ["inventoryAlerts", user?.restId],
     queryFn: async () => {
       const res = await fetch(
-        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}/alerts`,
+        `/Inventory/restaurant/${user.restId}/alerts`,
       );
       if (!res.ok) throw new Error("Failed to fetch inventory alerts");
       return res.json();

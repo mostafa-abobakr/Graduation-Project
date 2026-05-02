@@ -33,6 +33,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import api from "@/api/axios";
 import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function SchedulePage() {
@@ -142,18 +143,12 @@ export default function SchedulePage() {
         payload.scheduleID = editingShiftId;
       }
 
-      const method = isEditMode ? "PUT" : "POST";
-      const response = await fetch("https://resturantai.runasp.net/api/Schedule", {
-        method: method,
-        headers: {
-          "Accept": "*/*",
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (!response.ok) throw new Error(`Failed to ${isEditMode ? "update" : "create"} shift`);
+      let response;
+      if (isEditMode) {
+        response = await api.put("/Schedule", payload);
+      } else {
+        response = await api.post("/Schedule", payload);
+      }
       
       toast.success(`Shift ${isEditMode ? "updated" : "added"} successfully!`);
       setIsModalOpen(false);
@@ -180,15 +175,7 @@ export default function SchedulePage() {
         if (storedUser) token = JSON.parse(storedUser).token;
       }
 
-      const response = await fetch(`https://resturantai.runasp.net/api/Schedule/${editingShiftId}`, {
-        method: "DELETE",
-        headers: {
-          "Accept": "*/*",
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) throw new Error("Failed to delete shift");
+      await api.delete(`/Schedule/${editingShiftId}`);
       
       toast.success("Shift deleted successfully!");
       setIsModalOpen(false);
@@ -237,19 +224,8 @@ export default function SchedulePage() {
           return;
         }
 
-        const response = await fetch("https://resturantai.runasp.net/api/Employees", {
-          headers: {
-            "Accept": "*/*",
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        if (!response.ok) {
-          if (response.status === 401) {
-             toast.error("Your session has expired or you are unauthorized. Please log in again.");
-          }
-          throw new Error(`Failed to fetch employees: ${response.status}`);
-        }
-        const data = await response.json();
+        const response = await api.get("/Employees");
+        const data = response.data;
         
         const formattedEmployees = data.map(emp => ({
           id: emp.empID,
@@ -307,15 +283,9 @@ export default function SchedulePage() {
           if (storedUser) token = JSON.parse(storedUser).token;
         }
 
-        const url = `https://resturantai.runasp.net/api/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`;
-        const response = await fetch(url, {
-          headers: {
-            "Accept": "*/*",
-            "Authorization": `Bearer ${token}`
-          }
-        });
-        if (!response.ok) throw new Error("Failed to fetch API");
-        const data = await response.json();
+        const url = `/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`;
+        const response = await api.get(url);
+        const data = response.data;
         
         const formattedShifts = transformScheduleData(data);
         setShifts(formattedShifts);

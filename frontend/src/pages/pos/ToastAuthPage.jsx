@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthorizationSuccess from "./AuthorizationSuccess";
 import { registerUser } from "@/services/authService";
 import { useAuth } from "@/contexts/AuthContext";
-import axios from "axios";
+import api from "@/api/axios";
 
 
 const permissions =
@@ -64,7 +64,7 @@ export default function PosAuthorizePage() {
             }
 
             try {
-                await axios.post("https://resturantai.runasp.net/api/Auth/register", formData);
+                await api.post("/Auth/register", formData);
             } catch (err) {
                 const errorData = err.response?.data;
                 const msg = typeof errorData === "string" ? errorData : errorData?.message || errorData?.title;

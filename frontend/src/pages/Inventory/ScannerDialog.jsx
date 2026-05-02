@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import api from "@/api/axios";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -95,7 +95,7 @@ export function ScannerDialog({
         const formData = new FormData();
         formData.append("file", selectedFile);
 
-        const res = await axios.post(
+        const res = await api.post(
           "https://youseef-awaad-zerobite-ai-engine.hf.space/inventory/invoice-scan/2?mode=auto",
           formData,
           {
@@ -241,8 +241,8 @@ export function ScannerDialog({
               : new Date().toISOString(),
           };
           promises.push(
-            axios.post(
-              `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/restock`,
+            api.post(
+              `/InventoryBatch/restaurant/${restId}/restock`,
               payload,
               { headers },
             ),
@@ -267,8 +267,8 @@ export function ScannerDialog({
                 : new Date().toISOString(),
             };
             promises.push(
-              axios.post(
-                `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/restock`,
+              api.post(
+                `/InventoryBatch/restaurant/${restId}/restock`,
                 payload,
                 { headers },
               ),
@@ -295,8 +295,8 @@ export function ScannerDialog({
               : new Date().toISOString(),
           };
           promises.push(
-            axios.post(
-              `https://resturantai.runasp.net/api/Inventory`,
+            api.post(
+              `/Inventory`,
               createPayload,
               { headers },
             ),

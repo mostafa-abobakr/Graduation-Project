@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import axios from "axios";
+import api from "@/api/axios";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,8 @@ export default function InventoryPage() {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["inventoryItems", user?.restId],
     queryFn: async () => {
-      const response = await axios.get(
-        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}`,
+      const response = await api.get(
+        `/Inventory/restaurant/${user.restId}`,
       );
       return response.data.map((item) => ({
         id: item.inventoryID,
@@ -157,8 +157,8 @@ export default function InventoryPage() {
           ? new Date(formData.productionDate).toISOString()
           : new Date().toISOString(),
       };
-      const response = await axios.post(
-        "https://resturantai.runasp.net/api/Inventory",
+      const response = await api.post(
+        "/Inventory",
         payload,
       );
       return response.data;
@@ -188,8 +188,8 @@ export default function InventoryPage() {
           : parseInt(formData.shelfLifeDays, 10) || formData.shelfLife || 0,
         costPerUnit: formData.cost ?? formData.costPerUnit ?? 0,
       };
-      const response = await axios.put(
-        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}/${id}`,
+      const response = await api.put(
+        `/Inventory/restaurant/${user.restId}/${id}`,
         payload,
       );
       return response.data;
@@ -206,8 +206,8 @@ export default function InventoryPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await axios.delete(
-        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}/${id}`,
+      await api.delete(
+        `/Inventory/restaurant/${user.restId}/${id}`,
       );
     },
     onSuccess: () => {
@@ -271,8 +271,8 @@ export default function InventoryPage() {
           toast.error("Cannot deduct more than current stock");
           return;
         }
-        await axios.post(
-          `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/item/${restockItem.id}/withdraw?quantity=${qty}`,
+        await api.post(
+          `/InventoryBatch/restaurant/${restId}/item/${restockItem.id}/withdraw?quantity=${qty}`,
           "",
           { headers },
         );
@@ -286,8 +286,8 @@ export default function InventoryPage() {
             ? new Date(productionDate).toISOString()
             : new Date().toISOString(),
         };
-        await axios.post(
-          `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/restock`,
+        await api.post(
+          `/InventoryBatch/restaurant/${restId}/restock`,
           payload,
           { headers },
         );

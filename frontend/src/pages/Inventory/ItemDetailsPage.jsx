@@ -59,8 +59,15 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
+import { useQueryClient } from "@tanstack/react-query";
+import { 
+  useInventoryItems, 
+  useBatchDetails, 
+  useItemTransactions, 
+  useDeleteBatch, 
+  useUpdateBatch 
+} from "@/hooks/useInventory";
+import api from "@/api/axios";
 import { toast } from "sonner";
 
 // ─── Consume Group Row ────────────────────────────────────────────────────────
@@ -145,36 +152,21 @@ function BatchEditDialog({ batch, restId, itemId, open, onClose, token, shelfLif
     return d;
   }, [prodDate, shelfLife]);
 
-  const mutation = useMutation({
-    mutationFn: async () => {
-      const payload = {
-        quantity: parseFloat(qty) || 0,
-        unitCost: parseFloat(unitCost) || 0,
-        productionDate: prodDate
-          ? new Date(prodDate).toISOString()
-          : new Date().toISOString(),
-      };
-      await axios.put(
-        `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/batch/${batch.batchId}`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        },
-      );
-    },
-    onSuccess: () => {
-      toast.success(`Batch #${batch.batchId} updated`);
-      queryClient.invalidateQueries(["batchDetails", restId, itemId]);
-      queryClient.invalidateQueries(["inventoryItems", restId]);
-      onClose();
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to update batch");
-    },
-  });
+  const updateBatchMutation = useUpdateBatch();
+  
+  const handleUpdate = () => {
+    const payload = {
+      quantity: parseFloat(qty) || 0,
+      unitCost: parseFloat(unitCost) || 0,
+      productionDate: prodDate
+        ? new Date(prodDate).toISOString()
+        : new Date().toISOString(),
+    };
+    updateBatchMutation.mutate(
+      { restId, batchId: batch.batchId, payload },
+      { onSuccess: () => onClose() }
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -280,11 +272,11 @@ function BatchEditDialog({ batch, restId, itemId, open, onClose, token, shelfLif
             Cancel
           </Button>
           <Button
-            onClick={() => mutation.mutate()}
-            disabled={mutation.isPending}
+            onClick={handleUpdate}
+            disabled={updateBatchMutation.isPending}
             className="gap-2"
           >
-            {mutation.isPending && (
+            {updateBatchMutation.isPending && (
               <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
             )}
             Save Changes
@@ -308,92 +300,21 @@ export default function ItemDetailsPage() {
 
   const queryClient = useQueryClient();
 
-  const deleteBatchMutation = useMutation({
-    mutationFn: async (batchId) => {
-      await axios.delete(
-        `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/batch/${batchId}`,
-        {
-          headers: {
-            accept: "*/*",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        },
-      );
-    },
-    onSuccess: () => {
-      toast.success(`Batch #${deletingBatch?.batchId} deleted`);
-      queryClient.invalidateQueries(["batchDetails", restId, id]);
-      queryClient.invalidateQueries(["inventoryItems", restId]);
-      setDeletingBatch(null);
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to delete batch");
-      setDeletingBatch(null);
-    },
-  });
+  const deleteBatchMutation = useDeleteBatch();
 
-  // Fetch inventory list (for item meta: name, category, unit, reorderLevel…)
-  const { data: items = [], isLoading: itemsLoading } = useQuery({
-    queryKey: ["inventoryItems", user?.restId],
-    queryFn: async () => {
-      const response = await axios.get(
-        `https://resturantai.runasp.net/api/Inventory/restaurant/${user.restId}`,
-      );
-      return response.data.map((item) => ({
-        id: item.inventoryID,
-        name: item.itemName,
-        category: item.category || "Other",
-        quantity: item.stock,
-        unit: item.unit,
-        reorderLevel: item.reorderLevel,
-        cost: item.costPerUnit || 0,
-        shelfLife: item.shelfLife ?? null,
-        batchesCount: item.batchesCount ?? 0,
-        supplier: item.supplier || "Unknown",
-        apiStatus: item.status,
-      }));
-    },
-    enabled: !!user?.restId,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
-  });
+  const handleDeleteBatch = () => {
+    if (!deletingBatch) return;
+    deleteBatchMutation.mutate(
+      { restId, batchId: deletingBatch.batchId },
+      {
+        onSettled: () => setDeletingBatch(null)
+      }
+    );
+  };
 
-  // Fetch live batch details from the dedicated batch endpoint
-  const {
-    data: batchData,
-    isLoading: batchesLoading,
-    isError: batchesError,
-  } = useQuery({
-    queryKey: ["batchDetails", restId, id],
-    queryFn: async () => {
-      const res = await axios.get(
-        `https://resturantai.runasp.net/api/InventoryBatch/restaurant/${restId}/item/${id}`,
-        { headers: { accept: "*/*" } },
-      );
-      return res.data;
-    },
-    enabled: !!id && !!restId,
-    refetchOnWindowFocus: true,
-    staleTime: 0,
-  });
-
-  // Fetch transactions from real endpoint
-  const {
-    data: transactions = [],
-    isLoading: transactionsLoading,
-    isError: transactionsError,
-  } = useQuery({
-    queryKey: ["itemTransactions", restId, id],
-    queryFn: async () => {
-      const res = await axios.get(
-        `https://resturantai.runasp.net/api/InventoryTransactions/restaurant/${restId}/item/${id}`,
-        { headers: { accept: "*/*" } },
-      );
-      return res.data;
-    },
-    enabled: !!id && !!restId,
-    refetchOnWindowFocus: true,
-  });
+  const { data: items = [], isLoading: itemsLoading } = useInventoryItems(restId);
+  const { data: batchData, isLoading: batchesLoading, isError: batchesError } = useBatchDetails(restId, id);
+  const { data: transactions = [], isLoading: transactionsLoading, isError: transactionsError } = useItemTransactions(restId, id);
 
   const item = items.find((i) => String(i.id) === String(id));
 
@@ -890,9 +811,7 @@ export default function ItemDetailsPage() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() =>
-                deleteBatchMutation.mutate(deletingBatch?.batchId)
-              }
+              onClick={handleDeleteBatch}
               disabled={deleteBatchMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 gap-2"
             >
