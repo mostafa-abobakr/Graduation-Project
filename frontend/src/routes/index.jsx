@@ -26,6 +26,7 @@ import { ROUTES } from "./ROUTES";
 import Login from "@/pages/Auth/Login";
 import Register from "@/pages/Auth/Register";
 import RegisterPage from "@/pages/Auth/Register/RegisterPage";
+import RegisterRestaurant from "@/pages/Auth/Register/RegisterRestaurant";
 import RestaurantLocation from "@/pages/Auth/Register/RestaurantLocation";
 import PosOptions from "@/pages/pos/ConnectPosPage";
 import SchedulePage from "@/pages/SchedulePage";
@@ -60,6 +61,10 @@ const Routes = [
       {
         index: true,
         element: <RegisterPage />,
+      },
+      {
+        path: "restaurant-details",
+        element: <RegisterRestaurant />,
       },
       {
         path: "restaurant-location",
