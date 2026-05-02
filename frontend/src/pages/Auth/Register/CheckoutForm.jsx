@@ -2,8 +2,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePayment } from "@/hooks/usePayment";
 import { useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from "@stripe/react-stripe-js";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import AuthContainer from "@/components/AuthContainer";
 
 export default function CheckoutForm({ plan }) {
     const navigate = useNavigate();
@@ -61,63 +62,46 @@ export default function CheckoutForm({ plan }) {
     };
 
     return (
-
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-black px-4">
-
-            <form
-                className="w-full max-w-md p-8 rounded-3xl 
-        bg-white/5 backdrop-blur-2xl border border-white/10 
-        shadow-[0_0_40px_rgba(59,130,246,0.15)] space-y-6"
-                onSubmit={handleSubmit}
-            >
-
-
-                {/* Title */}
-                <div className="text-center space-y-1">
-                    <h2 className="text-white text-xl font-semibold text-center"> Plan {plan} </h2>
-                    <h3 className="text-white text-2xl font-semibold"> Secure Payment </h3>
-                    <p className="text-gray-400 text-sm"> Enter your card details below </p>
-                </div>
-
+        <AuthContainer
+            title={`${plan} Plan - Secure Payment`}
+            description="Enter your card details below"
+        >
+            <form onSubmit={handleSubmit} className="space-y-5 mt-2">
                 {/* Card Number */}
-                <div className="relative p-[1px] rounded-2xl bg-gradient-to-r from-blue-600/40 to-indigo-600/40">
-                    <div className="bg-gray-900/80 rounded-2xl p-4">
+                <div className="space-y-1">
+                    <label className="text-sm font-medium text-foreground">Card Number</label>
+                    <div className="border border-input bg-background rounded-md p-3 shadow-sm">
                         <CardNumberElement options={elementStyle} />
                     </div>
                 </div>
 
                 {/* Expiry + CVC */}
                 <div className="flex gap-4">
-
-                    <div className="relative w-1/2 p-[1px] rounded-2xl bg-gradient-to-r from-blue-600/30 to-indigo-600/30">
-                        <div className="bg-gray-900/80 rounded-2xl p-4">
+                    <div className="w-1/2 space-y-1">
+                        <label className="text-sm font-medium text-foreground">Expiry Date</label>
+                        <div className="border border-input bg-background rounded-md p-3 shadow-sm">
                             <CardExpiryElement options={elementStyle} />
                         </div>
                     </div>
 
-                    <div className="relative w-1/2 p-[1px] rounded-2xl bg-gradient-to-r from-blue-600/30 to-indigo-600/30">
-                        <div className="bg-gray-900/80 rounded-2xl p-4">
+                    <div className="w-1/2 space-y-1">
+                        <label className="text-sm font-medium text-foreground">CVC</label>
+                        <div className="border border-input bg-background rounded-md p-3 shadow-sm">
                             <CardCvcElement options={elementStyle} />
                         </div>
                     </div>
-
                 </div>
 
                 {/* Button */}
                 <button
-                    className="w-full py-3 rounded-2xl font-semibold text-white
-            bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600
-            shadow-lg shadow-blue-500/20
-            hover:scale-[1.02] active:scale-[0.98]
-            transition-all duration-300
-            disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="w-full py-2.5 mt-4 rounded-md font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-sm"
                     disabled={!stripe || loading}
                 >
                     {loading ? (
-                        <span className="flex items-center justify-center gap-2">
-                            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        <>
+                            <span className="w-4 h-4 mr-2 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin"></span>
                             Processing...
-                        </span>
+                        </>
                     ) : (
                         "Pay Now"
                     )}
@@ -125,18 +109,17 @@ export default function CheckoutForm({ plan }) {
 
                 {/* Messages */}
                 {error && (
-                    <p className="text-red-400 text-sm text-center animate-pulse">
+                    <div className="text-destructive font-medium text-sm text-center bg-destructive/10 p-3 rounded-md">
                         {error}
-                    </p>
+                    </div>
                 )}
 
                 {success && (
-                    <p className="text-green-400 text-sm text-center animate-fade-in">
+                    <div className="text-green-600 dark:text-green-400 font-medium text-sm text-center bg-green-500/10 p-3 rounded-md">
                         {success}
-                    </p>
+                    </div>
                 )}
-
             </form>
-        </div>
+        </AuthContainer>
     );
 }

@@ -1,4 +1,4 @@
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import { ToastIcon } from "./ConnectPosPage";
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -38,11 +38,13 @@ export default function PosAuthorizePage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const title = searchParams.get("auth")
     const navigate = useNavigate();
-    const {login} = useAuth();
+   
 
-    const signInHandler = async (e) => {
-        if (e) e.preventDefault();
+    const skipRegistration = () =>{
         
+        navigate("/login")
+    }
+    const handleAllow = async () => {
         setIsLoading(true);
         setErrorMap("");
         
@@ -83,22 +85,9 @@ export default function PosAuthorizePage() {
                 navigate("/login");
             }
         } catch (error) {
-            console.error("Registration/login skip execution failed:", error);
-            setErrorMap("An unexpected error occurred while skipping.");
+            setErrorMap("Failed to connect to Toast. Please try again.");
         } finally {
             setIsLoading(false);
-        }
-    }
-
-    const handleAllow = async () => {
-        setIsLoading(true);
-        setErrorMap("");
-        const result = await registerUser();
-        setIsLoading(false);
-        if (result.success) {
-            setIsSuccess(true);
-        } else {
-            setErrorMap(result.error);
         }
     }
 
@@ -163,30 +152,19 @@ export default function PosAuthorizePage() {
                                     type="button"
                                     onClick={handleAllow}
                                     disabled={isLoading}
-                                    className={`w-full py-2 rounded-md text-white bg-orange-600 disabled:opacity-50`}
+                                    className={`w-full py-2 rounded-md text-white bg-orange-600 disabled:opacity-50 flex items-center justify-center`}
                                 >
-                                    {isLoading ? "Registering..." : "Allow Access"}
+                                    {isLoading ? <Loader2 className="animate-spin" />  : "Allow Access"}
                                 </button>
                                 <button
                                     type="button"
-                                    onClick={signInHandler}
+                                    onClick={skipRegistration}
                                     className="w-full py-2 font-semibold rounded-md border border-gray-400 text-black bg-white hover:bg-gray-50"
                                 >
                                     Skip For Now
                                 </button>
                             </div>
                         </form>
-                        {/* Remember device */}
-                        {/* <div className="flex items-start gap-2 mb-4">
-                        <input type="checkbox" className="mt-1" />
-                        <div>
-                            <p className="text-sm font-medium">Remember this device</p>
-                            <p className="text-xs text-gray-500">
-                                You won't be asked to authorize again
-                            </p>
-                        </div>
-                    </div> */}
-
                     </div>
 
                     {/* Footer */}

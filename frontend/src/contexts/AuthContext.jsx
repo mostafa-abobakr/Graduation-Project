@@ -63,9 +63,10 @@ export function AuthProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         data: data,
       });
-      toast({ title: "Account created!", description: "Please log in with your credentials." });
+      toast({ title: "Account created!", description: "you can  log in with your credentials." });
     } catch (e) {
-      const errorMsg = e.response?.data || e.response?.request?.responseText || "Registration failed";
+      const errorData = e.response?.data;
+      const errorMsg = errorData?.message || (typeof errorData === 'string' ? errorData : "Registration failed");
       toast({ title: "Registration failed", description: errorMsg, variant: "destructive" });
       throw e;
     } finally {
