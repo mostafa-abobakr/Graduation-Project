@@ -23,8 +23,12 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "@/api/axios";
+import { useQueryClient } from "@tanstack/react-query";
+import { useStaffQuery, useAddEmployee } from "@/hooks/useStaff";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SummaryCard } from "@/components/shared/SummaryCard";
@@ -38,74 +42,50 @@ export default function StaffPage() {
   const queryClient = useQueryClient();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    role: "cook",
-    salary: "",
-    phone: "",
-    status: "Active",
-    shift: "Morning",
-    workingHoursPerDay: "8",
-    workingDaysPerWeek: "5",
-    email: "",
-    password: ""
+
+  const employeeSchema = z.object({
+    fullName: z.string().min(1, "Name is required"),
+    role: z.string().min(1, "Role is required"),
+    salary: z.coerce.number().min(0, "Salary must be positive"),
+    phone: z.string().min(1, "Phone is required"),
+    status: z.string().default("Active"),
+    shift: z.string().min(1, "Shift is required"),
+    workingHoursPerDay: z.coerce.number().min(1).default(8),
+    workingDaysPerWeek: z.coerce.number().min(1).default(5),
+    email: z.string().email("Invalid email"),
+    password: z.string().min(6, "Password must be at least 6 chars"),
   });
 
-
-
-  /* ── Fetch employees with TanStack Query ──────────────────────────────────── */
-  const { data: employees = [], isLoading, error, isError } = useQuery({
-    queryKey: ["employees"],
-    queryFn: async () => {
-      const response = await api.get("/Employees");
-      return response.data;
-    },
-    retry: 1,
-    retryDelay: 1000,
+  const { register, handleSubmit, control, reset, formState: { errors } } = useForm({
+    resolver: zodResolver(employeeSchema),
+    defaultValues: {
+      fullName: "",
+      role: "Cook",
+      salary: "",
+      phone: "",
+      status: "Active",
+      shift: "Morning",
+      workingHoursPerDay: "8",
+      workingDaysPerWeek: "5",
+      email: "",
+      password: ""
+    }
   });
 
-  /* ── Add employee handler ─────────────────────────────────────── */
-  const handleAddEmployee = async (e) => {
-    e.preventDefault();
-    
-    const payload = {
+  const { data: employees = [], isLoading, error, isError } = useStaffQuery();
+  const addEmployeeMutation = useAddEmployee();
+
+  const handleAddEmployee = (data) => {
+    addEmployeeMutation.mutate({
       restID: user?.restId || 0,
-      fullName: formData.fullName,
-      role: formData.role,
-      salary: parseFloat(formData.salary) || 0,
-      phone: formData.phone,
-      status: formData.status,
-      shift: formData.shift,
-      workingHoursPerDay: parseInt(formData.workingHoursPerDay, 10) || 0,
-      workingDaysPerWeek: parseInt(formData.workingDaysPerWeek, 10) || 0,
-      email: formData.email,
-      password: formData.password,
-    };
-
-    addEmployeeMutation.mutate(payload);
+      ...data,
+    }, {
+      onSuccess: () => {
+        setIsModalOpen(false);
+        reset();
+      }
+    });
   };
-
-  /* ── Add employee with TanStack Query Mutation ──────────────────────────────────── */
-  const addEmployeeMutation = useMutation({
-    mutationFn: async (employeeData) => {
-      const response = await api.post("/Employees", employeeData);
-      return response.data;
-    },
-    onSuccess: () => {
-      toast.success("Employee added successfully!");
-      setIsModalOpen(false);
-      setFormData({
-        fullName: "", role: "Employee", salary: "", phone: "", status: "Active",
-        shift: "Morning", workingHoursPerDay: "8", workingDaysPerWeek: "5", email: "", password: ""
-      });
-      // Invalidate and refetch employees query
-      queryClient.invalidateQueries({ queryKey: ["employees"] });
-    },
-    onError: (error) => {
-      console.error("Error adding employee:", error);
-      toast.error(error.message || "Failed to add employee.");
-    },
-  });
 
   const active = employees.filter((s) => s.status === "Active").length;
   const totalHours = employees.reduce((acc, curr) => acc + (curr.workingHoursPerDay * curr.workingDaysPerWeek), 0);
@@ -373,7 +353,7 @@ export default function StaffPage() {
       {/* ── Add Employee Dialog ──────────────────────────────── */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="sm:max-w-[460px]">
-          <form onSubmit={handleAddEmployee}>
+          <form onSubmit={handleSubmit(handleAddEmployee)}>
             <DialogHeader>
               <DialogTitle>Add New Employee</DialogTitle>
             </DialogHeader>
@@ -383,37 +363,50 @@ export default function StaffPage() {
                 <Input
                   id="fullName"
                   placeholder="Enter Full Name"
-                  value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                  required
+                  {...register("fullName")}
                 />
+                {errors.fullName && <span className="text-xs text-destructive">{errors.fullName.message}</span>}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
-                  <select
-                    id="role"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  >
-                   <option value="casher">casher</option>
-                   <option value="Cook">Cook</option>
-                   <option value="Waiter">Waiter</option>
-                   
-                    
-                  </select>
+                  <Label>Role</Label>
+                  <Controller
+                    name="role"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Casher">Casher</SelectItem>
+                          <SelectItem value="Cook">Cook</SelectItem>
+                          <SelectItem value="Waiter">Waiter</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.role && <span className="text-xs text-destructive">{errors.role.message}</span>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="shift">Shift</Label>
-                  <select
-                    id="shift"
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-                    value={formData.shift}
-                    onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
-                  >
-                    {SHIFT_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <Label>Shift</Label>
+                  <Controller
+                    name="shift"
+                    control={control}
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select shift" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {SHIFT_OPTIONS.map((s) => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.shift && <span className="text-xs text-destructive">{errors.shift.message}</span>}
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -422,10 +415,9 @@ export default function StaffPage() {
                   <Input
                     id="phone"
                     placeholder="01010000000"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    required
+                    {...register("phone")}
                   />
+                  {errors.phone && <span className="text-xs text-destructive">{errors.phone.message}</span>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="salary">Salary ($)</Label>
@@ -433,37 +425,32 @@ export default function StaffPage() {
                     id="salary"
                     type="number"
                     placeholder="2500"
-                    value={formData.salary}
-                    onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
-                    required
+                    {...register("salary")}
                   />
+                  {errors.salary && <span className="text-xs text-destructive">{errors.salary.message}</span>}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="staffEmail">Email</Label>
                 <Input
                   id="staffEmail"
-                  name="staffEmail"
                   type="email"
                   placeholder="username@example.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
+                  {...register("email")}
                   autoComplete="new-password"
                 />
+                {errors.email && <span className="text-xs text-destructive">{errors.email.message}</span>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="staffPassword">Initial Password</Label>
                 <Input
                   id="staffPassword"
-                  name="staffPassword"
                   type="password"
                   placeholder="Password123!"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
+                  {...register("password")}
                   autoComplete="new-password"
                 />
+                {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
               </div>
             </div>
             <DialogFooter className="mt-2">

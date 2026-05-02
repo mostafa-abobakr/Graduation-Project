@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useInventory } from "@/contexts/InventoryContext";
+import { useMenuQuery, useUpdateMenuItem, useUpdateMenuRecipe } from "@/hooks/useMenu";
 import {
   Table,
   TableBody,
@@ -43,10 +44,13 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SummaryCard } from "@/components/shared/SummaryCard";
+import { SkeletonRows } from "@/components/shared/Skeletons";
 
 export default function MenuManagementPage() {
-  const { menuItems, inventory, updateMenuItemRecipe, updateMenuItem } =
-    useInventory();
+  const { inventory } = useInventory();
+  const { data: menuItems = [] } = useMenuQuery();
+  const { mutate: updateMenuItem } = useUpdateMenuItem();
+  const { mutate: updateMenuItemRecipe } = useUpdateMenuRecipe();
   const [search, setSearch] = useState("");
   const [expandedRows, setExpandedRows] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -123,49 +127,23 @@ export default function MenuManagementPage() {
       return;
     }
 
-    updateMenuItem(editForm.id, {
-      name: editForm.name.trim(),
-      cost: parseFloat(editForm.cost) || 0,
-      price: parseFloat(editForm.price) || 0,
-      category: editForm.category.trim(),
-      image: editForm.image,
+    updateMenuItem({
+      id: editForm.id,
+      payload: {
+        name: editForm.name.trim(),
+        cost: parseFloat(editForm.cost) || 0,
+        price: parseFloat(editForm.price) || 0,
+        category: editForm.category.trim(),
+        image: editForm.image,
+      }
     });
-    updateMenuItemRecipe(editForm.id, recipeEdit);
+    updateMenuItemRecipe({ id: editForm.id, recipe: recipeEdit });
 
     setDialogOpen(false);
     toast.success("Menu item updated.");
   };
 
-  /* ── Skeleton rows ──────────────────────────────────── */
-  const SkeletonRows = () =>
-    Array.from({ length: 5 }).map((_, i) => (
-      <TableRow key={i} className="border-border/20">
-        <TableCell className="text-center">
-          <Skeleton className="h-4 w-4 mx-auto" />
-        </TableCell>
-        <TableCell>
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-7 w-7 rounded" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-5 w-16 rounded-full" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-14" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-4 w-14" />
-        </TableCell>
-        <TableCell>
-          <Skeleton className="h-5 w-12 rounded-full" />
-        </TableCell>
-        <TableCell className="text-right">
-          <Skeleton className="h-8 w-8 ml-auto rounded" />
-        </TableCell>
-      </TableRow>
-    ));
+
 
   /* ── Search empty state ─────────────────────────────── */
   const SearchEmptyState = () => (
