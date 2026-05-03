@@ -28,7 +28,7 @@ export function UnmatchedItemsTable({ newItems, setNewItems, existingInventory }
         ))}
       </datalist>
 
-      <h3 className="text-lg font-semibold flex items-center gap-2 text-amber-600 dark:text-amber-500">
+      <h3 className="text-lg font-semibold flex items-center gap-2 text-warning">
         <AlertCircle className="h-5 w-5" />
         Action Required: Unmatched Items ({newItems.length})
       </h3>

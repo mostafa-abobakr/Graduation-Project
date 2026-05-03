@@ -1,9 +1,7 @@
-import { Shield, CheckCircle } from "lucide-react";
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import AuthorizationSuccess from "./AuthorizationSuccess";
-import { registerUser } from "@/services/authService";
-import { useAuth } from "@/contexts/AuthContext";
+import { Shield, CheckCircle } from "lucide-react"
+import { useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import AuthorizationSuccess from "./AuthorizationSuccess"
 
 const permissions = [
     {
@@ -32,31 +30,24 @@ export default function PosAuthorizePage() {
     const [ErrorMap, setErrorMap] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [isSuccess, setIsSuccess] = useState(false)
-    const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams] = useSearchParams()
     const title = searchParams.get("title")
-    const navigate = useNavigate();
-    const {login} = useAuth();
+    const navigate = useNavigate()
 
-    const signInHandler = async () => {
-        const stored = localStorage.getItem("register");
-        const formData = JSON.parse(stored);
-        const { email, password } = formData;
-        
-        const success = await login(email, password)
-        if(success){
-            navigate("/dashboard")
-        }
+    const skipRegistration = () => {
+        navigate("/login")
     }
 
     const handleAllow = async () => {
-        setIsLoading(true);
-        setErrorMap("");
-        const result = await registerUser();
-        setIsLoading(false);
-        if (result.success) {
-            setIsSuccess(true);
-        } else {
-            setErrorMap(result.error);
+        setIsLoading(true)
+        setErrorMap("")
+        try {
+            await new Promise((resolve) => setTimeout(resolve, 1500))
+            navigate("/register/plans")
+        } catch (error) {
+            setErrorMap("Failed to connect to Geidea. Please try again.")
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -128,7 +119,7 @@ export default function PosAuthorizePage() {
                   </button>
                   <button
                     type="button"
-                    onClick={signInHandler}
+                    onClick={skipRegistration}
                     className="w-full py-2 rounded-md border text-black border-gray-300"
                   >
                     Skip For Now

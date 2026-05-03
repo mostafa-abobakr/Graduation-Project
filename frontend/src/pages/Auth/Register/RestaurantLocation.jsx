@@ -8,8 +8,8 @@ import AuthContainer from "@/components/AuthContainer";
 import { signupValidationSchema } from "@/schemas/auth/validations";
 import { useRegisterContext } from "@/contexts/Valdation";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, MapPin, Building2, Navigation, Map } from "lucide-react";
-import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
+import { Loader2, MapPin, Building2, Navigation, Map, Maximize2, Minimize2 } from "lucide-react";
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -49,6 +49,15 @@ const DraggableMarker = ({ position, onDragEnd }) => {
   );
 };
 
+const MapResizer = ({ expanded }) => {
+  const map = useMap()
+  useEffect(() => {
+    const timer = setTimeout(() => map.invalidateSize(), 310)
+    return () => clearTimeout(timer)
+  }, [expanded, map])
+  return null
+}
+
 const RestaurantLocation = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,8 +67,9 @@ const RestaurantLocation = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
   const { formData, updateFromData } = useRegisterContext();
-  const { register } = useAuth();
+  const { register,login} = useAuth();
 
   const formik = useFormik({
     initialValues: {
@@ -74,7 +84,9 @@ const RestaurantLocation = () => {
         updateFromData(values); // 1. Save data to local storage
         const completeData = { ...formData, ...values };
         await register(completeData); // 2. Register
+        await login(completeData.email, completeData.password);
         navigate("/register/connect-pos"); // 3. Navigate
+        localStorage.removeItem("register");
       } catch (error) {
         setSubmitError(error.response?.data?.message || "Registration failed. Please try again.");
       } finally {
@@ -275,10 +287,14 @@ const RestaurantLocation = () => {
                 formik.setFieldValue("address", event.target.value);
                 setShowSuggestions(true);
               }}
-              onBlur={formik.handleBlur}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={(event) => {
+                formik.handleBlur(event)
+                setShowSuggestions(false)
+              }}
             />
             {showSuggestions && (suggestions.length > 0 || isSearchingAddress) && (
-              <div className="absolute top-[3.2rem] z-20 w-full rounded-md border border-border bg-background shadow-md">
+              <div className="absolute top-[3.2rem] z-[9999] w-full rounded-md border border-border bg-background shadow-md">
                 {isSearchingAddress ? (
                   <p className="px-3 py-2 text-sm text-muted-foreground">Searching...</p>
                 ) : (
@@ -305,17 +321,28 @@ const RestaurantLocation = () => {
             <div className="absolute top-2 left-2 z-[500] bg-background/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-medium text-muted-foreground flex items-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
               <Map className="w-3 h-3 mr-1" /> Drag pin to adjust
             </div>
-            <MapContainer
-              center={mapCenter}
-              zoom={16}
-              style={{ width: "100%", height: "250px", borderRadius: "0.5rem" }}
+            <button
+              type="button"
+              aria-label={isMapExpanded ? "Collapse map" : "Expand map"}
+              onClick={() => setIsMapExpanded((prev) => !prev)}
+              className="absolute top-2 right-2 z-[500] bg-background/90 backdrop-blur-sm p-1.5 rounded shadow-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <DraggableMarker position={mapCenter} onDragEnd={handleDragEnd} />
-            </MapContainer>
+              {isMapExpanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            </button>
+            <div style={{ height: isMapExpanded ? "450px" : "250px", transition: "height 0.3s ease", width: "100%" }}>
+              <MapContainer
+                center={mapCenter}
+                zoom={16}
+                style={{ width: "100%", height: "100%" }}
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <DraggableMarker position={mapCenter} onDragEnd={handleDragEnd} />
+                <MapResizer expanded={isMapExpanded} />
+              </MapContainer>
+            </div>
           </div>
         </div>
 

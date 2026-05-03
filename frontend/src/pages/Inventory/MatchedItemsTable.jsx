@@ -31,7 +31,7 @@ export function MatchedItemsTable({ mappedItems, setMappedItems }) {
     <div className="space-y-3">
       <h3 className="text-lg font-semibold flex items-center justify-between gap-2">
         <span className="flex items-center gap-2">
-          <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+          <CheckCircle2 className="h-5 w-5 text-success" />
           Matched Items ({mappedItems.length})
         </span>
         {mappedItems.length > 0 && (

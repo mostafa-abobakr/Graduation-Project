@@ -8,27 +8,48 @@ import CostReduction from "./CostReduction";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePayment } from "@/hooks/usePayment";
 
 const ManagerDashboard = () => {
+
+
   const [viewMode, setViewMode] = useState("today");
   const { user } = useAuth();
   // console.log(user);
 
 
+  // const { data, isLoading, error } = useQuery({
+  //   queryKey: ["dashboardData"],
+  //   queryFn: async () => {
+  //     const token = localStorage.getItem("authToken");
+
+  //     const res = await fetch(
+  //       `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restId}`,
+  //       { method: "GET", headers: { accept: "application/json", }, },
+  //     );
+  //     if (!res.ok) {
+  //       throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
+  //     }
+  //     return res.json();
+  //   },
+  // });
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboardData"],
     queryFn: async () => {
-      const token = localStorage.getItem("authToken");
-
       const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restId}`,
-        { method: "GET", headers: { accept: "application/json", }, },
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restId}`
       );
-      if (!res.ok) {
-        throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
-      }
+
+      if (!res.ok) throw new Error("Not ready yet");
+
       return res.json();
     },
+    refetchInterval: (query) => {
+      return query.state.data ? false : 3000;
+    },
+
+    retry: false,
   });
 
   if (isLoading)
@@ -63,6 +84,22 @@ const ManagerDashboard = () => {
         Error: {error.message}
       </div>
     );
+
+  if (error && !data) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
+
+        <p className="text-lg font-medium">
+          Preparing your restaurant data...
+        </p>
+
+        <p className="text-sm text-muted-foreground">
+          This may take a few seconds
+        </p>
+      </div>
+    );
+  }
 
   // The API returns nested data: { data: { day: {...}, week: {...}, month: {...}, all: {...} } }
   const getViewKey = () => {

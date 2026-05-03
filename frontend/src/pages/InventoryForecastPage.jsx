@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import api from "@/api/axios";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,11 +28,8 @@ export default function InventoryForecastPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["inventoryForecast", user?.restId],
     queryFn: async () => {
-      const res = await fetch(
-        `/InventoryForecast/restaurant/${user.restId}`,
-      );
-      if (!res.ok) throw new Error("Failed to fetch inventory forecast");
-      return res.json();
+      const res = await api.get(`/InventoryForecast/restaurant/${user.restId}`);
+      return res.data;
     },
     enabled: !!user?.restId,
   });

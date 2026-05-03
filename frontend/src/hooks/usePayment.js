@@ -6,8 +6,6 @@ import { useToast } from "./use-toast";
 
 export function usePayment() {
     const [loading, setLoading] = useState(false);
-    const [loadingSData, setLoadingSData] = useState(false);
-    console.log("Loading state in usePayment:", loadingSData);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
@@ -56,25 +54,18 @@ export function usePayment() {
 
             if (result.error) { setError(result.error.message); }
             else if (result.paymentIntent?.status === "succeeded") {
-                // setSuccess(`Payment successful for ${plan} 🎉`);
-                toast({ title: "Payment Successful 🎉", description: `Payment successful for ${plan}`, variant: "default", });
-                try {
-                    setLoadingSData(true);
-                    const res = await axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`);
-                    console.log("Restaurant seed response:", res.data);
-                    navigate("/dashboard");
+                toast({
+                    title: "Payment Successful 🎉",
+                    description: `Payment successful for ${plan}`,
+                });
 
-                } catch (apiError) {
-                    console.log("Seed API error:", apiError);
+                
+                axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`)
+                    .then(res => console.log("Seed done:", res.data))
+                    .catch(err => console.log("Seed error:", err.response?.data));
 
-                    setError(
-                        apiError.response?.data?.detail ||
-                        apiError.response?.data?.message ||
-                        "Failed to load restaurant data"
-                    );
-                } finally {
-                    setLoadingSData(false);
-                }
+                
+                navigate("/dashboard");
             }
             else {
                 setError("Payment failed or incomplete");
@@ -88,5 +79,5 @@ export function usePayment() {
         setLoading(false);
     };
 
-    return { createPayment, loading, error, success, loadingSData };
+    return { createPayment, loading, error, success};
 }

@@ -1,10 +1,7 @@
-import { Square, CheckCircle } from "lucide-react";
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import AuthorizationSuccess from "./AuthorizationSuccess";
-import { registerUser, seedRestaurantInfo } from "@/services/authService";
-import { useAuth } from "@/contexts/AuthContext";
-// import { Button } from "@/components/ui/button";
+import { Square, CheckCircle } from "lucide-react"
+import { useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import AuthorizationSuccess from "./AuthorizationSuccess"
 
 const permissions = [
   {
@@ -30,37 +27,29 @@ const permissions = [
 ];
 
 export default function PosAuthorizePage() {
-  const [ErrorMap, setErrorMap] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const title = searchParams.get("title");
-  const { login } = useAuth();
+  const [ErrorMap, setErrorMap] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const title = searchParams.get("title")
 
-  const signInHandler = async () => {
-    const stored = localStorage.getItem("register");
-    const formData = JSON.parse(stored);
-    const { email, password } = formData;
-    setIsLoading(true);
-    const success = await login(email, password);
-    if (success) {
-      navigate("/dashboard");
-    }
-    setIsLoading(false);
-  };
+  const skipRegistration = () => {
+    navigate("/login")
+  }
 
   const handleAllow = async () => {
-    setIsLoading(true);
-    setErrorMap("");
-    const result = await registerUser();
-    setIsLoading(false);
-    if (result.success) {
-      setIsSuccess(true);
-    } else {
-      setErrorMap(result.error);
+    setIsLoading(true)
+    setErrorMap("")
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      navigate("/register/plans")
+    } catch (error) {
+      setErrorMap("Failed to connect to Square. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
-  };
+  }
 
   if (isSuccess) {
     return (
@@ -71,12 +60,8 @@ export default function PosAuthorizePage() {
         textColor="text-black"
         buttonText="Continue to Square"
       />
-    );
+    )
   }
-
-//   if (isLoading) {
-//     return <LoadingSpinner />;
-//   }
 
   return (
     <div className="min-h-[100vh] p-4 flex items-center bg-gray-200 justify-center">
@@ -133,7 +118,7 @@ export default function PosAuthorizePage() {
                 <button
                   type="button"
                   className="w-full py-2 rounded-md border-2 border-gray-600 text-black"
-                  onClick={signInHandler}
+                  onClick={skipRegistration}
                 >
                   Skip For Now
                 </button>

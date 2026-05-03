@@ -47,44 +47,11 @@ export default function PosAuthorizePage() {
     const handleAllow = async () => {
         setIsLoading(true);
         setErrorMap("");
-        
-        try {
-            const stored = localStorage.getItem("register");
 
-            if (!stored) {
-                console.error("No registration data found. Please log in.");
-                navigate("/login");
-                return;
-            }
-
-            const formData = JSON.parse(stored);
-            // console.log("formData:",formData)
-            if (!formData || !formData.email || !formData.password) {
-                console.error("Incomplete login credentials. Please log in again.");
-                navigate("/login");
-                return;
-            }
-
-            try {
-                await api.post("/Auth/register", formData);
-            } catch (err) {
-                const errorData = err.response?.data;
-                const msg = typeof errorData === "string" ? errorData : errorData?.message || errorData?.title;
-                if (msg !== "Email already exists" && msg !== "User already exists") {
-                    setErrorMap(msg || "Failed to register account.");
-                    setIsLoading(false);
-                    return;
-                }
-            }
-
-            
-            const success = await login(formData.email, formData.password);
-            if (success) {
-                navigate("/dashboard");
-            } else {
-                navigate("/login");
-            }
-        } catch (error) {
+        try{
+            await new Promise((resolve) => setTimeout(resolve, 1500));
+            navigate("/register/plans")
+        }catch (error) {
             setErrorMap("Failed to connect to Toast. Please try again.");
         } finally {
             setIsLoading(false);
