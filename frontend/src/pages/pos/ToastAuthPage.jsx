@@ -58,7 +58,7 @@ export default function PosAuthorizePage() {
             }
 
             const formData = JSON.parse(stored);
-            console.log("formData:",formData)
+            // console.log("formData:",formData)
             if (!formData || !formData.email || !formData.password) {
                 console.error("Incomplete login credentials. Please log in again.");
                 navigate("/login");
