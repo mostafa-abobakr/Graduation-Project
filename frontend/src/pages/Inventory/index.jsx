@@ -15,12 +15,12 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
-import { InventoryFilters } from "./components/InventoryFilters";
-import { InventoryTable } from "./components/InventoryTable";
-import { ItemFormDialog } from "./components/ItemFormDialog";
+import { InventoryFilters } from "./InventoryFilters";
+import { InventoryTable } from "./InventoryTable";
+import { ItemFormDialog } from "./ItemFormDialog";
 import { ScannerDialog } from "./ScannerDialog";
-import { RestockDialog } from "./components/RestockDialog";
-import { CATEGORIES } from "./utils/InventoryUtils";
+import { RestockDialog } from "./RestockDialog";
+import { CATEGORIES } from "./InventoryUtils";
 
 export default function InventoryPage() {
   const { user } = useAuth();
@@ -29,9 +29,7 @@ export default function InventoryPage() {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["inventoryItems", user?.restId],
     queryFn: async () => {
-      const response = await api.get(
-        `/Inventory/restaurant/${user.restId}`,
-      );
+      const response = await api.get(`/Inventory/restaurant/${user.restId}`);
       return response.data.map((item) => ({
         id: item.inventoryID,
         name: item.itemName,
@@ -157,10 +155,7 @@ export default function InventoryPage() {
           ? new Date(formData.productionDate).toISOString()
           : new Date().toISOString(),
       };
-      const response = await api.post(
-        "/Inventory",
-        payload,
-      );
+      const response = await api.post("/Inventory", payload);
       return response.data;
     },
     onSuccess: (responseData) => {
@@ -206,9 +201,7 @@ export default function InventoryPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      await api.delete(
-        `/Inventory/restaurant/${user.restId}/${id}`,
-      );
+      await api.delete(`/Inventory/restaurant/${user.restId}/${id}`);
     },
     onSuccess: () => {
       toast.success("Item deleted");
@@ -258,12 +251,7 @@ export default function InventoryPage() {
       return;
     }
 
-    const token = user?.token || localStorage.getItem("authToken");
     const restId = user?.restId || 2;
-    const headers = {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    };
 
     try {
       if (mode === "deduct") {
@@ -273,8 +261,7 @@ export default function InventoryPage() {
         }
         await api.post(
           `/InventoryBatch/restaurant/${restId}/item/${restockItem.id}/withdraw?quantity=${qty}`,
-          "",
-          { headers },
+          ""
         );
         toast.success("Stock deducted successfully");
       } else {
@@ -288,8 +275,7 @@ export default function InventoryPage() {
         };
         await api.post(
           `/InventoryBatch/restaurant/${restId}/restock`,
-          payload,
-          { headers },
+          payload
         );
         toast.success("Stock restocked successfully");
       }

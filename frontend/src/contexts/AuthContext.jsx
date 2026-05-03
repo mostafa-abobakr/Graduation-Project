@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import axios from "axios";
+import { jwtDecode } from "jwt-decode";
 
 const API_BASE = "/api/Auth";
 
@@ -17,7 +18,21 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     const stored = localStorage.getItem("user");
-    return stored ? JSON.parse(stored) : null;
+    if (stored) {
+      const parsedUser = JSON.parse(stored);
+      const token = localStorage.getItem("authToken") || parsedUser.token;
+      if (token) {
+        try {
+          const decoded = jwtDecode(token);
+          parsedUser.restId = parseInt(decoded.RestID || decoded.restId || decoded.restID || "0", 10);
+          parsedUser.token = token;
+        } catch (e) {
+          console.error("Failed to decode token on load:", e);
+        }
+      }
+      return parsedUser;
+    }
+    return null;
   });
   const [isLoading, setIsLoading] = useState(false);
   
@@ -38,6 +53,13 @@ export function AuthProvider({ children }) {
 
         const role = response.data.role;
         const userData = { ...response.data, email, role };
+        
+        try {
+          const decoded = jwtDecode(response.data.token);
+          userData.restId = parseInt(decoded.RestID || decoded.restId || decoded.restID || "0", 10);
+        } catch (e) {
+          console.error("Failed to decode token on login:", e);
+        }
         
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));

@@ -28,13 +28,17 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { CATEGORIES, UNITS, emptyForm } from "../utils/InventoryUtils";
+import { CATEGORIES, UNITS, emptyForm } from "./InventoryUtils";
 import { toast } from "sonner";
 
 const todayStr = () => format(new Date(), "yyyy-MM-dd");
 
 export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
-  const [form, setForm] = useState({ ...emptyForm, category: "", productionDate: todayStr() });
+  const [form, setForm] = useState({
+    ...emptyForm,
+    category: "",
+    productionDate: todayStr(),
+  });
 
   useEffect(() => {
     if (open) {
@@ -44,7 +48,8 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
           category: editingItem.category || "Other",
           unit: editingItem.unit,
           reorderLevel: String(editingItem.reorderLevel),
-          shelfLifeDays: editingItem.shelfLife != null ? String(editingItem.shelfLife) : "",
+          shelfLifeDays:
+            editingItem.shelfLife != null ? String(editingItem.shelfLife) : "",
           isNonPerishable: editingItem.shelfLife == null,
           cost: String(editingItem.cost || 0),
           supplier: editingItem.supplier || "",
@@ -66,7 +71,9 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
       category: form.category || "Other",
       unit: form.unit || "kg",
       reorderLevel: parseFloat(form.reorderLevel) || 10,
-      shelfLifeDays: form.isNonPerishable ? null : parseInt(form.shelfLifeDays, 10),
+      shelfLifeDays: form.isNonPerishable
+        ? null
+        : parseInt(form.shelfLifeDays, 10),
       isNonPerishable: form.isNonPerishable,
       cost: parseFloat(form.cost) || 0,
       supplier: form.supplier.trim() || "Unknown",
@@ -85,12 +92,12 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button onClick={() => setOpen(true)} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add item
-          </Button>
-        </DialogTrigger>
+      <DialogTrigger asChild>
+        <Button onClick={() => setOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add item
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit item" : "Add item"}</DialogTitle>
@@ -146,7 +153,9 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
           </div>
 
           {/* Quantity + Unit + Cost — quantity hidden when editing */}
-          <div className={`grid gap-4 ${isEditing ? "grid-cols-2" : "grid-cols-3"}`}>
+          <div
+            className={`grid gap-4 ${isEditing ? "grid-cols-2" : "grid-cols-3"}`}
+          >
             {!isEditing && (
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">
@@ -155,7 +164,9 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
                 <Input
                   type="number"
                   value={form.quantity}
-                  onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, quantity: e.target.value })
+                  }
                   placeholder="0"
                 />
               </div>
@@ -259,7 +270,7 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
                     variant="outline"
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !form.productionDate && "text-muted-foreground"
+                      !form.productionDate && "text-muted-foreground",
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />

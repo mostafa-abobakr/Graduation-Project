@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
+import api from "@/api/axios";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -264,11 +265,8 @@ export default function InventoryAlertsPage() {
   } = useQuery({
     queryKey: ["inventoryAlerts", user?.restId],
     queryFn: async () => {
-      const res = await fetch(
-        `/Inventory/restaurant/${user.restId}/alerts`,
-      );
-      if (!res.ok) throw new Error("Failed to fetch inventory alerts");
-      return res.json();
+      const res = await api.get(`/Inventory/restaurant/${user.restId}/alerts`);
+      return res.data;
     },
     enabled: !!user?.restId,
   });
