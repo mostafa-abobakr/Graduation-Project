@@ -23,7 +23,7 @@ export default function CheckoutForm({ plan }) {
     const { createPayment, loading, error, success } = usePayment();
 
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    const userId = user?.id || 30;
+    const userId = user?.userID || 30;
 
     // useEffect(() => { if (success) { handleLoginAfterPayment(); } }, [success]);
 
@@ -62,10 +62,7 @@ export default function CheckoutForm({ plan }) {
     };
 
     return (
-        <AuthContainer
-            title={`${plan} Plan - Secure Payment`}
-            description="Enter your card details below"
-        >
+        <AuthContainer title={`${plan} Plan - Secure Payment`} description="Enter your card details below" >
             <form onSubmit={handleSubmit} className="space-y-5 mt-2">
                 {/* Card Number */}
                 <div className="space-y-1">

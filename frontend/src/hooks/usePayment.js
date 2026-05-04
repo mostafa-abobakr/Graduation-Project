@@ -1,11 +1,18 @@
 import { CardNumberElement } from "@stripe/react-stripe-js";
 import axios from "axios";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "./use-toast";
 
 export function usePayment() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+
+    const navigate = useNavigate();
+    const { toast } = useToast();
+
+
 
     const createPayment = async ({ amount, userId, stripe, elements, plan }) => {
         setLoading(true);
@@ -13,10 +20,18 @@ export function usePayment() {
         setSuccess("");
 
         try {
+
+            const user = JSON.parse(localStorage.getItem("user"));
+            const resId = user?.restId;
+            console.log("Restaurant ID from user data:", resId);
+
+            if (!resId) {
+                setError("Restaurant ID not found");
+                return;
+            }
+
             // 1️⃣ create intent
-            const { data } = await axios.post(
-                "http://localhost:5000/create-payment-intent", { amount, userId, plan }
-            );
+            const { data } = await axios.post("http://localhost:5000/create-payment-intent", { amount, userId, plan });
 
             const cardElement = elements.getElement(CardNumberElement);
 
@@ -37,11 +52,20 @@ export function usePayment() {
 
             // console.log("Stripe result:", result);
 
-            if (result.error) {
-                setError(result.error.message);
-            }
+            if (result.error) { setError(result.error.message); }
             else if (result.paymentIntent?.status === "succeeded") {
-                setSuccess(`Payment successful for ${plan} 🎉`);
+                toast({
+                    title: "Payment Successful 🎉",
+                    description: `Payment successful for ${plan}`,
+                });
+
+                
+                axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`)
+                    .then(res => console.log("Seed done:", res.data))
+                    .catch(err => console.log("Seed error:", err.response?.data));
+
+                
+                navigate("/dashboard");
             }
             else {
                 setError("Payment failed or incomplete");
@@ -55,5 +79,5 @@ export function usePayment() {
         setLoading(false);
     };
 
-    return { createPayment, loading, error, success };
+    return { createPayment, loading, error, success};
 }

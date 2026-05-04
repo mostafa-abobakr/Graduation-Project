@@ -47,6 +47,7 @@ export default function PosAuthorizePage() {
     const handleAllow = async () => {
         setIsLoading(true);
         setErrorMap("");
+
         try{
             await new Promise((resolve) => setTimeout(resolve, 1500));
             navigate("/register/plans")
