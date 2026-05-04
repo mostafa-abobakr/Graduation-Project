@@ -1,42 +1,93 @@
-import { useState } from "react";
-import { Card } from "@/components/ui/card";
-import { SummaryCard } from "@/components/shared/SummaryCard";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useAuth } from "@/contexts/AuthContext";
-import { 
-  FileText, 
-  Download, 
-  Calendar, 
-  BarChart3, 
-  DollarSign, 
-  Package, 
-  Clock, 
-  AlertCircle 
-} from "lucide-react";
-import { useReports } from "@/hooks/useReports";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
-import { exportDailyReportPdf } from "./exportDailyReportPdf";
+import { useState, useCallback } from "react"
+import { Card } from "@/components/ui/card"
+import { SummaryCard } from "@/components/shared/SummaryCard"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { useAuth } from "@/contexts/AuthContext"
+import {
+  FileText,
+  Download,
+  Calendar,
+  BarChart3,
+  DollarSign,
+  Package,
+  Clock,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react"
+import { useReports } from "@/hooks/useReports"
+import { useQueryClient } from "@tanstack/react-query"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { EmptyState } from "@/components/shared/EmptyState"
+import { exportDailyReportPdf } from "./exportDailyReportPdf"
+import {
+  exportWeeklyRevenueReport,
+  exportMenuAnalyticsReport,
+  exportInventoryReport,
+  exportStaffHoursReport,
+  exportWeeklyScheduleReport,
+} from "./exportReports"
 
-// Map string icon names from the backend to Lucide components
 const ICON_MAP = {
-  DollarSign: DollarSign,
-  BarChart3: BarChart3,
-  Calendar: Calendar,
-  FileText: FileText,
-  Package: Package,
-  Clock: Clock,
-};
+  DollarSign,
+  BarChart3,
+  Calendar,
+  FileText,
+  Package,
+  Clock,
+}
+
+// Maps each report name to its dedicated export function
+const EXPORT_FN_MAP = {
+  "Weekly Revenue Report": exportWeeklyRevenueReport,
+  "Menu Analytics Summary": exportMenuAnalyticsReport,
+  "Inventory Stock Level": exportInventoryReport,
+  // "Staff Hours Summary": exportStaffHoursReport,
+  // "Weekly Schedule": exportWeeklyScheduleReport,
+}
+
+// Reports hidden from the UI (not ready yet)
+const HIDDEN_REPORTS = new Set(["Staff Hours Summary", "Weekly Schedule"])
 
 export default function ReportsPage() {
-  const { data: reportsData, isLoading, isError } = useReports();
-  const { user } = useAuth();
-  const [isExporting, setIsExporting] = useState(false);
+  const { user } = useAuth()
+  const queryClient = useQueryClient()
+  const { data: reportsData, isLoading, isError } = useReports(user?.restId)
+  const [exportingId, setExportingId] = useState(null)
 
-  const handleExport = (reportName) => {
-    exportDailyReportPdf(user, setIsExporting, reportName);
-  };
+  // Per-report loading state — tracks which report is currently exporting
+  const handleExport = useCallback(
+    async (report) => {
+      if (exportingId) return
+      setExportingId(report.id)
+
+      const setIsExporting = () => {} // dummy — we manage state here
+
+      const exportFn = EXPORT_FN_MAP[report.name]
+      if (exportFn) {
+        await exportFn(user, (v) => !v && setExportingId(null))
+      } else {
+        // Fallback: full daily report
+        await exportDailyReportPdf(user, (v) => !v && setExportingId(null), report.name)
+      }
+
+      setExportingId(null)
+      // Refetch to update "Reports Generated" + "Last Export" cards
+      queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
+    },
+    [user, exportingId, queryClient]
+  )
+
+  const handleGenerateReport = useCallback(async () => {
+    if (exportingId) return
+    setExportingId("daily")
+    await exportDailyReportPdf(user, (v) => !v && setExportingId(null), "Daily Report")
+    setExportingId(null)
+    queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
+  }, [user, exportingId, queryClient])
+
+  const isAnyExporting = exportingId !== null
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
@@ -46,9 +97,12 @@ export default function ReportsPage() {
         title="Reports & Export"
         description="Generate and download reports"
         actions={
-          <Button disabled={isLoading || isExporting} onClick={() => handleExport("Daily Report")}>
+          <Button
+            disabled={isLoading || isAnyExporting}
+            onClick={handleGenerateReport}
+          >
             <FileText className="h-4 w-4 mr-2" />
-            {isExporting ? "Exporting..." : "Generate Report"}
+            {exportingId === "daily" ? "Exporting..." : "Generate Report"}
           </Button>
         }
       />
@@ -57,30 +111,65 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <SummaryCard
           title="Reports Generated"
-          value={isLoading ? <Skeleton className="h-8 w-16" /> : (reportsData?.stats?.generatedThisMonth || 0)}
+          value={
+            isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              reportsData?.stats?.generatedThisMonth ?? 0
+            )
+          }
           sub="This month"
           icon={FileText}
         />
         <SummaryCard
           title="Scheduled Reports"
-          value={isLoading ? <Skeleton className="h-8 w-16" /> : (reportsData?.stats?.scheduled || 0)}
+          value={
+            isLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : (
+              reportsData?.stats?.scheduled ?? 0
+            )
+          }
           sub="Active schedules"
           icon={Calendar}
         />
         <SummaryCard
           title="Last Export"
-          value={isLoading ? <Skeleton className="h-8 w-24" /> : (reportsData?.stats?.lastExport || "-")}
-          sub={isLoading ? <Skeleton className="h-3 w-32" /> : (reportsData?.stats?.lastExportName || "N/A")}
+          value={
+            isLoading ? (
+              <Skeleton className="h-8 w-24" />
+            ) : (
+              reportsData?.stats?.lastExport ?? "-"
+            )
+          }
+          sub={
+            isLoading ? (
+              <Skeleton className="h-3 w-32" />
+            ) : (
+              reportsData?.stats?.lastExportName ?? "N/A"
+            )
+          }
           icon={Download}
         />
       </div>
 
       {/* Reports List */}
       <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
-        <div className="p-5 border-b border-border/60">
-          <h3 className="text-base font-semibold text-foreground">Recent Reports</h3>
+        <div className="p-5 border-b border-border/60 flex items-center justify-between">
+          <h3 className="text-base font-semibold text-foreground">Available Reports</h3>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={isLoading}
+            onClick={() =>
+              queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
+            }
+          >
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+            Refresh
+          </Button>
         </div>
-        
+
         {isError && (
           <div className="p-10 flex flex-col items-center justify-center text-center space-y-3">
             <AlertCircle className="h-10 w-10 text-destructive" />
@@ -91,7 +180,7 @@ export default function ReportsPage() {
 
         {isLoading && !isError && (
           <div className="divide-y divide-border/30">
-            {[1, 2, 3, 4].map((i) => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <div key={i} className="flex items-center justify-between px-5 py-4">
                 <div className="flex items-center gap-4">
                   <Skeleton className="h-10 w-10 rounded-lg" />
@@ -108,27 +197,59 @@ export default function ReportsPage() {
 
         {!isLoading && !isError && (
           <div className="divide-y divide-border/30">
-            {reportsData?.data?.map((report) => {
-              const IconComponent = ICON_MAP[report.icon] || FileText;
+            {reportsData?.data?.filter((r) => !HIDDEN_REPORTS.has(r.name)).map((report) => {
+              const IconComponent = ICON_MAP[report.icon] || FileText
+              const isThisExporting = exportingId === report.id
+              const isError = report.status === "error"
+
               return (
-                <div key={report.id} className="flex items-center justify-between px-5 py-4 hover:bg-muted/20 transition-colors">
+                <div
+                  key={report.id}
+                  className="flex items-center justify-between px-5 py-4 hover:bg-muted/20 transition-colors"
+                >
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <IconComponent className="h-4 w-4 text-primary" />
+                    <div
+                      className={`h-10 w-10 rounded-lg flex items-center justify-center ${
+                        isError ? "bg-destructive/10" : "bg-primary/10"
+                      }`}
+                    >
+                      <IconComponent
+                        className={`h-4 w-4 ${isError ? "text-destructive" : "text-primary"}`}
+                      />
                     </div>
                     <div>
-                      <div className="font-medium text-foreground text-sm">{report.name}</div>
-                      <div className="text-xs text-muted-foreground">{report.type} · {report.date}</div>
+                      <div className="font-medium text-foreground text-sm flex items-center gap-2">
+                        {report.name}
+                        {report.badge && (
+                          <Badge
+                            variant={report.badge.includes("low") ? "destructive" : "secondary"}
+                            className="text-[10px] px-1.5 py-0"
+                          >
+                            {report.badge}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {report.type} · {report.date}
+                        {isError && (
+                          <span className="text-destructive ml-2">· Data unavailable</span>
+                        )}
+                      </div>
                     </div>
                   </div>
+
                   <Button
                     variant="ghost"
                     size="sm"
-                    disabled={report.status === "generating" || isExporting}
-                    onClick={() => handleExport(report.name)}
+                    disabled={isAnyExporting || isError}
+                    onClick={() => handleExport(report)}
+                    title={isError ? "Data unavailable for this report" : `Export ${report.name}`}
                   >
-                    {report.status === "generating" ? (
-                      <span className="text-xs text-muted-foreground">Generating...</span>
+                    {isThisExporting ? (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <RefreshCw className="h-3 w-3 animate-spin" />
+                        Exporting...
+                      </span>
                     ) : (
                       <>
                         <Download className="h-3.5 w-3.5 mr-1.5" />
@@ -137,18 +258,19 @@ export default function ReportsPage() {
                     )}
                   </Button>
                 </div>
-              );
+              )
             })}
+
             {reportsData?.data?.length === 0 && (
               <EmptyState
-                 icon={FileText}
-                 title="No reports found"
-                 description="Try generating a new report."
+                icon={FileText}
+                title="No reports found"
+                description="Try generating a new report."
               />
             )}
           </div>
         )}
       </Card>
     </div>
-  );
+  )
 }
