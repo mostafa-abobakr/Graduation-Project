@@ -37,7 +37,7 @@ function AuthContainer({
         </div>
 
         {/* Card Content */}
-        <Card className="p-7 bg-card border-border/60 premium-shadow-md">
+        <Card className="p-5   border-border/60 premium-shadow-md">
           {children}
         </Card>
 
