@@ -39,6 +39,12 @@ are written and read back.  On Render, use a persistent disk mounted here.
 PORT: int = int(os.getenv("PORT", "7860"))
 """Listening port — Render injects $PORT automatically."""
 
+AI_ENGINE_BASE_URL: str = os.getenv(
+    "AI_ENGINE_BASE_URL", 
+    "https://youseef-awaad-zerobite-ai-engine.hf.space"
+).rstrip("/")
+"""Base URL for the AI Engine for scheduling/forecasting requests."""
+
 # ---------------------------------------------------------------------------
 # Safety guard — fail fast if critical config is missing
 # ---------------------------------------------------------------------------

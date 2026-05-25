@@ -1466,5 +1466,9 @@ def api_invoice_confirm(restaurant_id: str, request: InvoiceConfirmRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-from scheduling.api import router as scheduling_router
-app.include_router(scheduling_router)
+from scheduling.router import router as scheduling_router
+app.include_router(
+    scheduling_router,
+    prefix="/scheduling",
+    tags=["Scheduling"]
+)

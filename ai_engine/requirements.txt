@@ -33,3 +33,4 @@ pillow>=10.4.0
 pytesseract>=0.3.10
 ortools>=9.7
 pytest>=8.0.0
+requests>=2.31.0
