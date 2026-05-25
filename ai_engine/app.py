@@ -36,13 +36,18 @@ Seed / Data Generation
   GET  /seed/check/all                 ← list all restaurants with no data
 """
 from contextlib import asynccontextmanager
+from datetime import datetime
+from pathlib import Path as FilePath
 from typing import Literal
 
 import numpy as np
 import pandas as pd
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Path, UploadFile, File, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.orm import Session
 from typing import Dict, Any, List
 import json
 import os
@@ -105,6 +110,7 @@ async def lifespan(app: FastAPI):
 
 tags_metadata = [
     {"name": "Health", "description": "Service health and status checks."},
+    {"name": "POS", "description": "POS tester page and order submission endpoints."},
     {"name": "Seed", "description": "Generate and insert dummy POS and inventory data for testing."},
     {"name": "Training", "description": "Train Prophet demand-forecasting models."},
     {"name": "Forecast", "description": "Generate hourly, daily, and dashboard demand forecasts."},
@@ -116,7 +122,73 @@ tags_metadata = [
 
 app = FastAPI(title="ZeroBite ML Service", lifespan=lifespan, openapi_tags=tags_metadata)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 MIN_HOURS = 336   # 2 weeks of hourly data, enforced per item
+POS_TESTER_PATH = FilePath(__file__).resolve().parent / "pos_tester" / "index.html"
+
+
+class PosOrderItemRequest(BaseModel):
+    menu_item_id: int
+    quantity: int
+    unit_price: float
+
+
+class PosOrderRequest(BaseModel):
+    restaurant_id: str
+    items: List[PosOrderItemRequest]
+
+
+def _load_pos_menu_items(restaurant_id: str) -> list[dict]:
+    engine = get_engine()
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                """
+                SELECT
+                    MenuItemId,
+                    ItemName,
+                    Price,
+                    ImageUrl
+                FROM MenuItems
+                WHERE RestaurantId = :restaurant_id
+                ORDER BY ItemName
+                """
+            ),
+            {"restaurant_id": restaurant_id},
+        ).mappings().all()
+
+    return [
+        {
+            "MenuItemId": row["MenuItemId"],
+            "ItemName": row["ItemName"],
+            "Price": float(row["Price"] or 0.0),
+            "ImageUrl": row["ImageUrl"],
+        }
+        for row in rows
+    ]
+
+
+def _get_pos_order_temperature(session: Session, restaurant_id: str) -> float:
+    latest_temp = session.execute(
+        text(
+            """
+            SELECT TOP 1 TemperatureCelsius
+            FROM Orders
+            WHERE RestaurantId = :restaurant_id
+              AND TemperatureCelsius IS NOT NULL
+            ORDER BY OrderTimestamp DESC, OrderId DESC
+            """
+        ),
+        {"restaurant_id": restaurant_id},
+    ).scalar()
+    return float(latest_temp) if latest_temp is not None else 25.0
 
 
 # ---------------------------------------------------------------------------
@@ -125,6 +197,151 @@ MIN_HOURS = 336   # 2 weeks of hourly data, enforced per item
 @app.get("/", tags=["Health"])
 def root():
     return {"status": "ZeroBite ML service running"}
+
+
+@app.get("/pos", tags=["POS"])
+@app.get("/pos/", tags=["POS"])
+def pos_page(restaurant_id: str | None = Query(default=None)):
+    if not POS_TESTER_PATH.exists():
+        raise HTTPException(status_code=404, detail="POS tester page not found.")
+    html = POS_TESTER_PATH.read_text(encoding="utf-8")
+    bootstrap = {
+        "restaurantId": restaurant_id or "",
+        "menuItems": _load_pos_menu_items(restaurant_id) if restaurant_id else [],
+    }
+    html = html.replace(
+        "<script>",
+        f"<script>window.__POS_BOOTSTRAP__ = {json.dumps(bootstrap)};</script>\n    <script>",
+        1,
+    )
+    return HTMLResponse(content=html)
+
+
+@app.post("/pos", tags=["POS"])
+@app.post("/pos/", tags=["POS"])
+def pos_submit(request: PosOrderRequest):
+    restaurant_id = request.restaurant_id.strip()
+    if not restaurant_id:
+        raise HTTPException(status_code=400, detail="Restaurant ID is required.")
+    if not request.items:
+        raise HTTPException(status_code=400, detail="Order must contain at least one item.")
+
+    engine = get_engine()
+    with Session(engine) as session:
+        requested_ids = sorted({item.menu_item_id for item in request.items})
+        order_temperature = _get_pos_order_temperature(session, restaurant_id)
+        placeholders = ", ".join(f":menu_id_{idx}" for idx in range(len(requested_ids)))
+        menu_rows = session.execute(
+            text(
+                f"""
+                SELECT MenuItemId, ItemName, Price
+                FROM MenuItems
+                WHERE RestaurantId = :restaurant_id
+                  AND MenuItemId IN ({placeholders})
+                """
+            ),
+            {
+                "restaurant_id": restaurant_id,
+                **{f"menu_id_{idx}": menu_id for idx, menu_id in enumerate(requested_ids)},
+            },
+        ).mappings().all()
+
+        menu_lookup = {row["MenuItemId"]: row for row in menu_rows}
+        missing_ids = [menu_id for menu_id in requested_ids if menu_id not in menu_lookup]
+        if missing_ids:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Menu items not found for restaurant {restaurant_id}: {missing_ids}",
+            )
+
+        normalized_items = []
+        total_item_count = 0
+        total_order_value = 0.0
+        for item in request.items:
+            if item.quantity <= 0:
+                raise HTTPException(status_code=400, detail="Item quantity must be greater than zero.")
+
+            menu_item = menu_lookup[item.menu_item_id]
+            unit_price = float(menu_item["Price"] or item.unit_price or 0.0)
+            line_total = round(unit_price * item.quantity, 2)
+            total_item_count += item.quantity
+            total_order_value += line_total
+            normalized_items.append(
+                {
+                    "menu_item_id": item.menu_item_id,
+                    "item_name": menu_item["ItemName"],
+                    "quantity": item.quantity,
+                    "unit_price": unit_price,
+                    "line_total": line_total,
+                }
+            )
+
+        order_result = session.execute(
+            text(
+                """
+                INSERT INTO Orders (
+                    RestaurantId,
+                    OrderTimestamp,
+                    TemperatureCelsius,
+                    EventDay,
+                    ItemCount,
+                    TotalOrderValue
+                )
+                OUTPUT inserted.OrderId
+                VALUES (
+                    :restaurant_id,
+                    :order_timestamp,
+                    :temperature_celsius,
+                    0,
+                    :item_count,
+                    :total_order_value
+                )
+                """
+            ),
+            {
+                "restaurant_id": restaurant_id,
+                "order_timestamp": datetime.utcnow(),
+                "temperature_celsius": order_temperature,
+                "item_count": total_item_count,
+                "total_order_value": round(total_order_value, 2),
+            },
+        ).first()
+
+        order_id = int(order_result[0])
+
+        for item in normalized_items:
+            session.execute(
+                text(
+                    """
+                    INSERT INTO OrderItems (OrderId, MenuItemId, Quantity, UnitPrice, LineTotal)
+                    VALUES (:order_id, :menu_item_id, :quantity, :unit_price, :line_total)
+                    """
+                ),
+                {
+                    "order_id": order_id,
+                    **item,
+                },
+            )
+
+        session.commit()
+
+    try:
+        inventory_consumption = consume_inventory(restaurant_id, order_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=f"Inventory consume failed: {exc}")
+
+    return {
+        "status": "success",
+        "message": "Order recorded successfully.",
+        "order_id": order_id,
+        "restaurant_id": restaurant_id,
+        "item_count": total_item_count,
+        "total_order_value": round(total_order_value, 2),
+        "inventory_consumption": inventory_consumption,
+    }
+
 
 
 # ---------------------------------------------------------------------------
