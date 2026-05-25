@@ -129,3 +129,16 @@ class InventoryTransaction(Base):
     ReferenceID     = Column(Integer, nullable=True)
     ReferenceType   = Column(String(50), nullable=True)
     CreatedAt       = Column(DateTime, nullable=True)
+
+
+class Forecast(Base):
+    """
+    Stores generated machine learning forecasts.
+    """
+    __tablename__ = "Forecasts"
+
+    ForecastId      = Column(Integer, primary_key=True, autoincrement=True)
+    RestaurantId    = Column(String(50), nullable=False, index=True)
+    ItemName        = Column(String(200), nullable=False, index=True)
+    RecordDate      = Column(DateTime, nullable=False, index=True)
+    ExpectedOrders  = Column(Float, nullable=False)

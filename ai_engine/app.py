@@ -63,6 +63,7 @@ from forecasting.evaluator import (
     evaluate_temperature_sanity,
     _train_and_predict,
 )
+from forecasting.services import save_forecasts_to_db
 from schemas.forecast_requests import HourlyForecastRequest, DailyForecastRequest, WeeklyDashboardRequest
 
 from analytics.queries import (
@@ -298,6 +299,7 @@ def hourly_forecast(
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+    save_forecasts_to_db(restaurant_id, item_name, result)
     return result.to_dict(orient="records")
 
 
@@ -333,6 +335,7 @@ def daily_forecast(
     if hourly.empty:
         raise HTTPException(status_code=404, detail="No forecast data")
 
+    save_forecasts_to_db(restaurant_id, item_name, hourly)
     hourly["date"] = hourly["timestamp"].dt.date
     daily = (
         hourly
@@ -367,6 +370,7 @@ def hourly_forecast_all(
     for item_name in items:
         try:
             result = forecast(restaurant_id, item_name, future_temp, future_events)
+            save_forecasts_to_db(restaurant_id, item_name, result)
             response[item_name] = result.to_dict(orient="records")
         except (FileNotFoundError, ValueError):
             continue
@@ -412,6 +416,7 @@ def daily_forecast_all(
             hourly = forecast(restaurant_id, item_name, future_temp, future_events)
             if hourly.empty:
                 continue
+            save_forecasts_to_db(restaurant_id, item_name, hourly)
             hourly["date"] = hourly["timestamp"].dt.date
             daily = (
                 hourly
@@ -698,6 +703,7 @@ def forecast_dashboard_week(
             price = p_data["price"]
             cost = p_data["cost"]
             
+            save_forecasts_to_db(restaurant_id, item_name, hourly)
             hourly["date"] = hourly["timestamp"].dt.date
             daily = hourly.groupby("date", as_index=False)["predicted_demand"].sum()
             
@@ -1459,3 +1465,6 @@ def api_invoice_confirm(restaurant_id: str, request: InvoiceConfirmRequest):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+from scheduling.api import router as scheduling_router
+app.include_router(scheduling_router)
