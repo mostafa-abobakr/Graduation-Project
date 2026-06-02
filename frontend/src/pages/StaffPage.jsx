@@ -29,14 +29,13 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { SummaryCard } from "@/components/shared/SummaryCard";
 
-
 const SHIFT_OPTIONS = ["Morning", "Evening", "Night"];
 
 export default function StaffPage() {
   const { isAdmin, user } = useAuth();
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
-
+const token = localStorage.getItem("authToken");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -48,26 +47,37 @@ export default function StaffPage() {
     workingHoursPerDay: "8",
     workingDaysPerWeek: "5",
     email: "",
-    password: ""
+    password: "",
   });
 
-
-
   /* ── Fetch employees with TanStack Query ──────────────────────────────────── */
-  const { data: employees = [], isLoading, error, isError } = useQuery({
+  const {
+    data: employees = [],
+    isLoading,
+    error,
+    isError,
+  } = useQuery({
     queryKey: ["employees"],
     queryFn: async () => {
-      const response = await api.get("/Employees");
+      const response = await api.get("/Employees", {
+       headers:{
+        Authorization: `Bearer ${token}`,
+       } 
+      });
       return response.data;
     },
     retry: 1,
     retryDelay: 1000,
   });
 
+    // const response = await api.get(`/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`, {
+    //     headers: getAuthHeaders(),
+    //   });
+
   /* ── Add employee handler ─────────────────────────────────────── */
   const handleAddEmployee = async (e) => {
     e.preventDefault();
-    
+
     const payload = {
       restID: user?.restId || 0,
       fullName: formData.fullName,
@@ -95,8 +105,16 @@ export default function StaffPage() {
       toast.success("Employee added successfully!");
       setIsModalOpen(false);
       setFormData({
-        fullName: "", role: "Employee", salary: "", phone: "", status: "Active",
-        shift: "Morning", workingHoursPerDay: "8", workingDaysPerWeek: "5", email: "", password: ""
+        fullName: "",
+        role: "Employee",
+        salary: "",
+        phone: "",
+        status: "Active",
+        shift: "Morning",
+        workingHoursPerDay: "8",
+        workingDaysPerWeek: "5",
+        email: "",
+        password: "",
       });
       // Invalidate and refetch employees query
       queryClient.invalidateQueries({ queryKey: ["employees"] });
@@ -108,8 +126,14 @@ export default function StaffPage() {
   });
 
   const active = employees.filter((s) => s.status === "Active").length;
-  const totalHours = employees.reduce((acc, curr) => acc + (curr.workingHoursPerDay * curr.workingDaysPerWeek), 0);
-  const totalSalaryBill = employees.reduce((acc, curr) => acc + (Number(curr.salary) || 0), 0);
+  const totalHours = employees.reduce(
+    (acc, curr) => acc + curr.workingHoursPerDay * curr.workingDaysPerWeek,
+    0,
+  );
+  const totalSalaryBill = employees.reduce(
+    (acc, curr) => acc + (Number(curr.salary) || 0),
+    0,
+  );
   const filtered = employees.filter((employee) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
@@ -129,7 +153,9 @@ export default function StaffPage() {
   const EmployeeTable = () => (
     <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
       <div className="p-6 pb-0">
-        <h3 className="text-base font-semibold text-foreground mb-4">Staff Directory</h3>
+        <h3 className="text-base font-semibold text-foreground mb-4">
+          Staff Directory
+        </h3>
       </div>
       <div className="overflow-x-auto">
         {isLoading ? (
@@ -140,23 +166,45 @@ export default function StaffPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/60 bg-muted/40">
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Employee Name</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Role</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Contact</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Hire Date</th>
-                <th className="text-right py-3 px-4 text-muted-foreground font-medium">Salary / Schedule</th>
-                <th className="text-left py-3 px-4 text-muted-foreground font-medium">Status</th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                  Employee Name
+                </th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                  Role
+                </th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                  Contact
+                </th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                  Hire Date
+                </th>
+                <th className="text-right py-3 px-4 text-muted-foreground font-medium">
+                  Salary / Schedule
+                </th>
+                <th className="text-left py-3 px-4 text-muted-foreground font-medium">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody>
               {employees.map((e) => (
-                <tr key={e.empID} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
+                <tr
+                  key={e.empID}
+                  className="border-b border-border/30 hover:bg-muted/20 transition-colors"
+                >
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-semibold shrink-0">
-                        {e.fullName ? e.fullName.split(' ').map(n => n[0]).join('') : ''}
+                        {e.fullName
+                          ? e.fullName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")
+                          : ""}
                       </div>
-                      <span className="text-foreground font-medium">{e.fullName}</span>
+                      <span className="text-foreground font-medium">
+                        {e.fullName}
+                      </span>
                     </div>
                   </td>
                   <td className="py-3 px-4 text-muted-foreground">{e.role}</td>
@@ -168,13 +216,22 @@ export default function StaffPage() {
                     {new Date(e.hireDate).toLocaleDateString()}
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <div className="text-foreground font-mono font-medium">${e.salary}</div>
-                    <div className="text-xs text-muted-foreground">{e.shift} ({e.workingDaysPerWeek}d x {e.workingHoursPerDay}h)</div>
+                    <div className="text-foreground font-mono font-medium">
+                      ${e.salary}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {e.shift} ({e.workingDaysPerWeek}d x{" "}
+                      {e.workingHoursPerDay}h)
+                    </div>
                   </td>
                   <td className="py-3 px-4">
                     <Badge
                       variant={e.status === "Active" ? "default" : "secondary"}
-                      className={e.status === "Active" ? "bg-primary/15 text-primary border-0" : ""}
+                      className={
+                        e.status === "Active"
+                          ? "bg-primary/15 text-primary border-0"
+                          : ""
+                      }
                     >
                       {e.status}
                     </Badge>
@@ -183,7 +240,10 @@ export default function StaffPage() {
               ))}
               {employees.length === 0 && !isLoading && (
                 <tr>
-                  <td colSpan="6" className="py-8 text-center text-muted-foreground">
+                  <td
+                    colSpan="6"
+                    className="py-8 text-center text-muted-foreground"
+                  >
                     No employees found.
                   </td>
                 </tr>
@@ -197,16 +257,21 @@ export default function StaffPage() {
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
-
       {/* ── Error State ──────────────────────────────────────────── */}
       {isError && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-          <p className="text-destructive font-medium">Failed to load employees</p>
-          <p className="text-destructive/70 text-sm mt-1">{error?.message || "Please try refreshing the page"}</p>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => queryClient.invalidateQueries({ queryKey: ["employees"] })}
+          <p className="text-destructive font-medium">
+            Failed to load employees
+          </p>
+          <p className="text-destructive/70 text-sm mt-1">
+            {error?.message || "Please try refreshing the page"}
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              queryClient.invalidateQueries({ queryKey: ["employees"] })
+            }
             className="mt-2"
           >
             Retry
@@ -218,15 +283,27 @@ export default function StaffPage() {
       <PageHeader
         icon={Users}
         title={isAdmin ? "Staff Management Dashboard" : "Staff Management"}
-        description={isAdmin ? "Global employee overview and directories" : "Manage your employees and schedules"}
+        description={
+          isAdmin
+            ? "Global employee overview and directories"
+            : "Manage your employees and schedules"
+        }
         actions={
-          <Button onClick={() => setIsModalOpen(true)} className="gap-2 shrink-0">
+          <Button
+            onClick={() => setIsModalOpen(true)}
+            className="gap-2 shrink-0"
+          >
             <Plus className="h-4 w-4" /> Add Employee
           </Button>
         }
       >
         {isAdmin && (
-          <Badge variant="outline" className="border-primary/30 text-primary text-xs">Admin</Badge>
+          <Badge
+            variant="outline"
+            className="border-primary/30 text-primary text-xs"
+          >
+            Admin
+          </Badge>
         )}
       </PageHeader>
 
@@ -234,7 +311,9 @@ export default function StaffPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
           title="Total Staff"
-          value={isLoading ? <Skeleton className="h-8 w-20" /> : employees.length}
+          value={
+            isLoading ? <Skeleton className="h-8 w-20" /> : employees.length
+          }
           icon={Users}
           iconWrapper
         />
@@ -247,13 +326,21 @@ export default function StaffPage() {
         />
         <SummaryCard
           title="Weekly Hrs"
-          value={isLoading ? <Skeleton className="h-8 w-20" /> : `${totalHours}h`}
+          value={
+            isLoading ? <Skeleton className="h-8 w-20" /> : `${totalHours}h`
+          }
           icon={Clock}
           iconWrapper
         />
         <SummaryCard
           title="Monthly Salary Bill"
-          value={isLoading ? <Skeleton className="h-8 w-20" /> : `$${totalSalaryBill.toLocaleString()}`}
+          value={
+            isLoading ? (
+              <Skeleton className="h-8 w-20" />
+            ) : (
+              `$${totalSalaryBill.toLocaleString()}`
+            )
+          }
           icon={DollarSign}
           iconWrapper
         />
@@ -288,13 +375,27 @@ export default function StaffPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/60 bg-muted/40">
-                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">Employee</th>
-                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">Role</th>
-                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">Contact</th>
-                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">Hire Date</th>
-                <th className="text-center py-3 px-5 text-muted-foreground font-semibold">Schedule</th>
-                <th className="text-right py-3 px-5 text-muted-foreground font-semibold">Salary</th>
-                <th className="text-center py-3 px-5 text-muted-foreground font-semibold">Status</th>
+                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">
+                  Employee
+                </th>
+                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">
+                  Role
+                </th>
+                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">
+                  Contact
+                </th>
+                <th className="text-left py-3 px-5 text-muted-foreground font-semibold">
+                  Hire Date
+                </th>
+                <th className="text-center py-3 px-5 text-muted-foreground font-semibold">
+                  Schedule
+                </th>
+                <th className="text-right py-3 px-5 text-muted-foreground font-semibold">
+                  Salary
+                </th>
+                <th className="text-center py-3 px-5 text-muted-foreground font-semibold">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -307,12 +408,27 @@ export default function StaffPage() {
                         <Skeleton className="h-4 w-32" />
                       </div>
                     </td>
-                    <td className="py-4 px-5"><Skeleton className="h-4 w-20" /></td>
-                    <td className="py-4 px-5"><div className="space-y-1.5"><Skeleton className="h-4 w-36" /><Skeleton className="h-3 w-24" /></div></td>
-                    <td className="py-4 px-5"><Skeleton className="h-4 w-24" /></td>
-                    <td className="py-4 px-5"><Skeleton className="h-4 w-24 mx-auto" /></td>
-                    <td className="py-4 px-5"><Skeleton className="h-4 w-16 ml-auto" /></td>
-                    <td className="py-4 px-5"><Skeleton className="h-6 w-16 rounded-full mx-auto" /></td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-4 w-20" />
+                    </td>
+                    <td className="py-4 px-5">
+                      <div className="space-y-1.5">
+                        <Skeleton className="h-4 w-36" />
+                        <Skeleton className="h-3 w-24" />
+                      </div>
+                    </td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-4 w-24" />
+                    </td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-4 w-24 mx-auto" />
+                    </td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-4 w-16 ml-auto" />
+                    </td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-6 w-16 rounded-full mx-auto" />
+                    </td>
                   </tr>
                 ))
               ) : filtered.length === 0 ? (
@@ -330,34 +446,57 @@ export default function StaffPage() {
                 </tr>
               ) : (
                 filtered.map((e) => (
-                  <tr key={e.empID} className="border-b border-border/30 hover:bg-muted/20 transition-colors">
+                  <tr
+                    key={e.empID}
+                    className="border-b border-border/30 hover:bg-muted/20 transition-colors"
+                  >
                     <td className="py-4 px-5">
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold shrink-0">
                           {initials(e.fullName)}
                         </div>
-                        <span className="text-foreground font-semibold">{e.fullName}</span>
+                        <span className="text-foreground font-semibold">
+                          {e.fullName}
+                        </span>
                       </div>
                     </td>
-                    <td className="py-4 px-5 text-muted-foreground">{e.role}</td>
+                    <td className="py-4 px-5 text-muted-foreground">
+                      {e.role}
+                    </td>
                     <td className="py-4 px-5">
                       <div className="text-sm text-foreground">{e.email}</div>
-                      <div className="text-xs text-muted-foreground">{e.phone}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {e.phone}
+                      </div>
                     </td>
                     <td className="py-4 px-5 text-muted-foreground">
-                      {e.hireDate ? new Date(e.hireDate).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—"}
+                      {e.hireDate
+                        ? new Date(e.hireDate).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : "—"}
                     </td>
                     <td className="py-4 px-5 text-center text-muted-foreground">
                       <div className="text-xs">{e.shift}</div>
-                      <div className="text-xs opacity-70">{e.workingDaysPerWeek}d × {e.workingHoursPerDay}h</div>
+                      <div className="text-xs opacity-70">
+                        {e.workingDaysPerWeek}d × {e.workingHoursPerDay}h
+                      </div>
                     </td>
                     <td className="py-4 px-5 text-right font-mono font-medium text-foreground">
                       ${e.salary?.toLocaleString()}
                     </td>
                     <td className="py-4 px-5 text-center">
                       <Badge
-                        variant={e.status === "Active" ? "default" : "secondary"}
-                        className={e.status === "Active" ? "bg-primary/15 text-primary border-0" : ""}
+                        variant={
+                          e.status === "Active" ? "default" : "secondary"
+                        }
+                        className={
+                          e.status === "Active"
+                            ? "bg-primary/15 text-primary border-0"
+                            : ""
+                        }
                       >
                         {e.status}
                       </Badge>
@@ -384,7 +523,9 @@ export default function StaffPage() {
                   id="fullName"
                   placeholder="Enter Full Name"
                   value={formData.fullName}
-                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, fullName: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -395,13 +536,13 @@ export default function StaffPage() {
                     id="role"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                     value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, role: e.target.value })
+                    }
                   >
-                   <option value="casher">casher</option>
-                   <option value="Cook">Cook</option>
-                   <option value="Waiter">Waiter</option>
-                   
-                    
+                    <option value="casher">casher</option>
+                    <option value="Cook">Cook</option>
+                    <option value="Waiter">Waiter</option>
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -410,9 +551,15 @@ export default function StaffPage() {
                     id="shift"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                     value={formData.shift}
-                    onChange={(e) => setFormData({ ...formData, shift: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, shift: e.target.value })
+                    }
                   >
-                    {SHIFT_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}
+                    {SHIFT_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -423,7 +570,9 @@ export default function StaffPage() {
                     id="phone"
                     placeholder="01010000000"
                     value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, phone: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -434,7 +583,9 @@ export default function StaffPage() {
                     type="number"
                     placeholder="2500"
                     value={formData.salary}
-                    onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, salary: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -447,7 +598,9 @@ export default function StaffPage() {
                   type="email"
                   placeholder="username@example.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   required
                   autoComplete="new-password"
                 />
@@ -460,25 +613,32 @@ export default function StaffPage() {
                   type="password"
                   placeholder="Password123!"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   required
                   autoComplete="new-password"
                 />
               </div>
             </div>
             <DialogFooter className="mt-2">
-              <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)}>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsModalOpen(false)}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={addEmployeeMutation.isPending}>
-                {addEmployeeMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {addEmployeeMutation.isPending && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
                 Add Employee
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
-
     </div>
   );
 }

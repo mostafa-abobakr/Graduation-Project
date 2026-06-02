@@ -2,11 +2,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/api/axios";
 import { toast } from "sonner";
 
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("authToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 export const useEmployees = () => {
   return useQuery({
     queryKey: ["employees"],
     queryFn: async () => {
-      const response = await api.get("/Employees");
+      const response = await api.get("/Employees", {
+        headers: getAuthHeaders(),
+      });
       return response.data.map((emp) => ({
         id: emp.empID,
         name: emp.fullName,
@@ -33,11 +40,13 @@ export const useShifts = (startDate, endDate) => {
   return useQuery({
     queryKey: ["shifts", startDate, endDate],
     queryFn: async () => {
-      const startFormatted = `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()}`;
-      const endFormatted = `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()}`;
-      
-      const response = await api.get(`/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`);
-      
+      const startFormatted = `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()}`
+      const endFormatted = `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()}`
+
+      const response = await api.get(`/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`, {
+        headers: getAuthHeaders(),
+      })
+
       return response.data.map(item => ({
         id: `shift-${item.scheduleID}`,
         staffId: item.empID,
@@ -47,18 +56,23 @@ export const useShifts = (startDate, endDate) => {
         startTime: item.startTime ? convert24to12(item.startTime.substring(0, 5)) : "",
         endTime: item.endTime ? convert24to12(item.endTime.substring(0, 5)) : "",
         shiftType: item.shiftType || "Morning",
+        source: item.source || item.Source || "Manual",
+        isOverridden: item.isOverridden !== undefined ? item.isOverridden : (item.IsOverridden !== undefined ? item.IsOverridden : false),
+        updatedAt: item.updatedAt || item.UpdatedAt || null,
         confirmed: true
-      }));
+      }))
     },
     enabled: !!startDate && !!endDate,
-  });
-};
+  })
+}
 
 export const useAddShift = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
-      return await api.post("/Schedule", payload);
+      return await api.post("/Schedule", payload, {
+        headers: getAuthHeaders(),
+      });
     },
     onSuccess: () => {
       toast.success("Shift added successfully!");
@@ -74,7 +88,9 @@ export const useUpdateShift = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
-      return await api.put("/Schedule", payload);
+      return await api.put("/Schedule", payload, {
+        headers: getAuthHeaders(),
+      });
     },
     onSuccess: () => {
       toast.success("Shift updated successfully!");
@@ -90,7 +106,9 @@ export const useDeleteShift = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (shiftId) => {
-      return await api.delete(`/Schedule/${shiftId}`);
+      return await api.delete(`/Schedule/${shiftId}`, {
+        headers: getAuthHeaders(),
+      });
     },
     onSuccess: () => {
       toast.success("Shift deleted successfully!");

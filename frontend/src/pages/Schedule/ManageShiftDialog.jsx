@@ -4,11 +4,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Loader2, Trash2 } from "lucide-react";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Loader2, Trash2, Sparkles } from "lucide-react"
 
 export function ManageShiftDialog({
   isModalOpen,
@@ -103,6 +103,42 @@ export function ManageShiftDialog({
                 required
               />
             </div>
+            {isEditMode && formData.source && (
+              <div className="grid grid-cols-4 items-start gap-4 bg-muted/40 p-3 rounded-lg border border-border/50 text-xs">
+                <span className="font-semibold text-muted-foreground text-right col-span-1 pt-1">
+                  Metadata
+                </span>
+                <div className="col-span-3 space-y-1.5">
+                  <div className="flex flex-wrap gap-1.5">
+                    {formData.source === "AI" ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-indigo-50 text-indigo-700 dark:bg-indigo-950/30 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-900/50">
+                        <Sparkles className="h-2.5 w-2.5 text-indigo-500" /> AI Generated
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-secondary text-secondary-foreground">
+                        Manual Entry
+                      </span>
+                    )}
+
+                    {formData.isOverridden && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50 dark:border-amber-900/50 animate-pulse">
+                        Overridden
+                      </span>
+                    )}
+                  </div>
+                  {formData.updatedAt && (
+                    <div className="text-[10px] text-muted-foreground">
+                      Last Updated: {new Date(formData.updatedAt).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter className="sm:justify-between w-full">
             {isEditMode ? (

@@ -1,7 +1,7 @@
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, CheckCircle2 } from "lucide-react";
-import { getStaffColorLight } from "@/lib/scheduleData";
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Plus, CheckCircle2, Sparkles, AlertCircle } from "lucide-react"
+import { getStaffColorLight } from "@/lib/scheduleData"
 
 export function ScheduleGrid({ 
   viewMode, 
@@ -18,7 +18,8 @@ export function ScheduleGrid({
     <ScrollArea className="w-full">
       <div className="min-w-[700px]">
         <div
-          className={`grid ${viewMode === "week" ? "grid-cols-7" : "grid-cols-1 max-w-sm mx-auto"} border-b border-border/60`}
+          className="grid border-b border-border/60"
+          style={{ gridTemplateColumns: viewMode !== "day" ? `repeat(${displayedDates.length}, minmax(0, 1fr))` : "repeat(1, minmax(0, 1fr))" }}
         >
           {displayedDates.map((date, i) => {
             const isToday =
@@ -44,7 +45,8 @@ export function ScheduleGrid({
           })}
         </div>
         <div
-          className={`grid ${viewMode === "week" ? "grid-cols-7" : "grid-cols-1 max-w-sm mx-auto"}`}
+          className="grid"
+          style={{ gridTemplateColumns: viewMode !== "day" ? `repeat(${displayedDates.length}, minmax(0, 1fr))` : "repeat(1, minmax(0, 1fr))" }}
         >
           {isLoadingShifts ? (
             displayedDates.map((_, index) => (
@@ -61,22 +63,50 @@ export function ScheduleGrid({
             displayedDates.map((date, index) => (
               <div
                 key={index}
-                className="border-r last:border-r-0 border-border/30 p-2 min-h-[280px] space-y-2"
+                className="border-r last:border-r-0 border-border/30 p-2 min-h-[280px] space-y-2 transition-colors duration-200"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.add("bg-primary/5");
+                }}
+                onDragLeave={(e) => {
+                  e.currentTarget.classList.remove("bg-primary/5");
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.currentTarget.classList.remove("bg-primary/5");
+                  const empId = e.dataTransfer.getData("employeeId");
+                  if (empId) {
+                    handleAddShiftClick(date, empId);
+                  }
+                }}
               >
                 {shiftsForDate(date).map((shift) => (
                   <div
                     key={shift.id}
                     onClick={() => handleEditShiftClick(shift, date)}
-                    className={`rounded-lg border p-2.5 text-xs cursor-pointer transition-all hover:shadow-md ${getStaffColorLight(shift.staffId)}`}
+                    className={`relative rounded-lg border p-2.5 text-xs cursor-pointer transition-all hover:shadow-md ${
+                      shift.source === "AI"
+                        ? "border-indigo-400/60 shadow-sm shadow-indigo-100/50 dark:shadow-none"
+                        : "border-border/60"
+                    } ${getStaffColorLight(shift.staffId)}`}
                   >
-                    <div className="flex items-center gap-1.5 mb-1">
-                      {shift.confirmed && (
-                        <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
-                      )}
-                      <span className="font-semibold text-foreground truncate">
-                        {shift.staffName.split(" ")[0]}{" "}
-                        {shift.staffName.split(" ")[1]?.[0]}.
-                      </span>
+                    <div className="flex items-center justify-between gap-1.5 mb-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        {shift.confirmed && (
+                          <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
+                        )}
+                        <span className="font-semibold text-foreground truncate">
+                          {shift.staffName ? shift.staffName : "-"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        {shift.source === "AI" && (
+                          <Sparkles className="h-3 w-3 text-indigo-500 animate-pulse" title="AI Generated Shift" />
+                        )}
+                        {shift.isOverridden && (
+                          <AlertCircle className="h-3 w-3 text-amber-500" title="Manually Overridden" />
+                        )}
+                      </div>
                     </div>
                     <div className="text-muted-foreground">
                       {shift.startTime}-{shift.endTime}

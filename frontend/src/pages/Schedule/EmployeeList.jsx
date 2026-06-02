@@ -30,8 +30,17 @@ export function EmployeeList({ isVisble, employees, staffHours }) {
           <div className="space-y-4">
             {employees.map((member) => {
               const info = staffHours[member.id];
+            
+              
               return (
-                <div key={member.id} className="flex items-start gap-3">
+                <div
+                  key={member.id}
+                  className="flex items-start gap-3 cursor-grab active:cursor-grabbing"
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("employeeId", member.id.toString());
+                  }}
+                >
                   <div
                     className={`h-10 w-10 rounded-full ${getStaffColor(
                       member.id,
@@ -44,7 +53,7 @@ export function EmployeeList({ isVisble, employees, staffHours }) {
                       {member.name}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {member.role}
+                      {member.role}  id : {member.id}
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
