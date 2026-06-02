@@ -63,6 +63,7 @@ export const useDeleteBatch = () => {
       // Invalidate both batchDetails and inventoryItems to keep UI in sync
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
     },
     onError: (err) => {
       toast.error(err?.response?.data?.message || "Failed to delete batch");
@@ -80,6 +81,7 @@ export const useUpdateBatch = () => {
       toast.success(`Batch #${variables.batchId} updated`);
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
     },
     onError: (err) => {
       toast.error(err?.response?.data?.message || "Failed to update batch");

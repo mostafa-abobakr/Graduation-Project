@@ -20,9 +20,9 @@ const POS_FOOTER_LINKS = {
     { label: "Help", href: "https://central.toasttab.com/" },
   ],
   geidea: [
-    { label: "Privacy Policy", href: "https://www.geidea.net/privacy-policy/" },
-    { label: "Terms of Service", href: "https://www.geidea.net/terms-and-conditions/" },
-    { label: "Help", href: "https://help.geidea.net/" },
+    { label: "Privacy Policy", href: "https://www.geidea.net/egy/en/privacy-policy" },
+    { label: "Terms of Service", href: "https://d23r9m22xg868b.cloudfront.net/public/files/KSA-Terms-and-Conditions-CP-CNP-English-Version-(17-08-2025).pdf" },
+    { label: "Help", href: "https://www.geidea.net/egy/en/resources" },
   ],
 };
 const SIGNUP_URL = [

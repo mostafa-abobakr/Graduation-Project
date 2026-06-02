@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
+import api from "@/api/axios";
 import {
   AreaChart,
   Area,
@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ViewToggler } from "@/components/shared/ViewToggler";
 import { SummaryCard } from "@/components/shared/SummaryCard";
+import { LoadingSkeleton } from "@/components/shared/Skeletons";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "#3b82f6" },
@@ -80,8 +81,8 @@ function ChangePill({ value }) {
     <div
       className={`flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
         isNeg
-          ? "bg-rose-500/10 text-rose-500"
-          : "bg-emerald-500/10 text-emerald-500"
+          ? "bg-destructive/15 text-destructive"
+          : "bg-success/15 text-success"
       }`}
     >
       {isNeg ? (
@@ -97,10 +98,10 @@ function ChangePill({ value }) {
 function MarginBadge({ value }) {
   const cls =
     value >= 70
-      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+      ? "bg-success/15 text-success"
       : value >= 40
-        ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-        : "bg-rose-500/15 text-rose-600 dark:text-rose-400";
+        ? "bg-warning/15 text-warning"
+        : "bg-destructive/15 text-destructive";
   return (
     <span
       className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${cls}`}
@@ -110,29 +111,7 @@ function MarginBadge({ value }) {
   );
 }
 
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-5 py-5 animate-fade-in">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-64" />
-          </div>
-        </div>
-        <Skeleton className="h-10 w-full sm:w-[400px] rounded-xl" />
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 rounded-xl" />
-        ))}
-      </div>
-      <Skeleton className="h-[340px] rounded-xl" />
-      <Skeleton className="h-[360px] rounded-xl" />
-    </div>
-  );
-}
+
 
 export default function RevenuePage() {
   const { user } = useAuth();
@@ -142,12 +121,10 @@ export default function RevenuePage() {
     queryKey: ["revenueData", user?.restId],
     queryFn: async () => {
       if (!user?.restId) return null;
-      const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/revenue/${user.restId}`,
-        { headers: { accept: "application/json" } },
+      const res = await api.get(
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/revenue/${user.restId}`
       );
-      if (!res.ok) throw new Error("Failed to fetch revenue data");
-      return res.json();
+      return res.data;
     },
     enabled: !!user?.restId,
   });
@@ -529,10 +506,10 @@ export default function RevenuePage() {
                         key={i}
                         fill={
                           item.margin >= 70
-                            ? "#10b981"
+                            ? "hsl(var(--success))"
                             : item.margin >= 40
-                              ? "#f59e0b"
-                              : "#ef4444"
+                              ? "hsl(var(--warning))"
+                              : "hsl(var(--destructive))"
                         }
                         fillOpacity={0.85}
                       />
