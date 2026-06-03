@@ -1,16 +1,26 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from datetime import date, datetime, time, timedelta
 from typing import List, Dict, Any
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+from database.connection import get_db_session
 
-from .api_client import SchedulingAPIClient
+from .demand_service import DemandService
 from .db_manager import DBManager
 from .solver import ScheduleSolver, SHIFT_HOURS
-from .schemas import GenerateScheduleResponse, ShiftAssignment, ShiftUpdate
+from .schemas import (
+    GenerateScheduleResponse, ShiftAssignment, ShiftUpdate,
+    RetrieveReportResponse, Finding, KeyIssue, Report, Analysis,
+    ScheduleViewResponse
+)
 from .utils.normalization import normalize
-from .models import EmployeeModel
+from .models import EmployeeModel, RestaurantSettings
+from .intelligence import analyze_schedule
+from .llm_report_generator import LLMReportGenerator
 
 router = APIRouter()
+
+REPORT_CACHE = {}
 
 def shifts_overlap(s1_start: time, s1_end: time, s1_date: date, s2_start: time, s2_end: time, s2_date: date) -> bool:
     """Helper to check if two shifts overlap, accounting for midnight wrap-around."""
@@ -80,14 +90,15 @@ def generate_schedule(restaurant_id: str, target_date: date = None):
         # 1. Calculate boundaries (Monday -> Sunday)
         monday = target_date - timedelta(days=target_date.weekday())
         sunday = monday + timedelta(days=6)
+        dates = [monday + timedelta(days=i) for i in range(7)]
         
         # 2. Instantiate Providers
-        api_client = SchedulingAPIClient()
+        demand_service = DemandService()
         db_manager = DBManager()
         
         # 3. Fetch Data
-        forecasts = api_client.fetch_forecast_data_for_range(restaurant_id, monday, sunday)
-        employees = db_manager.get_employees_from_db(restaurant_id)
+        daily_demand = demand_service.get_weekly_demand(restaurant_id, monday, sunday)
+        employees = db_manager.get_employees_from_db(restaurant_id, dates)
         
         if not employees:
             raise HTTPException(status_code=400, detail="No employees found for this restaurant.")
@@ -100,30 +111,136 @@ def generate_schedule(restaurant_id: str, target_date: date = None):
             emp["Role"] = normalize(emp.get("Role"))
             emp["Shif"] = normalize(emp.get("Shif"))
             
+        # Fetch Restaurant Settings
+        # Calculate/update productivity ratios from history
+        try:
+            db_manager.calculate_and_save_productivity_ratios(restaurant_id, days=30, anchor_date=target_date)
+        except Exception as e:
+            print(f"WARNING: Could not calculate historical productivity: {e}")
+
+        from scheduling.models import RestaurantSettings
+        with db_manager.SessionLocal() as session:
+            settings = session.query(RestaurantSettings).filter(RestaurantSettings.rest_id == restaurant_id).first()
+            if not settings:
+                settings = RestaurantSettings(
+                    rest_id=restaurant_id,
+                    morning_shift_weight=0.6,
+                    night_shift_weight=0.4,
+                    productivity_ratio=10.0,
+                    morning_productivity_ratio=10.0,
+                    night_productivity_ratio=10.0
+                )
+                session.add(settings)
+                session.commit()
+                session.refresh(settings)
+
         # 6. Solve Schedule
         solver = ScheduleSolver()
-        assignments, message, solver_status = solver.solve(employees, forecasts, target_date, overrides)
+        solver_output = solver.solve(employees, daily_demand, target_date, overrides, settings)
         
-        if solver_status in ["success", "partial_success"]:
-            # Delete only existing non-overridden AI schedules for the week range
-            deleted_count = db_manager.delete_schedules_for_week(restaurant_id, monday, sunday)
-            print(f"DEBUG: Deleted {deleted_count} old AI-generated schedules.")
-            
-            # Save only the newly generated AI assignments (non-overridden)
-            ai_assignments = [a for a in assignments if not a.IsOverridden]
-            saved_count = db_manager.save_schedule_to_db(ai_assignments, restaurant_id)
-            
-            message = f"{message} Deleted {deleted_count} old AI shifts, created {saved_count} new AI shifts, and preserved {len(overrides)} manual overrides."
-            
+        assignments = solver_output["assignments"]
+        solver_status = solver_output["status"]
+        message = solver_output["message"]
+        metrics = solver_output["metrics"]
+        violations = solver_output["violations"]
+        skipped_overrides = solver_output["skipped_overrides"]
+        
+        # Ensure we never return an infeasible or failed status to the user
+        if solver_status not in ["success", "partial_success"]:
+            solver_status = "partial_success"
+        
+        # Delete only existing non-overridden AI schedules for the week range
+        deleted_count = db_manager.delete_schedules_for_week(restaurant_id, monday, sunday)
+        print(f"DEBUG: Deleted {deleted_count} old AI-generated schedules.")
+        
+        # Save only the newly generated AI assignments (non-overridden)
+        ai_assignments = [a for a in assignments if not a.IsOverridden]
+        saved_count = db_manager.save_schedule_to_db(ai_assignments, restaurant_id)
+        
+        message = f"{message} Deleted {deleted_count} old AI shifts, created {saved_count} new AI shifts, and preserved {len(overrides)} manual overrides."
+        
+        # Coverage and utilization metrics from solver output
+        total_required_shifts = metrics["total_required_shifts"]
+        total_available_capacity = metrics["total_available_capacity"]
+        capacity_utilization = metrics["utilization_percentage"]
+        missing_shifts = metrics["missing_shifts"]
+        coverage_pct = round((len(assignments) / max(1, total_required_shifts)) * 100, 1)
+        
         # 7. Print Schedule to Console
         print_schedule_to_console(restaurant_id, monday, sunday, assignments)
         
+        analysis = analyze_schedule(
+            assignments=assignments,
+            daily_demand=daily_demand,
+            employees=employees,
+            status=solver_status,
+            message=message,
+            target_date=target_date
+        )
+        
+        warnings_list = analysis.get("warnings", [])
+        if coverage_pct < 80.0:
+            warnings_list.append(
+                f"Restaurant is understaffed. Required: {total_required_shifts} shifts, Available: {total_available_capacity} shifts. Consider hiring."
+            )
+
+        llm_report_available = False
+        try:
+            from .llm_report_generator import build_report_metrics, calculate_health_score
+            solver_output_for_metrics = {
+                "status": solver_status,
+                "assignments": [
+                    {
+                        "employee_id": a.EmpID,
+                        "role": a.Role,
+                        "date": str(a.Date),
+                        "shift": a.ShiftType
+                    }
+                    for a in assignments
+                ],
+                "metrics": metrics,
+                "violations": violations,
+                "warnings": warnings_list,
+                "suggestions": analysis.get("suggestions", []),
+                "skipped_overrides": skipped_overrides
+            }
+            metrics_payload = build_report_metrics(
+                solver_output=solver_output_for_metrics,
+                employees=employees,
+                daily_demand=daily_demand,
+                target_date=target_date,
+                settings=settings
+            )
+            score, status = calculate_health_score(metrics_payload)
+            metrics_payload["system_health"]["health_score"] = score
+            metrics_payload["system_health"]["status"] = status
+            
+            llm_generator = LLMReportGenerator()
+            llm_report = llm_generator.generate_report(metrics_payload)
+            if llm_report:
+                # Cache the generated report
+                REPORT_CACHE[restaurant_id] = {
+                    "generated_at": datetime.utcnow().isoformat() + "Z",
+                    "report": llm_report,
+                    "metrics": metrics_payload,
+                    "analysis": llm_report
+                }
+                llm_report_available = True
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"Error in LLMReportGenerator during generate: {str(e)}")
+
         return GenerateScheduleResponse(
             restaurant_id=restaurant_id,
             date=target_date,
             status=solver_status,
             message=message,
-            assignments=assignments
+            assignments=assignments,
+            warnings=warnings_list,
+            suggestions=analysis.get("suggestions", []),
+            diagnostics=analysis.get("diagnostics", []),
+            llm_report_available=llm_report_available,
+            coverage_percentage=coverage_pct
         )
         
     except Exception as e:
@@ -156,20 +273,20 @@ def update_schedule_shift(id: int, update_data: ShiftUpdate):
     # 3. Normalize and validate ShiftType
     norm_shift = normalize(shift_type_raw)
     if norm_shift not in ["morning", "night"]:
-        raise HTTPException(status_code=400, detail="Invalid ShiftType. Must be 'Morning' or 'Evening'.")
+        raise HTTPException(status_code=400, detail="Invalid ShiftType. Must be 'Morning' or 'Night'.")
         
     # Set default times if updating shift type but not times
     if update_data.ShiftType is not None:
         if update_data.StartTime is None:
-            start_time = SHIFT_HOURS["Morning" if norm_shift == "morning" else "Evening"]["start"]
+            start_time = SHIFT_HOURS["Morning" if norm_shift == "morning" else "Night"]["start"]
         if update_data.EndTime is None:
-            end_time = SHIFT_HOURS["Morning" if norm_shift == "morning" else "Evening"]["end"]
+            end_time = SHIFT_HOURS["Morning" if norm_shift == "morning" else "Night"]["end"]
             
     # 4. Validation Rules: Overlap & Duplicate Bookings
     other_schedules = db_manager.get_employee_schedules_for_day(emp_id, day)
     for s in other_schedules:
         if s["ScheduleID"] == id:
-            continue # skip checking self
+            continue
             
         # Prevent double booking of same shift type
         if normalize(s["ShiftType"]) == norm_shift:
@@ -183,7 +300,7 @@ def update_schedule_shift(id: int, update_data: ShiftUpdate):
     update_fields = {
         "EmpID": emp_id,
         "Day": day,
-        "ShiftType": "Morning" if norm_shift == "morning" else "Evening",
+        "ShiftType": "Morning" if norm_shift == "morning" else "Night",
         "StartTime": start_time,
         "EndTime": end_time
     }
@@ -201,80 +318,274 @@ def update_schedule_shift(id: int, update_data: ShiftUpdate):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class SeedEmployeesRequest(BaseModel):
-    chefs: int
-    employees: int
 
-@router.post("/employees/seed/{restaurant_id}")
-def seed_mock_employees(restaurant_id: str, request_data: SeedEmployeesRequest):
-    """
-    Seed mock employees dynamically in the database for testing.
-    """
-    try:
-        rest_id_int = int(restaurant_id)
-    except ValueError:
-        raise HTTPException(status_code=400, detail="restaurant_id must be an integer.")
+def map_findings(raw_findings) -> List[Finding]:
+    if not raw_findings:
+        return []
+    mapped = []
+    for f in raw_findings:
+        if isinstance(f, dict):
+            mapped.append(Finding(
+                metric=f.get("metric", "unknown"),
+                value=f.get("value"),
+                description=f.get("description", "")
+            ))
+        elif hasattr(f, "metric") and hasattr(f, "description"):
+            mapped.append(Finding(
+                metric=f.metric,
+                value=getattr(f, "value", None),
+                description=f.description
+            ))
+        elif isinstance(f, str):
+            mapped.append(Finding(
+                metric="info",
+                value=None,
+                description=f
+            ))
+    return mapped
 
+
+def map_key_issues(raw_key_issues) -> List[KeyIssue]:
+    if not raw_key_issues:
+        return []
+    mapped = []
+    for k in raw_key_issues:
+        if isinstance(k, dict):
+            mapped.append(KeyIssue(
+                metric=k.get("metric", "unknown"),
+                value=k.get("value"),
+                description=k.get("description", "")
+            ))
+        elif hasattr(k, "metric") and hasattr(k, "description"):
+            mapped.append(KeyIssue(
+                metric=k.metric,
+                value=getattr(k, "value", None),
+                description=k.description
+            ))
+        elif isinstance(k, str):
+            mapped.append(KeyIssue(
+                metric="info",
+                value=None,
+                description=k
+            ))
+    return mapped
+
+
+@router.get("/report/{restaurant_id}", response_model=RetrieveReportResponse)
+def retrieve_report(restaurant_id: str):
+    """
+    Retrieve the latest generated LLM report for a restaurant.
+    """
+    cached = REPORT_CACHE.get(restaurant_id)
+    if cached:
+        analysis_data = cached.get("analysis") or {}
+        report_data = cached.get("report") or {}
+        
+        raw_findings = []
+        if isinstance(analysis_data, dict):
+            raw_findings = analysis_data.get("findings") or []
+        elif hasattr(analysis_data, "findings"):
+            raw_findings = analysis_data.findings or []
+            
+        raw_key_issues = []
+        if isinstance(report_data, dict):
+            raw_key_issues = report_data.get("key_issues") or report_data.get("findings") or []
+        elif hasattr(report_data, "key_issues"):
+            raw_key_issues = report_data.key_issues or []
+            
+        mapped_findings = map_findings(raw_findings)
+        mapped_key_issues = map_key_issues(raw_key_issues)
+        
+        status = "healthy"
+        if isinstance(analysis_data, dict):
+            status = analysis_data.get("status", "healthy")
+        elif hasattr(analysis_data, "status"):
+            status = analysis_data.status or "healthy"
+            
+        health_score = 100
+        if isinstance(analysis_data, dict):
+            health_score = analysis_data.get("health_score", 100)
+        elif hasattr(analysis_data, "health_score"):
+            health_score = analysis_data.health_score or 100
+            
+        recommendations = []
+        if isinstance(analysis_data, dict):
+            recommendations = analysis_data.get("recommendations") or []
+        elif hasattr(analysis_data, "recommendations"):
+            recommendations = analysis_data.recommendations or []
+            
+        warnings = []
+        if isinstance(analysis_data, dict):
+            warnings = analysis_data.get("warnings") or []
+        elif hasattr(analysis_data, "warnings"):
+            warnings = analysis_data.warnings or []
+            
+        return RetrieveReportResponse(
+            restaurant_id=restaurant_id,
+            generated_at=cached.get("generated_at"),
+            metrics=cached.get("metrics"),
+            report=Report(
+                key_issues=mapped_key_issues
+            ),
+            analysis=Analysis(
+                status=status,
+                health_score=health_score,
+                findings=mapped_findings,
+                recommendations=recommendations,
+                warnings=warnings
+            )
+        )
+    return RetrieveReportResponse(
+        restaurant_id=restaurant_id,
+        report=None,
+        metrics=None,
+        analysis=None,
+        message="No report has been generated yet."
+    )
+
+
+from pydantic import Field, model_validator
+from typing import Optional
+
+class RestaurantSettingsResponse(BaseModel):
+    rest_id: str
+    morning_shift_weight: float
+    night_shift_weight: float
+    productivity_ratio: float
+    morning_productivity_ratio: Optional[float] = 10.0
+    night_productivity_ratio: Optional[float] = 10.0
+
+    class Config:
+        from_attributes = True
+
+class RestaurantSettingsUpdate(BaseModel):
+    morning_shift_weight: Optional[float] = Field(None, gt=0.0, lt=1.0)
+    night_shift_weight: Optional[float] = Field(None, gt=0.0, lt=1.0)
+    productivity_ratio: Optional[float] = Field(None, gt=0.0)
+    morning_productivity_ratio: Optional[float] = Field(None, gt=0.0)
+    night_productivity_ratio: Optional[float] = Field(None, gt=0.0)
+
+    @model_validator(mode='after')
+    def validate_weights(self) -> 'RestaurantSettingsUpdate':
+        w_m = self.morning_shift_weight
+        w_n = self.night_shift_weight
+        if w_m is not None and w_n is not None:
+            total = w_m + w_n
+            if not (1.0 - 1e-6 <= total <= 1.0 + 1e-6):
+                raise ValueError("The sum of morning_shift_weight and night_shift_weight must be exactly 1.0.")
+        return self
+
+
+@router.get("/settings/{restaurant_id}", response_model=RestaurantSettingsResponse)
+def get_restaurant_settings(restaurant_id: str, db: Session = Depends(get_db_session)):
+    settings = db.query(RestaurantSettings).filter(RestaurantSettings.rest_id == restaurant_id).first()
+    if not settings:
+        settings = RestaurantSettings(
+            rest_id=restaurant_id,
+            morning_shift_weight=0.6,
+            night_shift_weight=0.4,
+            productivity_ratio=10.0,
+            morning_productivity_ratio=10.0,
+            night_productivity_ratio=10.0
+        )
+        sa_settings = settings
+        db.add(sa_settings)
+        db.commit()
+        db.refresh(sa_settings)
+    return settings
+
+
+@router.patch("/settings/{restaurant_id}", response_model=RestaurantSettingsResponse)
+def update_restaurant_settings(
+    restaurant_id: str,
+    update_data: RestaurantSettingsUpdate,
+    db: Session = Depends(get_db_session)
+):
+    settings = db.query(RestaurantSettings).filter(RestaurantSettings.rest_id == restaurant_id).first()
+    if not settings:
+        raise HTTPException(status_code=404, detail="Settings for this restaurant do not exist.")
+    
+    update_fields = update_data.model_dump(exclude_unset=True)
+    for key, val in update_fields.items():
+        setattr(settings, key, val)
+        
+    db.commit()
+    db.refresh(settings)
+    return settings
+
+
+def group_weekly_schedule(restaurant_id: str, raw_assignments: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Transforms and groups raw schedules into morning and night tables by Date.
+    """
+    from collections import defaultdict
+    grouped = {
+        "morning": defaultdict(list),
+        "night": defaultdict(list)
+    }
+    
+    for a in raw_assignments:
+        shift_type = normalize(a.get("ShiftType"))
+        table_key = None
+        if shift_type == "morning":
+            table_key = "morning"
+        elif shift_type in ["night", "evening"]:
+            table_key = "night"
+            
+        if not table_key:
+            continue
+            
+        d_val = a.get("Date")
+        if isinstance(d_val, (date, datetime)):
+            date_str = d_val.strftime("%Y-%m-%d")
+        else:
+            date_str = str(d_val)
+            
+        st_val = a.get("StartTime")
+        et_val = a.get("EndTime")
+        
+        start_time_str = st_val.strftime("%H:%M:%S") if isinstance(st_val, time) else str(st_val)
+        end_time_str = et_val.strftime("%H:%M:%S") if isinstance(et_val, time) else str(et_val)
+        
+        grouped[table_key][date_str].append({
+            "EmpID": a.get("EmpID"),
+            "Role": a.get("Role"),
+            "StartTime": start_time_str,
+            "EndTime": end_time_str
+        })
+        
+    tables = {
+        "morning": [],
+        "night": []
+    }
+    
+    for tk in ["morning", "night"]:
+        for d_str in sorted(grouped[tk].keys()):
+            tables[tk].append({
+                "Date": d_str,
+                "employees": grouped[tk][d_str]
+            })
+            
+    return {
+        "restaurant_id": restaurant_id,
+        "tables": tables
+    }
+
+
+@router.get("/{restaurant_id}/view", response_model=ScheduleViewResponse)
+def view_weekly_schedule(restaurant_id: str, target_date: Optional[date] = None):
+    """
+    Retrieve and view the structured weekly schedule for a restaurant.
+    """
+    if not target_date:
+        target_date = date.today()
+        
+    # Calculate Monday -> Sunday boundaries
+    monday = target_date - timedelta(days=target_date.weekday())
+    sunday = monday + timedelta(days=6)
+    
     db_manager = DBManager()
-    with db_manager.SessionLocal() as session:
-        try:
-            # Clear existing mock employees for this restaurant to avoid duplicate email/phone or accumulation
-            session.query(EmployeeModel).filter(
-                EmployeeModel.RestID == rest_id_int,
-                EmployeeModel.Status == "MOCK"
-            ).delete(synchronize_session=False)
+    raw_assignments = db_manager.get_schedules_for_week(restaurant_id, monday, sunday)
+    
+    return group_weekly_schedule(restaurant_id, raw_assignments)
 
-            created_count = 0
-            
-            # Seed Chefs
-            for i in range(1, request_data.chefs + 1):
-                new_emp = EmployeeModel(
-                    RestID=rest_id_int,
-                    FullName=f"Mock Chef {i}",
-                    Role="Chef",
-                    Salary=3000.0,
-                    Phone=f"0100000000{i}",
-                    HireDate=datetime.utcnow(),
-                    Status="MOCK",
-                    CreatedAt=datetime.utcnow(),
-                    UpdatedAt=datetime.utcnow(),
-                    Email=f"mock_chef_{rest_id_int}_{i}@test.local",
-                    HashedPassword="123456",
-                    Shif="Any",
-                    WorkingDaysPerWeek=5,
-                    WorkingHoursPerDay=8
-                )
-                session.add(new_emp)
-                created_count += 1
-                
-            # Seed Regular Employees
-            for i in range(1, request_data.employees + 1):
-                new_emp = EmployeeModel(
-                    RestID=rest_id_int,
-                    FullName=f"Mock Employee {i}",
-                    Role="Employee",
-                    Salary=2500.0,
-                    Phone=f"0100000000{i}",
-                    HireDate=datetime.utcnow(),
-                    Status="MOCK",
-                    CreatedAt=datetime.utcnow(),
-                    UpdatedAt=datetime.utcnow(),
-                    Email=f"mock_employee_{rest_id_int}_{i}@test.local",
-                    HashedPassword="123456",
-                    Shif="Any",
-                    WorkingDaysPerWeek=5,
-                    WorkingHoursPerDay=8
-                )
-                session.add(new_emp)
-                created_count += 1
-                
-            session.commit()
-            
-            return {
-                "status": "success",
-                "restaurant_id": rest_id_int,
-                "created": created_count
-            }
-        except Exception as e:
-            session.rollback()
-            raise HTTPException(status_code=500, detail=f"Failed to seed mock employees: {str(e)}")

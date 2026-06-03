@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date, Time, ForeignKey, Float, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Date, Time, ForeignKey, Float, DateTime, Boolean, UniqueConstraint
 from sqlalchemy.orm import declarative_base
 from datetime import datetime
 
@@ -37,3 +37,28 @@ class ScheduleModel(Base):
     Source = Column(String(50), default="AI")
     IsOverridden = Column(Boolean, default=False)
     UpdatedAt = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class EmployeeAvailability(Base):
+    __tablename__ = 'EmployeeAvailabilities'
+    __table_args__ = (
+        UniqueConstraint('emp_id', 'day', name='uq_emp_availability_day'),
+        {"schema": "dbo"}
+    )
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    emp_id = Column(Integer, ForeignKey('dbo.Employees.EmpID', ondelete='CASCADE'), nullable=False, index=True)
+    day = Column(sa_Date := Date, nullable=False, index=True)
+    available_shifts = Column(String(100), nullable=False)
+
+
+class RestaurantSettings(Base):
+    __tablename__ = 'RestaurantSettings'
+    __table_args__ = {"schema": "dbo"}
+    
+    rest_id = Column(String(50), primary_key=True, index=True)
+    morning_shift_weight = Column(Float, nullable=False, default=0.6)
+    night_shift_weight = Column(Float, nullable=False, default=0.4)
+    productivity_ratio = Column(Float, nullable=False, default=10.0)
+    morning_productivity_ratio = Column(Float, nullable=True, default=10.0)
+    night_productivity_ratio = Column(Float, nullable=True, default=10.0)
