@@ -134,7 +134,7 @@ export default function SchedulePage() {
     }
 
     setFormData({
-      empID: shift.staffId.toString(),
+      empID: shift.staffId ? shift.staffId.toString() : "",
       startTime: convert12to24(shift.startTime),
       endTime: convert12to24(shift.endTime),
       shiftType: shift.shiftType || "Morning",

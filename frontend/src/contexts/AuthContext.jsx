@@ -48,7 +48,7 @@ export function AuthProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         data: { email, password },
       });
-
+      
       if (response.data && response.data.token) {
 
         const role = response.data.role;

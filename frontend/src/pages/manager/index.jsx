@@ -9,6 +9,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePayment } from "@/hooks/usePayment";
+import { motion } from "framer-motion";
+
+const staggerContainer = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const fadeUpVariant = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+};
 
 const ManagerDashboard = () => {
 
@@ -109,7 +123,7 @@ const ManagerDashboard = () => {
     return "day";
   };
   const dashboardData = data?.data?.[getViewKey()];
-  console.log("dashboardData", dashboardData)
+  // console.log("dashboardData", dashboardData)
 
   const statistics = dashboardData?.revenue;
   const costReduction = dashboardData?.cost_reduction;
@@ -124,27 +138,32 @@ const ManagerDashboard = () => {
       <Header viewMode={viewMode} setViewMode={setViewMode} />
 
       {/* Main Dashboard Container */}
-      <main className="flex-1 pt-5 space-y-4 md:space-y-5">
+      <motion.main 
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="flex-1 pt-5 space-y-4 md:space-y-5"
+      >
         {/* Row 1: Stats & Cost Reduction */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
+        <motion.div variants={fadeUpVariant} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-5">
           <Statistics data={statistics} />
           <CostReduction data={costReduction} />
-        </div>
+        </motion.div>
 
         {/* Row 2: Layout block - Alerts (left), PeakTimes (right) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 items-stretch">
+        <motion.div variants={fadeUpVariant} className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-5 items-stretch">
           {/* Left Column */}
           <Alerts data={dashboardData} />
           {/* <Alerts data={mockAlertData} /> */}
 
           {/* Right Column */}
           <PeakTimes data={peakTimes} viewMode={viewMode} />
-        </div>
+        </motion.div>
 
-        <div className="grid grid-cols-1 items-stretch">
+        <motion.div variants={fadeUpVariant} className="grid grid-cols-1 items-stretch">
           <SalesProfitChart data={salesProfit} viewMode={viewMode} />
-        </div>
-      </main>
+        </motion.div>
+      </motion.main>
     </div>
   );
 };

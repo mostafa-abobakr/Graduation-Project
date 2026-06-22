@@ -15,7 +15,7 @@ export const useEmployees = () => {
         headers: getAuthHeaders(),
       });
       return response.data.map((emp) => ({
-        id: emp.empID,
+        id: emp.empID || emp.empId || emp.id || emp.employeeId,
         name: emp.fullName,
         role: emp.role,
         avatar: emp.fullName ? emp.fullName.split(" ").map(n => n[0]).join("") : "",
@@ -46,10 +46,12 @@ export const useShifts = (startDate, endDate) => {
       const response = await api.get(`/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`, {
         headers: getAuthHeaders(),
       })
-
+      console.log(response.data);
+      console.log(startFormatted,endFormatted);
+      
       return response.data.map(item => ({
         id: `shift-${item.scheduleID}`,
-        staffId: item.empID,
+        staffId: item.empID || item.empId || item.employeeId || item.staffId || item.id,
         staffName: item.employeeName,
         avatar: item.employeeName ? item.employeeName.split(" ").map(n => n[0]).join("") : "",
         date: item.day ? item.day.split("T")[0] : "",

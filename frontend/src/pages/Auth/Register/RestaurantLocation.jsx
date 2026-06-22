@@ -67,9 +67,10 @@ const RestaurantLocation = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [isMapExpanded, setIsMapExpanded] = useState(false);
-  const { formData, updateFromData } = useRegisterContext();
-  const { register,login} = useAuth();
+  const [isMapExpanded, setIsMapExpanded] = useState(false)
+  const [isUserTyping, setIsUserTyping] = useState(false)
+  const { formData, updateFromData } = useRegisterContext()
+  const { register, login } = useAuth();
 
   const formik = useFormik({
     initialValues: {
@@ -101,9 +102,9 @@ const RestaurantLocation = () => {
   );
 
   useEffect(() => {
-    if (!searchText || searchText.length < 3) {
-      setSuggestions([]);
-      return;
+    if (!isUserTyping || !searchText || searchText.length < 3) {
+      setSuggestions([])
+      return
     }
 
     const controller = new AbortController();
@@ -160,8 +161,9 @@ const RestaurantLocation = () => {
   };
 
   const handleSuggestionSelect = (item) => {
-    const lat = Number(item.lat);
-    const lng = Number(item.lon);
+    setIsUserTyping(false)
+    const lat = Number(item.lat)
+    const lng = Number(item.lon)
     formik.setFieldValue("address", item.display_name || "");
     const city = extractCity(item.address || {});
     if (city) {
@@ -175,11 +177,13 @@ const RestaurantLocation = () => {
   };
 
   const handleDragEnd = (lat, lng) => {
-    setMapCenter({ lat, lng });
-    reverseGeocode(lat, lng);
-  };
+    setIsUserTyping(false)
+    setMapCenter({ lat, lng })
+    reverseGeocode(lat, lng)
+  }
 
   const retryGeolocation = () => {
+    setIsUserTyping(false)
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
         const lat = coords.latitude;
@@ -210,6 +214,7 @@ const RestaurantLocation = () => {
   };
 
   const handleLocateMe = () => {
+    setIsUserTyping(false)
     if (!window.isSecureContext) {
       setSubmitError("Locate Me works only on HTTPS (or localhost).");
       return;
@@ -247,6 +252,7 @@ const RestaurantLocation = () => {
       footerText="Already have an account?"
       footerLinkText="Log in"
       footerLinkTo="/login"
+      className="min-h-0 py-6 bg-transparent w-full"
     >
       <form
         onSubmit={formik.handleSubmit}
@@ -284,8 +290,9 @@ const RestaurantLocation = () => {
               className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem] w-full"
               value={formik.values.address}
               onChange={(event) => {
-                formik.setFieldValue("address", event.target.value);
-                setShowSuggestions(true);
+                formik.setFieldValue("address", event.target.value)
+                setIsUserTyping(true)
+                setShowSuggestions(true)
               }}
               onFocus={() => setShowSuggestions(true)}
               onBlur={(event) => {
@@ -390,7 +397,7 @@ const RestaurantLocation = () => {
         </div>
       </form>
     </AuthContainer>
-  );
-};
+  )
+}
 
-export default RestaurantLocation;
+export default RestaurantLocation

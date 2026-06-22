@@ -49,7 +49,7 @@ export function ManageShiftDialog({
                   Select employee
                 </option>
                 {employees.map((member) => (
-                  <option key={member.id} value={member.id}>
+                  <option key={member.id} value={member.id?.toString()}>
                     {member.name}
                   </option>
                 ))}

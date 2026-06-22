@@ -487,11 +487,90 @@ return (
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                
-                {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
+                <Label>Role</Label>
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Casher">Casher</SelectItem>
+                        <SelectItem value="Cook">Cook</SelectItem>
+                        <SelectItem value="Waiter">Waiter</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.role && <span className="text-xs text-destructive">{errors.role.message}</span>}
               </div>
-            </div >
+              <div className="space-y-2">
+                <Label>Shift</Label>
+                <Controller
+                  name="shift"
+                  control={control}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select shift" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SHIFT_OPTIONS.map((s) => (
+                          <SelectItem key={s} value={s}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.shift && <span className="text-xs text-destructive">{errors.shift.message}</span>}
+              </div>
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  placeholder="01010000000"
+                  {...register("phone")}
+                />
+                {errors.phone && <span className="text-xs text-destructive">{errors.phone.message}</span>}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="salary">Salary ($)</Label>
+                <Input
+                  id="salary"
+                  type="number"
+                  placeholder="2500"
+                  {...register("salary")}
+                />
+                {errors.salary && <span className="text-xs text-destructive">{errors.salary.message}</span>}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="staffEmail">Email</Label>
+              <Input
+                id="staffEmail"
+                type="email"
+                placeholder="username@example.com"
+                {...register("email")}
+                autoComplete="new-password"
+              />
+              {errors.email && <span className="text-xs text-destructive">{errors.email.message}</span>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="staffPassword">Initial Password</Label>
+              <Input
+                id="staffPassword"
+                type="password"
+                placeholder="Password123!"
+                {...register("password")}
+                autoComplete="new-password"
+              />
+              {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
+            </div>
+          </div>
   <DialogFooter className="mt-2">
     <Button
       type="button"
