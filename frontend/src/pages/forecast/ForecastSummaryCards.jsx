@@ -27,7 +27,7 @@ export default function ForecastSummaryCards({ data, alignment, isLoading }) {
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 3 }).map((_, i) => (
           <Skeleton key={i} className="h-[120px] w-full rounded-xl" />
         ))}
@@ -36,7 +36,7 @@ export default function ForecastSummaryCards({ data, alignment, isLoading }) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:justify-center sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {statistics.map((stat) => {
         const displayValue =
           stat.name !== "Orders" && stat.value >= 1000

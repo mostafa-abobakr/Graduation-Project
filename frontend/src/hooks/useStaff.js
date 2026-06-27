@@ -4,15 +4,23 @@ import { toast } from "sonner";
 
 export const useStaffQuery = () => {
   return useQuery({
-    queryKey: ["employees"],
+    queryKey: ["staff"],
     queryFn: async () => {
-      const response = await api.get("/Employees");
-      return response.data;
+      const response = await api.get("/Employees")
+      const data = response.data
+
+      return {
+        totalStaff: data.totalStaff ?? 0,
+        totalActive: data.totalActive ?? 0,
+        weeklyHrs: data.weeklyHrs ?? 0,
+        monthlySalary: data.monthlySalary ?? 0,
+        employees: data.employees ?? [],
+      }
     },
     retry: 1,
     retryDelay: 1000,
-  });
-};
+  })
+}
 
 export const useAddEmployee = () => {
   const queryClient = useQueryClient();
@@ -23,6 +31,7 @@ export const useAddEmployee = () => {
     },
     onSuccess: () => {
       toast.success("Employee added successfully!");
+      queryClient.invalidateQueries({ queryKey: ["staff"] });
       queryClient.invalidateQueries({ queryKey: ["employees"] });
     },
     onError: (error) => {

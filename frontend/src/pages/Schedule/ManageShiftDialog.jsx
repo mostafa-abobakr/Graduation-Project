@@ -49,7 +49,7 @@ export function ManageShiftDialog({
                   Select employee
                 </option>
                 {employees.map((member) => (
-                  <option key={member.id} value={member.id?.toString()}>
+                  <option key={member.id || member.empID} value={(member.id || member.empID)?.toString()}>
                     {member.name}
                   </option>
                 ))}
@@ -63,13 +63,16 @@ export function ManageShiftDialog({
                 id="shiftType"
                 className="col-span-3 flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 value={formData.shiftType}
-                onChange={(e) =>
-                  setFormData({ ...formData, shiftType: e.target.value })
-                }
+                onChange={(e) => {
+                  const type = e.target.value
+                  const times = type === "Morning"
+                    ? { startTime: "08:00", endTime: "16:00" }
+                    : { startTime: "16:00", endTime: "00:00" }
+                  setFormData({ ...formData, shiftType: type, ...times })
+                }}
                 required
               >
                 <option value="Morning">Morning</option>
-                <option value="Evening">Evening</option>
                 <option value="Night">Night</option>
               </select>
             </div>

@@ -2,8 +2,9 @@ import { useState, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { getWeekDates, formatWeekRange } from "@/lib/scheduleData"
-import { ChevronLeft, ChevronRight, Users, CalendarDays, Sparkles, Loader2, AlertCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, Users, CalendarDays, Sparkles, Loader2, AlertCircle, Bot, Copy, Trash2, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { useAuth } from "@/contexts/AuthContext"
 import { useQueryClient } from "@tanstack/react-query"
@@ -13,6 +14,8 @@ import {
   useAddShift,
   useUpdateShift,
   useDeleteShift,
+  useDeleteScheduleRange,
+  useCopyLastWeekSchedule,
 } from "@/hooks/useSchedule"
 import { EmployeeList } from "./EmployeeList"
 import { ScheduleGrid } from "./ScheduleGrid"
@@ -35,8 +38,8 @@ export default function SchedulePage() {
 
   const [formData, setFormData] = useState({
     empID: "",
-    startTime: "09:00",
-    endTime: "17:00",
+    startTime: "08:00",
+    endTime: "16:00",
     shiftType: "Morning",
     source: "Manual",
     isOverridden: false,
@@ -84,8 +87,16 @@ export default function SchedulePage() {
 
   const { data: employees = [] } = useEmployees()
 
-  const activeStartDate = displayedDates[0] || baseDate
-  const activeEndDate = displayedDates[displayedDates.length - 1] || baseDate
+  const firstDisplayed = displayedDates[0] || baseDate
+  const lastDisplayed = displayedDates[displayedDates.length - 1] || baseDate
+
+  const activeStartDate = firstDisplayed
+
+  const activeEndDate = new Date(
+    lastDisplayed.getFullYear(),
+    lastDisplayed.getMonth(),
+    lastDisplayed.getDate() + 1
+  )
 
   const { data: shifts = [], isLoading: isLoadingShifts } = useShifts(
     activeStartDate,
@@ -95,6 +106,8 @@ export default function SchedulePage() {
   const addShiftMutation = useAddShift();
   const updateShiftMutation = useUpdateShift();
   const deleteShiftMutation = useDeleteShift();
+  const deleteRangeMutation = useDeleteScheduleRange();
+  const copyLastWeekMutation = useCopyLastWeekSchedule();
 
   const handleAddShiftClick = (date, prefilledEmpId = "") => {
     const formattedDate = new Date(
@@ -105,8 +118,8 @@ export default function SchedulePage() {
     setEditingShiftId(null)
     setFormData({
       empID: prefilledEmpId ? prefilledEmpId.toString() : "",
-      startTime: "09:00",
-      endTime: "17:00",
+      startTime: "08:00",
+      endTime: "16:00",
       shiftType: "Morning",
       source: "Manual",
       isOverridden: false,
@@ -160,7 +173,8 @@ export default function SchedulePage() {
       endTime: formData.endTime + ":00",
       shiftType: formData.shiftType,
     }
-
+    console.log(payload);
+    
     if (isEditMode) {
       payload.scheduleID = editingShiftId
       if (formData.source === "AI") {
@@ -231,6 +245,43 @@ export default function SchedulePage() {
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const handleCopyLastWeek = () => {
+    const currentStart = displayedDates[0]
+    const currentEnd = displayedDates[displayedDates.length - 1]
+
+    if (!currentStart || !currentEnd) {
+      toast.error("No dates available.")
+      return
+    }
+
+    const prevStart = new Date(currentStart)
+    prevStart.setDate(prevStart.getDate() - 7)
+    const prevEnd = new Date(currentEnd)
+    prevEnd.setDate(prevEnd.getDate() - 7)
+
+    copyLastWeekMutation.mutate({
+      prevStartDate: prevStart,
+      prevEndDate: prevEnd,
+      currentStartDate: currentStart,
+    })
+  }
+
+  const handleStartFromScratch = () => {
+    const confirmed = window.confirm("Are you sure you want to clear the entire schedule for this week? This action cannot be undone.")
+    if (!confirmed) return
+
+    const startDate = displayedDates[0]
+    const lastDay = displayedDates[displayedDates.length - 1]
+    const endDate = new Date(lastDay.getFullYear(), lastDay.getMonth(), lastDay.getDate() + 1)
+
+    if (!startDate || !endDate) {
+      toast.error("No dates available to clear.")
+      return
+    }
+
+    deleteRangeMutation.mutate({ startDate, endDate })
   }
 
   const handleApplyRange = () => {
@@ -362,19 +413,56 @@ export default function SchedulePage() {
               <Users className="h-4 w-4" />
               Employee List
             </Button>
-            <Button
-              variant="default"
-              className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shadow-indigo-500/20 transition-all duration-300"
-              onClick={handleGenerateAISchedule}
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4" />
-              )}
-              {isGenerating ? "Generating..." : "Generate AI Schedule"}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="default"
+                  className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shadow-indigo-500/20 transition-all duration-300"
+                  disabled={isGenerating}
+                >
+                  {isGenerating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  {isGenerating ? "Processing..." : "Schedule Actions"}
+                  <ChevronDown className="h-4 w-4 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Schedule Template</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleGenerateAISchedule} className="cursor-pointer gap-2">
+                  <Bot className="h-4 w-4 text-indigo-500" />
+                  <span>Generate with AI</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleCopyLastWeek}
+                  disabled={copyLastWeekMutation.isPending}
+                  className="cursor-pointer gap-2"
+                >
+                  {copyLastWeekMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-emerald-500" />
+                  ) : (
+                    <Copy className="h-4 w-4 text-emerald-500" />
+                  )}
+                  <span>{copyLastWeekMutation.isPending ? "Copying..." : "Copy Last Week"}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleStartFromScratch}
+                  disabled={deleteRangeMutation.isPending}
+                  className="cursor-pointer gap-2 text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-950"
+                >
+                  {deleteRangeMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  <span>{deleteRangeMutation.isPending ? "Clearing..." : "Start From Scratch"}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
       />
@@ -538,7 +626,7 @@ export default function SchedulePage() {
             </div>
           )} */}
 
-          <Card className="bg-card border-border/60 overflow-hidden">
+          <Card className="bg-card border-border/60 ">
             <ScheduleGrid
               viewMode={viewMode}
               displayedDates={displayedDates}
@@ -558,7 +646,7 @@ export default function SchedulePage() {
       </div>
 
       <ManageShiftDialog
-        isModalOpen={isModalOpen}_
+        isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         isEditMode={isEditMode}
         handleSubmitShift={handleSubmitShift}

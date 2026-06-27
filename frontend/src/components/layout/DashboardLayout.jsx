@@ -299,10 +299,11 @@ export default function DashboardLayout() {
             </div>
           </header>
           <motion.main 
+            id="main-scroll-container"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="flex-1 px-4 md:px-5 overflow-auto"
+            className="flex-1 px-4 md:px-5 overflow-auto relative"
           >
             <Suspense fallback={null}>
               <Outlet />

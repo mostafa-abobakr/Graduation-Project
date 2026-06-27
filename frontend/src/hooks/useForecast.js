@@ -38,14 +38,14 @@ export function useForecast({ alignment, dailyData, weeklyTemperatures, weeklyEv
   useEffect(() => {
     if (alignment === "day" && query.isSuccess) {
       queryClient.prefetchQuery({
-        queryKey: ["hourlyForecast", "week"],
+        queryKey: ["hourlyForecast", "week", dailyData, weeklyTemperatures, weeklyEvents],
         queryFn: async () => {
           const weekPayload = {
             weekly_temperatures: weeklyTemperatures,
             weekly_events: weeklyEvents,
           };
           const response = await axios.post(
-            `https://youseef-awaad-zerobite-ai-engine.hf.space/forecast/dashboard/week/2`,
+            `https://youseef-awaad-zerobite-ai-engine.hf.space/forecast/dashboard/week/${user.restId}`,
             weekPayload,
             { headers: { Accept: "application/json" } }
           );

@@ -14,7 +14,8 @@ export const useEmployees = () => {
       const response = await api.get("/Employees", {
         headers: getAuthHeaders(),
       });
-      return response.data.map((emp) => ({
+      const list = response.data.employees ?? response.data ?? []
+      return list.map((emp) => ({
         id: emp.empID || emp.empId || emp.id || emp.employeeId,
         name: emp.fullName,
         role: emp.role,
@@ -40,15 +41,15 @@ export const useShifts = (startDate, endDate) => {
   return useQuery({
     queryKey: ["shifts", startDate, endDate],
     queryFn: async () => {
-      const startFormatted = `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()}`
-      const endFormatted = `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()}`
+      const startFormatted = `${startDate.getFullYear()}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${String(startDate.getDate()).padStart(2, "0")}`
+      const endFormatted = `${endDate.getFullYear()}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${String(endDate.getDate()).padStart(2, "0")}`
 
-      const response = await api.get(`/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`, {
+      const response = await api.get(`/Schedule/range?startDate=${startFormatted}&endDate=${endFormatted}`, {
         headers: getAuthHeaders(),
       })
       console.log(response.data);
-      console.log(startFormatted,endFormatted);
-      
+      console.log(startFormatted, endFormatted);
+
       return response.data.map(item => ({
         id: `shift-${item.scheduleID}`,
         staffId: item.empID || item.empId || item.employeeId || item.staffId || item.id,
@@ -72,6 +73,8 @@ export const useAddShift = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
+      console.log(payload);
+      
       return await api.post("/Schedule", payload, {
         headers: getAuthHeaders(),
       });
@@ -121,3 +124,87 @@ export const useDeleteShift = () => {
     },
   });
 };
+
+export const useDeleteScheduleRange = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ startDate, endDate }) => {
+      const startFormatted = `${startDate.getFullYear()}/${startDate.getMonth() + 1}/${startDate.getDate()}`
+      const endFormatted = `${endDate.getFullYear()}/${endDate.getMonth() + 1}/${endDate.getDate()}`
+      return await api.delete(`/Schedule/range?startDate=${startFormatted}&endDate=${endFormatted}`, {
+        headers: getAuthHeaders(),
+      })
+    },
+    onSuccess: () => {
+      toast.success("Schedule cleared successfully!", {
+        description: "All shifts for the selected week have been removed.",
+      })
+      queryClient.invalidateQueries({ queryKey: ["shifts"] })
+    },
+    onError: () => {
+      toast.error("Failed to clear schedule.", {
+        description: "Something went wrong while deleting shifts.",
+      })
+    },
+  })
+}
+
+export const useCopyLastWeekSchedule = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ prevStartDate, prevEndDate, currentStartDate }) => {
+      const startFormatted = `${prevStartDate.getFullYear()}/${prevStartDate.getMonth() + 1}/${prevStartDate.getDate()}`
+      const endFormatted = `${prevEndDate.getFullYear()}/${prevEndDate.getMonth() + 1}/${prevEndDate.getDate()}`
+
+      const response = await api.get(`/Schedule/range?startDate=${startFormatted}&endDate=${endFormatted}`, {
+        headers: getAuthHeaders(),
+      })
+
+      const prevShifts = response.data
+
+      if (!prevShifts || prevShifts.length === 0) {
+        throw new Error("No shifts found in the previous week to copy.")
+      }
+
+      const dayDiff = Math.round((currentStartDate - prevStartDate) / (1000 * 60 * 60 * 24))
+
+      const mappedShifts = prevShifts.map((shift) => {
+        const prevDay = new Date(shift.day)
+        const newDay = new Date(prevDay)
+        newDay.setDate(prevDay.getDate() + dayDiff)
+
+        return {
+          scheduleID: 0,
+          empID: shift.empID || shift.empId || shift.employeeId,
+          restID: shift.restID || shift.restId,
+          day: newDay.toISOString(),
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+          shiftType: shift.shiftType,
+        }
+      })
+
+      const results = await Promise.all(
+        mappedShifts.map((payload) =>
+          api.put("/Schedule/range", payload, {
+            headers: getAuthHeaders(),
+          })
+        )
+      )
+
+      return results
+    },
+    onSuccess: () => {
+      toast.success("Previous week schedule copied!", {
+        description: "All shifts have been copied to the current week.",
+      })
+      queryClient.invalidateQueries({ queryKey: ["shifts"] })
+    },
+    onError: (error) => {
+      toast.error("Failed to copy schedule.", {
+        description: error.message || "Something went wrong.",
+      })
+    },
+  })
+}
+

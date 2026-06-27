@@ -53,7 +53,7 @@ export function EmployeeList({ isVisble, employees, staffHours }) {
                       {member.name}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {member.role}  id : {member.id}
+                     role: {member.role}  
                     </div>
                     <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
