@@ -13,7 +13,7 @@ const initials = (name = "") =>
     .map((part) => part[0].toUpperCase())
     .join("")
 
-export function EmployeeTableCard({ filtered, isLoading, search, setSearch }) {
+export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEdit }) {
   if (filtered.length === 0 && !isLoading && !search) {
     return (
       <Card className="bg-card border-border/60 premium-shadow overflow-hidden p-8">
@@ -78,6 +78,9 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch }) {
               </th>
               <th className="text-center py-3 px-5 text-muted-foreground font-semibold">
                 Status
+              </th>
+              <th className="text-right py-3 px-5 text-muted-foreground font-semibold">
+                Actions
               </th>
             </tr>
           </thead>
@@ -184,6 +187,14 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch }) {
                       {e.status} 
                       
                     </Badge>
+                  </td>
+                  <td className="py-4 px-5 text-right">
+                    <button 
+                      onClick={() => onEdit && onEdit(e)}
+                      className="text-primary hover:text-primary/80 transition-colors text-sm font-medium"
+                    >
+                      Edit
+                    </button>
                   </td>
                 </tr>
               ))

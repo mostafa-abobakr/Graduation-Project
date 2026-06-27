@@ -56,6 +56,8 @@ export const useShifts = (startDate, endDate) => {
         staffName: item.employeeName,
         avatar: item.employeeName ? item.employeeName.split(" ").map(n => n[0]).join("") : "",
         date: item.day ? item.day.split("T")[0] : "",
+        rawStartTime: item.startTime,
+        rawEndTime: item.endTime,
         startTime: item.startTime ? convert24to12(item.startTime.substring(0, 5)) : "",
         endTime: item.endTime ? convert24to12(item.endTime.substring(0, 5)) : "",
         shiftType: item.shiftType || "Morning",
@@ -81,7 +83,8 @@ export const useAddShift = () => {
     },
     onSuccess: () => {
       toast.success("Shift added successfully!");
-      queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["shifts"] })
+      queryClient.invalidateQueries({ queryKey: ["activeStaffCount"] })
     },
     onError: () => {
       toast.error("Failed to add shift.");
@@ -99,7 +102,8 @@ export const useUpdateShift = () => {
     },
     onSuccess: () => {
       toast.success("Shift updated successfully!");
-      queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["shifts"] })
+      queryClient.invalidateQueries({ queryKey: ["activeStaffCount"] })
     },
     onError: () => {
       toast.error("Failed to update shift.");
@@ -117,7 +121,8 @@ export const useDeleteShift = () => {
     },
     onSuccess: () => {
       toast.success("Shift deleted successfully!");
-      queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["shifts"] })
+      queryClient.invalidateQueries({ queryKey: ["activeStaffCount"] })
     },
     onError: () => {
       toast.error("Failed to delete shift.");
@@ -140,6 +145,7 @@ export const useDeleteScheduleRange = () => {
         description: "All shifts for the selected week have been removed.",
       })
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
+      queryClient.invalidateQueries({ queryKey: ["activeStaffCount"] })
     },
     onError: () => {
       toast.error("Failed to clear schedule.", {
@@ -199,6 +205,7 @@ export const useCopyLastWeekSchedule = () => {
         description: "All shifts have been copied to the current week.",
       })
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
+      queryClient.invalidateQueries({ queryKey: ["activeStaffCount"] })
     },
     onError: (error) => {
       toast.error("Failed to copy schedule.", {

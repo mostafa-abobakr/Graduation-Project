@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/contexts/AuthContext"
-import { useStaffQuery } from "@/hooks/useStaff"
+import { useStaffQuery, useActiveStaffCount } from "@/hooks/useStaff"
 import { Users, Clock, UserCheck, DollarSign, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -9,19 +9,23 @@ import { Badge } from "@/components/ui/badge"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { SummaryCard } from "@/components/shared/SummaryCard"
 import { AddEmployeeDialog } from "@/components/staff/AddEmployeeDialog"
+import { EditEmployeeDialog } from "@/components/staff/EditEmployeeDialog"
 import { EmployeeTableCard } from "@/components/staff/EmployeeTableCard"
 
 export default function StaffPage() {
   const { isAdmin } = useAuth()
   const [search, setSearch] = useState("")
   const queryClient = useQueryClient()
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [employeeToEdit, setEmployeeToEdit] = useState(null)
+
   const { data, isLoading, error, isError } = useStaffQuery()
 
   const employees = data?.employees ?? []
   const totalStaff = data?.totalStaff ?? 0
-  const totalActive = data?.totalActive ?? 0
+
+  const { data: totalActive = 0, isLoading: isActiveLoading } = useActiveStaffCount()
   const weeklyHrs = data?.weeklyHrs ?? 0
   const monthlySalary = data?.monthlySalary ?? 0
 
@@ -32,6 +36,11 @@ export default function StaffPage() {
     const role = (employee.role || "").toLowerCase()
     return name.includes(q) || role.includes(q)
   })
+
+  const handleEditEmployee = (emp) => {
+    setEmployeeToEdit(emp)
+    setIsEditModalOpen(true)
+  }
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
@@ -68,7 +77,7 @@ export default function StaffPage() {
         }
         actions={
           <Button
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsAddModalOpen(true)}
             className="gap-2 shrink-0"
           >
             <Plus className="h-4 w-4" /> Add Employee
@@ -97,7 +106,7 @@ export default function StaffPage() {
         />
         <SummaryCard
           title="Active Members"
-          value={isLoading ? <Skeleton className="h-8 w-20" /> : totalActive}
+          value={isLoading || isActiveLoading ? <Skeleton className="h-8 w-20" /> : totalActive}
           icon={UserCheck}
           iconWrapper
           valueColorClass="text-primary"
@@ -124,16 +133,24 @@ export default function StaffPage() {
         />
       </div>
 
-      <EmployeeTableCard 
-        filtered={filtered} 
-        isLoading={isLoading} 
-        search={search} 
-        setSearch={setSearch} 
+      <EmployeeTableCard
+        filtered={filtered}
+        isLoading={isLoading}
+        search={search}
+        setSearch={setSearch}
+        onEdit={handleEditEmployee}
       />
 
-      <AddEmployeeDialog 
-        isOpen={isModalOpen} 
-        onOpenChange={setIsModalOpen} 
+      {/* ── Modals ──────────────────────────────────────────── */}
+      <AddEmployeeDialog
+        isOpen={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+      />
+
+      <EditEmployeeDialog
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        employee={employeeToEdit}
       />
     </div>
   )

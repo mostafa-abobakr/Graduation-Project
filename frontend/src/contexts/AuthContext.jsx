@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
     return null;
   });
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // You can adjust isAdmin logic based on backend response, e.g. user.role
   const isAdmin = user?.role?.toLowerCase() === "admin";
 
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
     let timeoutId;
 
     if (user && user.token && user.exp) {
-      const expirationTime = user.exp * 1000; 
+      const expirationTime = user.exp * 1000;
       const currentTime = Date.now();
       const timeUntilExpiration = expirationTime - currentTime;
 
@@ -78,17 +78,17 @@ export function AuthProvider({ children }) {
     setIsLoading(true);
     try {
       const response = await axios({
-        method: "post", 
+        method: "post",
         url: `${API_BASE}/login`,
         headers: { "Content-Type": "application/json" },
         data: { email, password },
       });
-      
+
       if (response.data && response.data.token) {
 
         const role = response.data.role;
         const userData = { ...response.data, email, role };
-        
+
         try {
           const decoded = jwtDecode(response.data.token);
           userData.restId = parseInt(decoded.RestID || decoded.restId || decoded.restID || "0", 10);
@@ -96,7 +96,7 @@ export function AuthProvider({ children }) {
         } catch (e) {
           console.error("Failed to decode token on login:", e);
         }
-        
+
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("authToken", response.data.token);
