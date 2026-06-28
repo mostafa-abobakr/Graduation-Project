@@ -102,6 +102,15 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("authToken");
   };
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      toast({ title: "Session expired", description: "Please log in again.", variant: "destructive" });
+      logout();
+    };
+    window.addEventListener("auth-unauthorized", handleUnauthorized);
+    return () => window.removeEventListener("auth-unauthorized", handleUnauthorized);
+  }, []);
+
   return (
     <AuthContext.Provider value={{ user, isAdmin, isLoading, login, register, logout }}>
       {children}

@@ -1,46 +1,58 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/api/axios";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const useMenuQuery = () => {
+  const { user } = useAuth();
+  const restId = user?.restId;
+
   return useQuery({
-    queryKey: ["menuItems"],
+    queryKey: ["menuItems", restId],
     queryFn: async () => {
-      const response = await api.get("/Menu");
-      return response.data;
+      const response = await api.get(`/MenuItems?restId=${restId}`);
+      return response.data.map((item) => ({
+        id: item.itemID ?? item.menuItemId,
+        restId: item.restID ?? item.restaurantId,
+        name: item.itemName,
+        description: item.description || "",
+        price: item.price || 0,
+        category: item.category || "",
+        image: item.imageURL || "",
+        cost: item.cost || 0,
+        ingredients: item.ingredients
+          ? item.ingredients.map((ing) => ({
+              inventoryId: ing.inventoryID ?? ing.inventoryId,
+              quantityUsed: ing.quantityUsed,
+            }))
+          : [],
+      }));
     },
-    retry: 1,
-    retryDelay: 1000,
+    enabled: !!restId,
   });
 };
 
 export const useUpdateMenuItem = () => {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const restId = user?.restId;
+
   return useMutation({
-    mutationFn: async ({ id, payload }) => {
-      const response = await api.put(`/Menu/${id}`, payload);
+    mutationFn: async (payload) => {
+      const response = await api.put(`/MenuItems`, payload);
       return response.data;
     },
     onSuccess: () => {
       toast.success("Menu item updated successfully.");
-      queryClient.invalidateQueries({ queryKey: ["menuItems"] });
+      queryClient.invalidateQueries({ queryKey: ["menuItems", restId] });
     },
     onError: (error) => {
       console.error("Error updating menu item:", error);
-      toast.error(error.message || "Failed to update menu item.");
-    },
-  });
-};
-
-export const useUpdateMenuRecipe = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, recipe }) => {
-      const response = await api.put(`/Menu/${id}/recipe`, recipe);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["menuItems"] });
+      toast.error(
+        error?.response?.data?.message ||
+          error.message ||
+          "Failed to update menu item.",
+      );
     },
   });
 };

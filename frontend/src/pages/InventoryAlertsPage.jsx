@@ -63,7 +63,7 @@ function daysUntil(iso) {
 
 function AlertRowSkeleton() {
   return (
-    <div className="p-4 flex items-center gap-4 border-b border-border/30 last:border-0">
+    <div className="p-4 flex items-center gap-4">
       <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
       <div className="flex-1 space-y-2">
         <Skeleton className="h-4 w-48" />
@@ -90,7 +90,7 @@ function ExpiryBatchRow({ alert }) {
 
   return (
     <div
-      className="grid text-sm py-2 items-center gap-4"
+      className="grid text-sm py-2 items-center gap-4 hover:bg-muted/30 transition-colors border-b border-border/50 last:border-0"
       style={{ gridTemplateColumns: "6rem 8rem 15rem 8rem" }}
     >
       {/* Batch ID - Centered */}
@@ -148,7 +148,7 @@ function GroupedExpiryRow({ itemName, batches }) {
   const AlertIcon = meta.icon;
 
   return (
-    <div className="p-4 hover:bg-muted/20 transition-colors">
+    <div className="p-4">
       {/* Item header */}
       <div className="flex items-center gap-3 mb-3">
         <div
@@ -167,7 +167,7 @@ function GroupedExpiryRow({ itemName, batches }) {
         <div className="min-w-[500px]">
           {/* Header row */}
           <div
-            className="grid text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide pb-2 mb-1 border-b border-border/30 gap-4"
+            className="grid text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide pb-2 mb-1 border-b border-border/90 gap-4"
             style={{ gridTemplateColumns: "6rem 8rem 15rem 8rem" }}
           >
             <span className="text-center">Batch ID</span>
@@ -177,7 +177,7 @@ function GroupedExpiryRow({ itemName, batches }) {
           </div>
 
           {/* Data rows */}
-          <div className="divide-y divide-border/20">
+          <div>
             {batches.map((batch, idx) => (
               <ExpiryBatchRow key={`${batch.batchID ?? idx}`} alert={batch} />
             ))}
@@ -197,7 +197,7 @@ function LowStockRow({ alert }) {
       : 100;
 
   return (
-    <div className="p-4 flex flex-wrap items-center justify-between gap-4 hover:bg-muted/20 transition-colors">
+    <div className="p-4 flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-start gap-3 flex-1 min-w-0">
         <div
           className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${meta.iconBg}`}
@@ -408,15 +408,15 @@ export default function InventoryAlertsPage() {
 
       {/* ── Alert List ───────────────────────────────── */}
       {isLoading ? (
-        <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
-          <div className="divide-y divide-border/30">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <AlertRowSkeleton key={i} />
-            ))}
-          </div>
-        </Card>
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="bg-card border-border/70 premium-shadow overflow-hidden">
+              <AlertRowSkeleton />
+            </Card>
+          ))}
+        </div>
       ) : totalRows === 0 ? (
-        <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
+        <Card className="bg-card border-border/70 premium-shadow overflow-hidden">
           <EmptyState
             searchQuery={search}
             searchItemName="alerts"
@@ -432,7 +432,7 @@ export default function InventoryAlertsPage() {
           {lowStockAlerts.map((alert) => (
             <Card
               key={`ls-${alert.inventoryID}`}
-              className="bg-card border-border/60 premium-shadow overflow-hidden"
+              className="bg-card border-border/70 premium-shadow overflow-hidden"
             >
               <LowStockRow alert={alert} />
             </Card>
@@ -442,7 +442,7 @@ export default function InventoryAlertsPage() {
           {expiryGroups.map((group) => (
             <Card
               key={`exp-${group.itemName}`}
-              className="bg-card border-border/60 premium-shadow overflow-hidden"
+              className="bg-card border-border/70 premium-shadow overflow-hidden"
             >
               <GroupedExpiryRow
                 itemName={group.itemName}
