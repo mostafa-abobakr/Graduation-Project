@@ -11,13 +11,13 @@ import { signupValidationSchema } from "@/schemas/auth/validations";
 import { useRegisterContext } from "@/contexts/Valdation";
 import { Loader2 } from "lucide-react";
 
-const validationSchema = signupValidationSchema.pick([ "restaurantName", "restaurantPhone"]);
+const validationSchema = signupValidationSchema.pick(["restaurantName", "restaurantPhone"])
 
 const RegisterRestaurant = () => {
-  const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState("");
-  const { formData, updateFromData } = useRegisterContext();
+  const navigate = useNavigate()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+  const { formData, updateFromData } = useRegisterContext()
 
   const formik = useFormik({
     initialValues: {
@@ -26,13 +26,13 @@ const RegisterRestaurant = () => {
     },
     validationSchema,
     onSubmit: async (values) => {
-      setIsSubmitting(true);
-      updateFromData(values);
+      setIsSubmitting(true)
+      updateFromData(values)
       // Changed to navigate to the new location page
-      navigate("/register/restaurant-location");
-      setIsSubmitting(false);
+      navigate("/register/restaurant-location")
+      setIsSubmitting(false)
     },
-  });
+  })
 
   return (
     <AuthContainer
@@ -41,11 +41,12 @@ const RegisterRestaurant = () => {
       footerText="Already have an account?"
       footerLinkText="Log in"
       footerLinkTo="/login"
+      className="min-h-0 py-6 bg-transparent "
     >
       <form
         onSubmit={formik.handleSubmit}
         noValidate
-        className="w-full flex flex-col gap-5"
+        className="w-full flex flex-col gap-5 "
       >
 
         <div className="space-y-2 relative">
@@ -68,7 +69,7 @@ const RegisterRestaurant = () => {
         <div className="space-y-2 relative">
           <Label htmlFor="restaurantPhone" className="font-semibold">Restaurant Phone</Label>
           <div className="relative">
-             <svg className="absolute left-3 top-3 w-5 h-5 text-primary z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="absolute left-3 top-3 w-5 h-5 text-primary z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
             <Input
@@ -95,7 +96,7 @@ const RegisterRestaurant = () => {
         </Button>
       </form>
     </AuthContainer>
-  );
-};
+  )
+}
 
-export default RegisterRestaurant;
+export default RegisterRestaurant

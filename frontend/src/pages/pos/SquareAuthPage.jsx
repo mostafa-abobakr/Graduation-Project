@@ -7,24 +7,24 @@ const permissions = [
   {
     title: "Read payment information",
     description: "View transactions, payments, and refund history",
-    key: "paymentInformation",
+    key: "paymentInformation"
   },
   {
     title: "Manage inventory",
     description: "Access and update product inventory and pricing",
-    key: "inventory",
+    key: "inventory"
   },
   {
     title: "Access customer data",
     description: "View customer profiles and purchase history",
-    key: "customerData",
+    key: "customerData"
   },
   {
     title: "View business analytics",
     description: "Access sales reports and insights",
-    key: "businessAnalytics",
-  },
-];
+    key: "businessAnalytics"
+  }
+]
 
 export default function PosAuthorizePage() {
   const [ErrorMap, setErrorMap] = useState("")
@@ -43,7 +43,7 @@ export default function PosAuthorizePage() {
     setErrorMap("")
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500))
-      navigate("/register/plans")
+      setIsSuccess(true)
     } catch (error) {
       setErrorMap("Failed to connect to Square. Please try again.")
     } finally {
@@ -54,33 +54,33 @@ export default function PosAuthorizePage() {
   if (isSuccess) {
     return (
       <AuthorizationSuccess
-        title={title}
-        icon={<div className="w-5 h-5 bg-white rounded-sm" />}
-        bgColor="bg-black"
-        textColor="text-black"
+        title="Square"
+        icon={<div className="w-5 h-5 bg-background rounded-sm" />}
+        bgColor="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
+        textColor="text-foreground"
         buttonText="Continue to Square"
       />
     )
   }
 
   return (
-    <div className="min-h-[100vh] p-4 flex items-center bg-gray-200 justify-center">
+    <div className="min-h-screen p-4 flex items-center justify-center bg-background text-foreground animate-fade-in">
       <div className="w-full max-w-md text-center">
         <div className="mb-6">
-          <div className="w-14 h-14 mx-auto p-4 rounded-lg bg-black flex items-center justify-center">
-            <Square className="text-white" />
+          <div className="w-14 h-14 mx-auto p-4 rounded-lg bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center shadow-sm">
+            <Square className="text-white dark:text-zinc-900" />
           </div>
-          <h1 className="text-2xl text-black font-semibold mt-2">Square</h1>
+          <h1 className="text-2xl font-bold mt-3 text-foreground">Square</h1>
         </div>
 
-        <div className="border-gray-300 border-2 rounded-xl shadow-md p-6 text-left">
-          <h2 className="text-lg text-black font-semibold mb-2">
+        <div className="border border-border/60 bg-card text-card-foreground rounded-xl shadow-lg p-6 text-left">
+          <h2 className="text-lg font-bold mb-1 text-foreground">
             Authorize Application
           </h2>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             Business Partner App would like to access your Square account
           </p>
-          <p className="text-sm font-medium text-black mb-3">
+          <p className="text-sm font-semibold mb-3 text-foreground">
             This application will be able to:
           </p>
 
@@ -88,36 +88,36 @@ export default function PosAuthorizePage() {
             <form onSubmit={(e) => e.preventDefault()}>
               {permissions.map((perm, index) => (
                 <div key={index} className="flex items-start gap-3 mt-3">
-                  <div className="mt-0.5">
-                    <CheckCircle size={18} className="text-green-500" />
+                  <div className="mt-0.5 shrink-0">
+                    <CheckCircle size={18} className="text-primary" />
                   </div>
                   <div>
-                    <p className="text-sm text-black font-medium">
+                    <p className="text-sm font-semibold text-foreground">
                       {perm.title}
                     </p>
-                    <p className="text-xs text-gray-500">{perm.description}</p>
+                    <p className="text-xs text-muted-foreground">{perm.description}</p>
                   </div>
                 </div>
               ))}
               {ErrorMap && (
-                <p className="text-sm font-medium text-destructive mt-1">
+                <p className="text-sm font-medium text-destructive mt-2">
                   {ErrorMap}
                 </p>
               )}
 
-              <hr className="h-1 my-3" />
+              <hr className="border-border/60 my-4" />
               <div className="space-y-2">
                 <button
                   type="button"
                   onClick={handleAllow}
                   disabled={isLoading}
-                  className="w-full py-2 rounded-md text-white bg-black disabled:opacity-50"
+                  className="w-full py-3 rounded-xl font-semibold bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all shadow-sm"
                 >
                   {isLoading ? "Sending..." : "Allow Access"}
                 </button>
                 <button
                   type="button"
-                  className="w-full py-2 rounded-md border-2 border-gray-600 text-black"
+                  className="w-full py-3 rounded-xl border border-border text-foreground hover:bg-muted bg-transparent transition-all font-semibold"
                   onClick={skipRegistration}
                 >
                   Skip For Now
@@ -126,17 +126,13 @@ export default function PosAuthorizePage() {
             </form>
           </div>
 
-          <p className="text-xs text-gray-400 mt-4 text-center">
+          <p className="text-[11px] text-muted-foreground mt-4 text-center leading-relaxed">
             By authorizing this application, you agree to share the information
             listed above. You can revoke access at any time from your Square
             account settings.
           </p>
         </div>
-
-        <div className="text-xs text-gray-400 mt-4">
-          Privacy Policy · Terms · Help
-        </div>
       </div>
     </div>
-  );
+  )
 }

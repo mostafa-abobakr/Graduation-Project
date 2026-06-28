@@ -64,6 +64,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { motion } from "framer-motion";
 
 const managerAnalyticsItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
@@ -262,16 +263,16 @@ export default function DashboardLayout() {
                     onClick={() => navigate("/dashboard/profile")}
                     className="cursor-pointer"
                   >
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
+                    <User className="me-2 h-4 w-4" />
+                    {t("Profile")}
                   </DropdownMenuItem>
                   {!isAdmin && (
                     <DropdownMenuItem
                       onClick={() => navigate("/dashboard/settings")}
                       className="cursor-pointer"
                     >
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
+                      <Settings className="me-2 h-4 w-4" />
+                      {t("Settings")}
                     </DropdownMenuItem>
                   )}
                   {/* Platform Settings removed for simplicity */}
@@ -279,8 +280,8 @@ export default function DashboardLayout() {
                     onClick={() => navigate("/dashboard/billing")}
                     className="cursor-pointer"
                   >
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    Billing
+                    <CreditCard className="me-2 h-4 w-4" />
+                    {t("Billing")}
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
@@ -290,18 +291,23 @@ export default function DashboardLayout() {
                     }}
                     className="cursor-pointer text-destructive focus:text-destructive"
                   >
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Log out
+                    <LogOut className="me-2 h-4 w-4" />
+                    {t("Log out")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </header>
-          <main className="flex-1 px-4 md:px-5 overflow-auto">
+          <motion.main 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex-1 px-4 md:px-5 overflow-auto"
+          >
             <Suspense fallback={null}>
               <Outlet />
             </Suspense>
-          </main>
+          </motion.main>
         </div>
       </div>
     </SidebarProvider>

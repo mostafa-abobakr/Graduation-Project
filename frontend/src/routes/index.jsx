@@ -1,39 +1,51 @@
 import React from "react";
 import { createBrowserRouter, redirect, Outlet } from "react-router-dom";
-import LandingPage from "../pages/LandingPage";
-
-import DashboardLayout from "../components/layout/DashboardLayout";
-import { lazy } from "react";
-
-const DashboardIndex = lazy(() => import("../pages/DashboardIndex"));
-const ForecastPage = lazy(() => import("../pages/forecast"));
-const MenuAnalyticsPage = lazy(() => import("../pages/MenuAnalyticsPage"));
-const RevenuePage = lazy(() => import("../pages/RevenuePage"));
-const AIInsightsPage = lazy(() => import("../pages/AIInsightsPage"));
-const MenuManagementPage = lazy(() => import("../pages/MenuManagementPage"));
-const SettingsPage = lazy(() => import("../pages/SettingsPage"));
-const StaffPage = lazy(() => import("../pages/StaffPage"));
-const InventoryPage = lazy(() => import("../pages/Inventory"));
-const InventoryForecastPage = lazy(() => import("../pages/InventoryForecastPage"));
-const InventoryAlertsPage = lazy(() => import("../pages/InventoryAlertsPage"));
-const ItemDetailsPage = lazy(() => import("../pages/ItemDetails"));
-const AddStock = lazy(() => import("../pages/draft/AddStock"));
-const ReportsPage = lazy(() => import("../pages/Reports"));
-const ProfilePage = lazy(() => import("../pages/ProfilePage"));
-const BillingPage = lazy(() => import("../pages/BillingPage"));
-import NotFound from "../pages/NotFound";
+import { lazy, Suspense } from "react";
 import { ROUTES } from "./ROUTES";
-import Login from "@/pages/Auth/Login";
-import Register from "@/pages/Auth/Register";
-import RegisterPage from "@/pages/Auth/Register/RegisterPage";
-import RegisterRestaurant from "@/pages/Auth/Register/RegisterRestaurant";
-import RestaurantLocation from "@/pages/Auth/Register/RestaurantLocation";
-import PosOptions from "@/pages/pos/ConnectPosPage";
-import SchedulePage from "@/pages/Schedule";
-import BillingPlans from "@/pages/Auth/Register/BillingPlans";
-import PaymentGateway from "@/pages/Auth/Register/PaymentGateway";
-import InventoryOverview from "@/pages/draft/InventoryOverview";
-import PaymentStripe from "@/pages/Auth/Register/PaymentStripe";
+
+// Fallback loader to show while chunk is downloading
+const Loadable = (Component) => (props) => (
+  <Suspense fallback={
+    <div className="flex h-screen w-full items-center justify-center bg-background">
+      <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+    </div>
+  }>
+    <Component {...props} />
+  </Suspense>
+);
+
+const DashboardLayout = Loadable(lazy(() => import("../components/layout/DashboardLayout")));
+const LandingPage = Loadable(lazy(() => import("../pages/LandingPage")));
+const NotFound = Loadable(lazy(() => import("../pages/NotFound")));
+const Login = Loadable(lazy(() => import("@/pages/Auth/Login")));
+const Register = Loadable(lazy(() => import("@/pages/Auth/Register")));
+const RegisterPage = Loadable(lazy(() => import("@/pages/Auth/Register/RegisterPage")));
+const RegisterRestaurant = Loadable(lazy(() => import("@/pages/Auth/Register/RegisterRestaurant")));
+const RestaurantLocation = Loadable(lazy(() => import("@/pages/Auth/Register/RestaurantLocation")));
+const PosOptions = Loadable(lazy(() => import("@/pages/pos/ConnectPosPage")));
+const BillingPlans = Loadable(lazy(() => import("@/pages/Auth/Register/BillingPlans")));
+const PaymentGateway = Loadable(lazy(() => import("@/pages/Auth/Register/PaymentGateway")));
+const PaymentStripe = Loadable(lazy(() => import("@/pages/Auth/Register/PaymentStripe")));
+
+const DashboardIndex = Loadable(lazy(() => import("../pages/DashboardIndex")));
+const ForecastPage = Loadable(lazy(() => import("../pages/forecast")));
+const MenuAnalyticsPage = Loadable(lazy(() => import("../pages/MenuAnalyticsPage")));
+const RevenuePage = Loadable(lazy(() => import("../pages/RevenuePage")));
+const AIInsightsPage = Loadable(lazy(() => import("../pages/AIInsightsPage")));
+const MenuManagementPage = Loadable(lazy(() => import("../pages/MenuManagementPage")));
+const SettingsPage = Loadable(lazy(() => import("../pages/SettingsPage")));
+const StaffPage = Loadable(lazy(() => import("../pages/StaffPage")));
+const SchedulePage = Loadable(lazy(() => import("@/pages/Schedule")));
+const ReportsPage = Loadable(lazy(() => import("../pages/Reports")));
+const ProfilePage = Loadable(lazy(() => import("../pages/ProfilePage")));
+const BillingPage = Loadable(lazy(() => import("../pages/BillingPage")));
+
+const InventoryPage = Loadable(lazy(() => import("../pages/Inventory")));
+const InventoryForecastPage = Loadable(lazy(() => import("../pages/InventoryForecastPage")));
+const InventoryAlertsPage = Loadable(lazy(() => import("../pages/InventoryAlertsPage")));
+const ItemDetailsPage = Loadable(lazy(() => import("../pages/ItemDetails")));
+const AddStock = Loadable(lazy(() => import("../pages/draft/AddStock")));
+const InventoryOverview = Loadable(lazy(() => import("@/pages/draft/InventoryOverview")));
 
 
 const requireAuth = () => {

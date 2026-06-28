@@ -1,30 +1,68 @@
-import React, { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Loader2, AlertCircle } from "lucide-react";
+import React, { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/AuthContext"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Loader2, AlertCircle } from "lucide-react"
+import axios from "axios"
 
-import { useForecast } from "../../hooks/useForecast";
-import ForecastHeader from "./ForecastHeader";
-import ForecastSummaryCards from "./ForecastSummaryCards";
-import ForecastTable from "./ForecastTable";
-import ForecastSettingsModal from "./ForecastSettingsModal";
+import { useForecast } from "../../hooks/useForecast"
+import ForecastHeader from "./ForecastHeader"
+import ForecastSummaryCards from "./ForecastSummaryCards"
+import ForecastTable from "./ForecastTable"
+import ForecastSettingsModal from "./ForecastSettingsModal"
 
 export default function ForecastPage() {
-  const { user } = useAuth();
-  const [alignment, setAlignment] = useState("day");
-  const [modalOpen, setModalOpen] = useState(false);
+  const { user } = useAuth()
+  const [alignment, setAlignment] = useState("day")
+  const [modalOpen, setModalOpen] = useState(false)
   
-  const [dailyData, setDailyData] = useState([30, 0]);
-  const [weeklyTemperatures, setWeeklyTemperatures] = useState([35, 35, 35, 30, 39, 36, 37]);
-  const [weeklyEvents, setWeeklyEvents] = useState([1, 0, 1, 0, 0, 0, 0]);
+  const [dailyData, setDailyData] = useState([0, 0])
+  const [weeklyTemperatures, setWeeklyTemperatures] = useState([0, 0, 0, 0, 0, 0, 0])
+  const [weeklyEvents, setWeeklyEvents] = useState([1, 0, 1, 0, 0, 0, 0])
+
+  useEffect(() => {
+    const fetchDefaultWeather = async () => {
+      const city = user?.city || user?.address || "mansoura university"
+      try {
+        const geoRes = await axios.get(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`
+        )
+        if (geoRes.data && geoRes.data.length > 0) {
+          const lat = parseFloat(geoRes.data[0].lat)
+          const lon = parseFloat(geoRes.data[0].lon)
+          
+          const weatherRes = await axios.get(
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max&timezone=auto`
+          )
+          const maxTemps = weatherRes.data.daily.temperature_2m_max
+          const times = weatherRes.data.daily.time
+          if (maxTemps && maxTemps.length >= 7 && times) {
+            const alignedTemps = [0, 0, 0, 0, 0, 0, 0]
+            times.slice(0, 7).forEach((timeStr, idx) => {
+              const [year, month, day] = timeStr.split("-").map(Number)
+              const date = new Date(year, month - 1, day)
+              const dayOfWeek = date.getDay()
+              const uiIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+              alignedTemps[uiIdx] = Math.round(maxTemps[idx])
+            })
+            setWeeklyTemperatures(alignedTemps)
+            setDailyData([Math.round(maxTemps[0]), 0])
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load initial city weather:", error)
+      }
+    }
+    
+    fetchDefaultWeather()
+  }, [user?.city, user?.address])
 
   const { data, isLoading, isError, error, refetch, isFetching } = useForecast({
     alignment,
     dailyData,
     weeklyTemperatures,
     weeklyEvents,
-  });
+  })
 
   if (isError) {
     return (
@@ -38,9 +76,10 @@ export default function ForecastPage() {
           <Button onClick={() => refetch()}>Retry</Button>
         </Card>
       </div>
-    );
+    )
   }
-
+  console.log(dailyData);
+  
   return (
     <div className="space-y-5 animate-fade-in py-5">
       <ForecastHeader 
@@ -49,9 +88,9 @@ export default function ForecastPage() {
         setModalOpen={setModalOpen} 
       />
 
-      <ForecastSummaryCards data={data} alignment={alignment} isLoading={isFetching} />
+      <ForecastSummaryCards data={data} alignment={alignment} isLoading={isFetching || isLoading || !data} />
 
-      <ForecastTable items={data?.items || []} alignment={alignment} isLoading={isFetching} />
+      <ForecastTable items={data?.items || []} alignment={alignment} isLoading={isFetching || isLoading || !data} />
 
       <ForecastSettingsModal
         open={modalOpen}
@@ -65,5 +104,5 @@ export default function ForecastPage() {
         onApply={refetch}
       />
     </div>
-  );
+  )
 }
