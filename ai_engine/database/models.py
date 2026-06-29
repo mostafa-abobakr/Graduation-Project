@@ -150,7 +150,7 @@ class InventoryTransaction(Base):
     RestId          = Column(String(50), nullable=False, index=True)
     InventoryId     = Column(Integer, ForeignKey("Inventories.InventoryID"), nullable=False, index=True)
     BatchId         = Column(Integer, ForeignKey("InventoryBatches.BatchID"), nullable=True, index=True)
-    Type            = Column(String(50), nullable=False)
+    Type            = Column(Integer, nullable=False)
     Quantity        = Column(Float, nullable=False)
     Price           = Column(Float, nullable=True)
     TransactionDate = Column(DateTime, nullable=True)

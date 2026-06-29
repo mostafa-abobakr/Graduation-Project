@@ -11,6 +11,8 @@ from database.connection import get_engine
 
 
 _EPSILON = 1e-9
+TRANSACTION_TYPE_RESTOCK = 1
+TRANSACTION_TYPE_USAGE = 2
 
 
 def _json_datetime(value):
@@ -230,7 +232,7 @@ def _consume_inventory_in_session(session: Session, restaurant_id: str, order_id
                         :restaurant_id,
                         :inventory_id,
                         :batch_id,
-                        :type,
+                        :transaction_type,
                         :quantity,
                         :price,
                         :transaction_date,
@@ -242,7 +244,7 @@ def _consume_inventory_in_session(session: Session, restaurant_id: str, order_id
                     "restaurant_id": restaurant_id,
                     "inventory_id": inventory_id,
                     "batch_id": batch["batch_id"],
-                    "type": "usage",
+                    "transaction_type": TRANSACTION_TYPE_USAGE,
                     "quantity": qty_to_consume,
                     "price": float(unit_cost or 0),
                     "transaction_date": now,
@@ -454,7 +456,7 @@ def restock_inventory(
                         :restaurant_id,
                         :inventory_id,
                         :batch_id,
-                        :type,
+                        :transaction_type,
                         :quantity,
                         :price,
                         :transaction_date,
@@ -466,7 +468,7 @@ def restock_inventory(
                     "restaurant_id": restaurant_id,
                     "inventory_id": inventory_id,
                     "batch_id": batch_id,
-                    "type": "restock",
+                    "transaction_type": TRANSACTION_TYPE_RESTOCK,
                     "quantity": quantity,
                     "price": float(unit_cost or 0),
                     "transaction_date": now,
