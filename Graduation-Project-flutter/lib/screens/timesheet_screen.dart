@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
 class TimesheetScreen extends StatefulWidget {
   const TimesheetScreen({super.key});
@@ -18,22 +19,109 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
 
   bool _isExporting = false;
   int _weeksOffset = 0;
+  List<ShiftSchedule> _schedules = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSchedules();
+  }
+
+  Future<void> _fetchSchedules() async {
+    final list = await ApiService.getSchedules();
+    if (mounted) {
+      setState(() {
+        if (ApiService.currentEmployeeId != null) {
+          _schedules = list.where((shift) => shift.empID == ApiService.currentEmployeeId).toList();
+        } else {
+          _schedules = list;
+        }
+        _isLoading = false;
+      });
+    }
+  }
+
+  double _calculateTotalHours(List<ShiftSchedule> schedules) {
+    double total = 0.0;
+    for (final s in schedules) {
+      final type = s.shiftType.toLowerCase();
+      if (type.contains('morning') || type.contains('night') || type.contains('evening')) {
+        total += 8.0;
+      } else {
+        final startParts = s.startTime.split(':');
+        final endParts = s.endTime.split(':');
+        if (startParts.isNotEmpty && endParts.isNotEmpty) {
+          final startHour = int.tryParse(startParts[0]) ?? 0;
+          final startMinute = startParts.length > 1 ? (int.tryParse(startParts[1]) ?? 0) : 0;
+          final endHour = int.tryParse(endParts[0]) ?? 0;
+          final endMinute = endParts.length > 1 ? (int.tryParse(endParts[1]) ?? 0) : 0;
+          final startMinutes = startHour * 60 + startMinute;
+          final endMinutes = endHour * 60 + endMinute;
+          if (endMinutes > startMinutes) {
+            total += (endMinutes - startMinutes) / 60.0;
+          } else if (endMinutes < startMinutes) {
+            total += ((24 * 60 - startMinutes) + endMinutes) / 60.0;
+          }
+        }
+      }
+    }
+    return total;
+  }
+
+  String _formatTime(String timeStr) {
+    final parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+    int hour = int.tryParse(parts[0]) ?? 0;
+    final minute = parts[1];
+    final ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12;
+    if (hour == 0) hour = 12;
+    final hourFormatted = hour.toString().padLeft(2, '0');
+    return '$hourFormatted:$minute $ampm';
+  }
+
+  String _formatDate(String dayStr) {
+    final parsed = DateTime.tryParse(dayStr);
+    if (parsed == null) return dayStr;
+    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[parsed.month - 1]} ${parsed.day}';
+  }
+
+  String _getWeekdayName(String dayStr) {
+    final parsed = DateTime.tryParse(dayStr);
+    if (parsed == null) return '';
+    final weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    return weekdays[parsed.weekday - 1];
+  }
 
   @override
   Widget build(BuildContext context) {
     final today = DateTime.now();
     final targetDay = today.add(Duration(days: _weeksOffset * 7));
     final monday = targetDay.subtract(Duration(days: targetDay.weekday - 1));
-    final tuesday = monday.add(const Duration(days: 1));
-    final wednesday = monday.add(const Duration(days: 2));
     final sundayEnd = monday.add(const Duration(days: 6));
 
     final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
     final String dateRange = '${months[monday.month - 1]} ${monday.day} - ${months[sundayEnd.month - 1]} ${sundayEnd.day}';
-    final String mondayStr = '${months[monday.month - 1]} ${monday.day}';
-    final String tuesdayStr = '${months[tuesday.month - 1]} ${tuesday.day}';
-    final String wednesdayStr = '${months[wednesday.month - 1]} ${wednesday.day}';
+
+    final weekSchedules = _schedules.where((s) {
+      final shiftDate = DateTime.tryParse(s.day);
+      if (shiftDate == null) return false;
+      
+      final startLimit = DateTime(monday.year, monday.month, monday.day);
+      final endLimit = DateTime(sundayEnd.year, sundayEnd.month, sundayEnd.day, 23, 59, 59);
+      final isInWeek = shiftDate.isAfter(startLimit.subtract(const Duration(seconds: 1))) &&
+                       shiftDate.isBefore(endLimit.add(const Duration(seconds: 1)));
+      if (!isInWeek) return false;
+      
+      final isPastOrToday = shiftDate.isBefore(today) || 
+                            (shiftDate.year == today.year && shiftDate.month == today.month && shiftDate.day == today.day);
+      return isPastOrToday;
+    }).toList();
+
+    weekSchedules.sort((a, b) => a.day.compareTo(b.day));
+    final totalHours = _calculateTotalHours(weekSchedules);
 
     return Scaffold(
       backgroundColor: bgColor,
@@ -52,7 +140,7 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
               const SizedBox(height: 24),
 
               // كارت ملخص الساعات الإجمالية
-              _buildSummaryCard(),
+              _buildSummaryCard(totalHours),
               const SizedBox(height: 32),
 
               // عنوان قسم الإدخالات
@@ -72,38 +160,95 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
                     ),
                   );
                 },
-                child: Column(
-                  key: ValueKey<int>(_weeksOffset),
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildTimeEntryCard(
-                      day: 'Monday',
-                      date: mondayStr,
-                      clockIn: '09:00 AM',
-                      clockOut: '05:00 PM',
-                      total: '8h 0m',
-                      status: 'Approved',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTimeEntryCard(
-                      day: 'Tuesday',
-                      date: tuesdayStr,
-                      clockIn: '09:15 AM',
-                      clockOut: '05:30 PM',
-                      total: '8h 15m',
-                      status: 'Approved',
-                    ),
-                    const SizedBox(height: 12),
-                    _buildTimeEntryCard(
-                      day: 'Wednesday',
-                      date: wednesdayStr,
-                      clockIn: '09:00 AM',
-                      clockOut: '05:00 PM',
-                      total: '8h 0m',
-                      status: 'Approved',
-                    ),
-                  ],
-                ),
+                child: _isLoading
+                    ? const Center(
+                        key: ValueKey<String>('loader'),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 40),
+                          child: CircularProgressIndicator(color: primaryGreen),
+                        ),
+                      )
+                    : Column(
+                        key: ValueKey<int>(_weeksOffset),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: weekSchedules.isEmpty
+                            ? [
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 20),
+                                  decoration: BoxDecoration(
+                                    color: cardColor,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(color: borderColor),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: const [
+                                      Icon(Icons.access_time, color: subTextColor, size: 40),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'No time entries for this week',
+                                        style: TextStyle(color: subTextColor, fontSize: 15, fontWeight: FontWeight.w500),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ]
+                            : List.generate(weekSchedules.length, (index) {
+                                final s = weekSchedules[index];
+                                final dayName = _getWeekdayName(s.day);
+                                final dateStr = _formatDate(s.day);
+                                
+                                final type = s.shiftType.toLowerCase();
+                                String clockIn = '09:00 AM';
+                                String clockOut = '05:00 PM';
+                                String total = '8h 0m';
+                                if (type.contains('morning')) {
+                                  clockIn = '08:00 AM';
+                                  clockOut = '04:00 PM';
+                                  total = '8h 0m';
+                                } else if (type.contains('night') || type.contains('evening')) {
+                                  clockIn = '04:00 PM';
+                                  clockOut = '12:00 AM';
+                                  total = '8h 0m';
+                                } else {
+                                  clockIn = _formatTime(s.startTime);
+                                  clockOut = _formatTime(s.endTime);
+                                  
+                                  double diff = 0.0;
+                                  final startParts = s.startTime.split(':');
+                                  final endParts = s.endTime.split(':');
+                                  if (startParts.isNotEmpty && endParts.isNotEmpty) {
+                                    final startHour = int.tryParse(startParts[0]) ?? 0;
+                                    final startMinute = startParts.length > 1 ? (int.tryParse(startParts[1]) ?? 0) : 0;
+                                    final endHour = int.tryParse(endParts[0]) ?? 0;
+                                    final endMinute = endParts.length > 1 ? (int.tryParse(endParts[1]) ?? 0) : 0;
+                                    final startMinutes = startHour * 60 + startMinute;
+                                    final endMinutes = endHour * 60 + endMinute;
+                                    if (endMinutes > startMinutes) {
+                                      diff = (endMinutes - startMinutes) / 60.0;
+                                    } else if (endMinutes < startMinutes) {
+                                      diff = ((24 * 60 - startMinutes) + endMinutes) / 60.0;
+                                    }
+                                  }
+                                  final int h = diff.toInt();
+                                  final int m = ((diff - h) * 60).round();
+                                  total = '${h}h ${m}m';
+                                }
+
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 12.0),
+                                  child: _buildTimeEntryCard(
+                                    day: dayName,
+                                    date: dateStr,
+                                    clockIn: clockIn,
+                                    clockOut: clockOut,
+                                    total: total,
+                                    status: 'Approved',
+                                  ),
+                                );
+                              }).toList(),
+                      ),
               ),
               const SizedBox(height: 24),
             ],
@@ -207,7 +352,22 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
   }
 
   // الكارت الأخضر (ملخص الساعات)
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(double totalHours) {
+    final regular = totalHours > 40.0 ? 40.0 : totalHours;
+    final overtime = totalHours > 40.0 ? totalHours - 40.0 : 0.0;
+
+    final int totalH = totalHours.toInt();
+    final int totalM = ((totalHours - totalH) * 60).round();
+    final String totalStr = '${totalH}h ${totalM}m';
+
+    final int regH = regular.toInt();
+    final int regM = ((regular - regH) * 60).round();
+    final String regStr = '${regH}h ${regM}m';
+
+    final int otH = overtime.toInt();
+    final int otM = ((overtime - otH) * 60).round();
+    final String otStr = '${otH}h ${otM}m';
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -230,7 +390,7 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
                 children: [
                   Text('Total Hours', style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 14)),
                   const SizedBox(height: 8),
-                  const Text('40h 30m', style: TextStyle(color: textColor, fontSize: 32, fontWeight: FontWeight.bold)),
+                  Text(totalStr, style: const TextStyle(color: textColor, fontSize: 32, fontWeight: FontWeight.bold)),
                 ],
               ),
               Container(
@@ -250,8 +410,8 @@ class _TimesheetScreenState extends State<TimesheetScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Regular: 40h', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14)),
-              Text('Overtime: 0.5h', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14)),
+              Text('Regular: $regStr', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14)),
+              Text('Overtime: $otStr', style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14)),
             ],
           ),
         ],
