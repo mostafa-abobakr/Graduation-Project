@@ -47,7 +47,7 @@ export function SummaryCard({
         )}
       </div>
 
-      <div className="flex items-end justify-between gap-2 mt-auto">
+      <div className="flex flex-wrap items-end justify-between gap-2 mt-auto">
         <div className={cn(valueSizeClass, valueColorClass)}>
           {value}
         </div>

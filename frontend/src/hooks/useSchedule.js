@@ -14,7 +14,8 @@ export const useEmployees = () => {
       const response = await api.get("/Employees", {
         headers: getAuthHeaders(),
       });
-      return response.data.map((emp) => ({
+      const list = response.data.employees ?? response.data ?? []
+      return list.map((emp) => ({
         id: emp.empID || emp.empId || emp.id || emp.employeeId,
         name: emp.fullName,
         role: emp.role,
@@ -40,21 +41,23 @@ export const useShifts = (startDate, endDate) => {
   return useQuery({
     queryKey: ["shifts", startDate, endDate],
     queryFn: async () => {
-      const startFormatted = `${startDate.getFullYear()}-${startDate.getMonth() + 1}-${startDate.getDate()}`
-      const endFormatted = `${endDate.getFullYear()}-${endDate.getMonth() + 1}-${endDate.getDate()}`
+      const startFormatted = `${startDate.getFullYear()}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${String(startDate.getDate()).padStart(2, "0")}`
+      const endFormatted = `${endDate.getFullYear()}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${String(endDate.getDate()).padStart(2, "0")}`
 
-      const response = await api.get(`/Schedule/range?start_date=${startFormatted}&end_date=${endFormatted}`, {
+      const response = await api.get(`/Schedule/range?startDate=${startFormatted}&endDate=${endFormatted}`, {
         headers: getAuthHeaders(),
       })
       console.log(response.data);
-      console.log(startFormatted,endFormatted);
-      
+      console.log(startFormatted, endFormatted);
+
       return response.data.map(item => ({
         id: `shift-${item.scheduleID}`,
         staffId: item.empID || item.empId || item.employeeId || item.staffId || item.id,
         staffName: item.employeeName,
         avatar: item.employeeName ? item.employeeName.split(" ").map(n => n[0]).join("") : "",
         date: item.day ? item.day.split("T")[0] : "",
+        rawStartTime: item.startTime,
+        rawEndTime: item.endTime,
         startTime: item.startTime ? convert24to12(item.startTime.substring(0, 5)) : "",
         endTime: item.endTime ? convert24to12(item.endTime.substring(0, 5)) : "",
         shiftType: item.shiftType || "Morning",
@@ -72,6 +75,8 @@ export const useAddShift = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
+      console.log(payload);
+      
       return await api.post("/Schedule", payload, {
         headers: getAuthHeaders(),
       });
@@ -121,3 +126,82 @@ export const useDeleteShift = () => {
     },
   });
 };
+
+export const useDeleteScheduleRange = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ startDate, endDate }) => {
+      const startFormatted = `${startDate.getFullYear()}/${startDate.getMonth() + 1}/${startDate.getDate()}`
+      const endFormatted = `${endDate.getFullYear()}/${endDate.getMonth() + 1}/${endDate.getDate()}`
+      return await api.delete(`/Schedule/range?startDate=${startFormatted}&endDate=${endFormatted}`, {
+        headers: getAuthHeaders(),
+      })
+    },
+    onSuccess: () => {
+      toast.success("Schedule cleared successfully!", {
+        description: "All shifts for the selected week have been removed.",
+      })
+      queryClient.invalidateQueries({ queryKey: ["shifts"] })
+    },
+    onError: () => {
+      toast.error("Failed to clear schedule.", {
+        description: "Something went wrong while deleting shifts.",
+      })
+    },
+  })
+}
+
+export const useCopyLastWeekSchedule = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ prevStartDate, prevEndDate, currentStartDate }) => {
+      const sourceStart = `${prevStartDate.getFullYear()}/${String(prevStartDate.getMonth() + 1).padStart(2, "0")}/${String(prevStartDate.getDate()).padStart(2, "0")}`
+      const sourceEnd = `${prevEndDate.getFullYear()}/${String(prevEndDate.getMonth() + 1).padStart(2, "0")}/${String(prevEndDate.getDate()).padStart(2, "0")}`
+      const newWeekStart = `${currentStartDate.getFullYear()}/${String(currentStartDate.getMonth() + 1).padStart(2, "0")}/${String(currentStartDate.getDate()).padStart(2, "0")}`
+
+      const response = await api.post(
+        `/Schedule/copy-week?sourceStart=${sourceStart}&sourceEnd=${sourceEnd}&newWeekStart=${newWeekStart}`,
+        {},
+        {
+          headers: getAuthHeaders(),
+        }
+      )
+
+      return response.data
+    },
+    onSuccess: (data) => {
+      // Check if backend returned a success message but with 0 shifts copied
+      if (data && (data.count === 0 || data.copiedShiftsCount === 0 || data.message?.toLowerCase().includes("no shifts") || data.message?.toLowerCase().includes("no data"))) {
+        toast.error("No shifts found to copy", {
+          description: data.message || "No shifts were found in the previous week to copy.",
+        })
+        return
+      }
+
+      // Check if backend returned an explicit logical failure
+      if (data && (data.success === false || data.status === "fail" || data.status === "error")) {
+        toast.error("Failed to copy schedule", {
+          description: data.message || "Something went wrong on the server.",
+        })
+        return
+      }
+
+      toast.success("Previous week schedule copied!", {
+        description: data?.message || "All shifts have been copied to the current week.",
+      })
+      queryClient.invalidateQueries({ queryKey: ["shifts"] })
+    },
+    onError: (error) => {
+      const errMsg = error.response?.data?.message || 
+                     error.response?.data?.error ||
+                     (typeof error.response?.data === "string" ? error.response.data : null) ||
+                     error.message || 
+                     "Something went wrong."
+      
+      toast.error("Failed to copy schedule.", {
+        description: errMsg,
+      })
+    },
+  })
+}
+

@@ -16,7 +16,7 @@ export default function ForecastPage() {
   const [alignment, setAlignment] = useState("day")
   const [modalOpen, setModalOpen] = useState(false)
   
-  const [dailyData, setDailyData] = useState([0, 0])
+  const [dailyData, setDailyData] = useState([null, 0])
   const [weeklyTemperatures, setWeeklyTemperatures] = useState([0, 0, 0, 0, 0, 0, 0])
   const [weeklyEvents, setWeeklyEvents] = useState([1, 0, 1, 0, 0, 0, 0])
 

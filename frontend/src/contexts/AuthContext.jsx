@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import { queryClient } from "@/lib/queryClient";
 
 const API_BASE = "/api/Auth";
 
@@ -26,6 +27,7 @@ export function AuthProvider({ children }) {
           const decoded = jwtDecode(token);
           parsedUser.restId = parseInt(decoded.RestID || decoded.restId || decoded.restID || "0", 10);
           parsedUser.token = token;
+          parsedUser.exp = decoded.exp;
         } catch (e) {
           console.error("Failed to decode token on load:", e);
         }
@@ -35,32 +37,66 @@ export function AuthProvider({ children }) {
     return null;
   });
   const [isLoading, setIsLoading] = useState(false);
-  
+
   // You can adjust isAdmin logic based on backend response, e.g. user.role
   const isAdmin = user?.role?.toLowerCase() === "admin";
+
+  const logout = () => {
+    setUser(null)
+    localStorage.removeItem("user")
+    localStorage.removeItem("authToken")
+    queryClient.clear()
+  };
+
+  useEffect(() => {
+    let timeoutId;
+
+    if (user && user.token && user.exp) {
+      const expirationTime = user.exp * 1000;
+      const currentTime = Date.now();
+      const timeUntilExpiration = expirationTime - currentTime;
+
+      if (timeUntilExpiration > 0) {
+        // Set timeout to logout when the time comes
+        timeoutId = setTimeout(() => {
+          toast({ title: "Session Expired", description: "Your session has expired. Please log in again.", variant: "destructive" });
+          logout();
+        }, timeUntilExpiration);
+      } else {
+        // It's already expired, logout immediately
+        toast({ title: "Session Expired", description: "Your session has expired. Please log in again.", variant: "destructive" });
+        logout();
+      }
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [user]);
 
   const login = async (email, password) => {
     setIsLoading(true);
     try {
       const response = await axios({
-        method: "post", 
+        method: "post",
         url: `${API_BASE}/login`,
         headers: { "Content-Type": "application/json" },
         data: { email, password },
       });
-      
+
       if (response.data && response.data.token) {
 
         const role = response.data.role;
         const userData = { ...response.data, email, role };
-        
+
         try {
           const decoded = jwtDecode(response.data.token);
           userData.restId = parseInt(decoded.RestID || decoded.restId || decoded.restID || "0", 10);
+          userData.exp = decoded.exp;
         } catch (e) {
           console.error("Failed to decode token on login:", e);
         }
-        
+
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("authToken", response.data.token);
@@ -96,11 +132,7 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("user");
-    localStorage.removeItem("authToken");
-  };
+
 
   useEffect(() => {
     const handleUnauthorized = () => {

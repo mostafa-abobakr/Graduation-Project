@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Plus, CheckCircle2, Sparkles, AlertCircle } from "lucide-react"
 import { getStaffColorLight } from "@/lib/scheduleData"
@@ -25,29 +24,30 @@ export function ScheduleGrid({
   }
 
   return (
-    <div className="flex flex-col w-full">
-      <div className="flex items-center justify-between p-3 border-b border-border/60 bg-muted/20">
-        <h3 className="font-semibold text-sm text-muted-foreground px-2">Shifts View</h3>
+    <div className="flex flex-col w-full min-w-0">
+      <div className="flex items-center justify-end p-3 border-b border-border/60 bg-muted/20">
+        <h3 className="font-semibold text-sm text-muted-foreground px-2">Shifts View :</h3>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2 w-[240px]">
+          <TabsList className="grid  grid-cols-2 w-[240px]">
             <TabsTrigger value="Morning">Morning</TabsTrigger>
             <TabsTrigger value="night">Night</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
-      <ScrollArea className="w-full">
-        <div className="min-w-[700px]">
+      <div className="w-full ">
+        <div className="pb-4">
           <div
-            className="grid border-b border-border/60"
+            className="grid"
             style={{ gridTemplateColumns: viewMode !== "day" ? `repeat(${displayedDates.length}, minmax(0, 1fr))` : "repeat(1, minmax(0, 1fr))" }}
           >
+            {/* Headers Row */}
             {displayedDates.map((date, i) => {
               const isToday =
                 new Date().toDateString() === date.toDateString()
               return (
                 <div
-                  key={i}
-                  className={`p-3 text-center border-r last:border-r-0 border-border/30 ${isToday ? "bg-primary/5" : ""}`}
+                  key={`header-${i}`}
+                  className={`p-3 text-center border-b border-border/30 ${i === displayedDates.length - 1 ? "" : "border-r"} ${isToday ? "bg-primary/5" : ""}`}
                 >
                   <div className="text-xs font-semibold text-muted-foreground">
                     {getDayName(date)}
@@ -63,16 +63,13 @@ export function ScheduleGrid({
                 </div>
               )
             })}
-          </div>
-          <div
-            className="grid"
-            style={{ gridTemplateColumns: viewMode !== "day" ? `repeat(${displayedDates.length}, minmax(0, 1fr))` : "repeat(1, minmax(0, 1fr))" }}
-          >
+
+            {/* Body Row */}
             {isLoadingShifts ? (
               displayedDates.map((_, index) => (
                 <div
-                  key={index}
-                  className="border-r last:border-r-0 border-border/30 p-2 min-h-[280px] space-y-2"
+                  key={`loading-${index}`}
+                  className={`border-border/30 p-2 min-h-[280px] space-y-2 ${index === displayedDates.length - 1 ? "" : "border-r"}`}
                 >
                   <Skeleton className="h-[60px] w-full rounded-lg" />
                   <Skeleton className="h-[60px] w-full rounded-lg" />
@@ -82,8 +79,8 @@ export function ScheduleGrid({
             ) : (
               displayedDates.map((date, index) => (
                 <div
-                  key={index}
-                  className="border-r last:border-r-0 border-border/30 p-2 min-h-[280px] space-y-2 transition-colors duration-200"
+                  key={`body-${index}`}
+                  className={`border-border/30 p-2 min-h-[380px]  space-y-2 transition-colors duration-200 ${index === displayedDates.length - 1 ? "" : "border-r"}`}
                   onDragOver={(e) => {
                     e.preventDefault()
                     e.currentTarget.classList.add("bg-primary/5")
@@ -144,7 +141,7 @@ export function ScheduleGrid({
             )}
           </div>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }
