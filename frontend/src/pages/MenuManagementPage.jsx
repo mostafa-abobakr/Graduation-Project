@@ -1,6 +1,7 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useInventory } from "@/contexts/InventoryContext";
-import { useMenuQuery, useUpdateMenuItem, useUpdateMenuRecipe } from "@/hooks/useMenu";
+import React, { useState, useMemo, useRef } from "react";
+import { useInventoryItems } from "@/hooks/useInventory";
+import { useAuth } from "@/contexts/AuthContext";
+import { useMenuQuery, useUpdateMenuItem } from "@/hooks/useMenu";
 import {
   Table,
   TableBody,
@@ -13,13 +14,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -39,6 +45,8 @@ import {
   Utensils,
   LayoutGrid,
   Percent,
+  UploadCloud,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -47,103 +55,173 @@ import { SummaryCard } from "@/components/shared/SummaryCard";
 import { SkeletonRows } from "@/components/shared/Skeletons";
 
 export default function MenuManagementPage() {
-  const { inventory } = useInventory();
-  const { data: menuItems = [] } = useMenuQuery();
+  const { user } = useAuth();
+  const restId = user?.restId;
+  const { data: inventory = [] } = useInventoryItems(restId);
+  const { data: menuItems = [], isLoading: isMenuLoading } = useMenuQuery();
   const { mutate: updateMenuItem } = useUpdateMenuItem();
-  const { mutate: updateMenuItemRecipe } = useUpdateMenuRecipe();
+
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [expandedRows, setExpandedRows] = useState({});
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const fileInputRef = useRef(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const processFile = async (file) => {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload a valid image file");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image size must be less than 2MB");
+      return;
+    }
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "menu_items_preset");
+
+    try {
+      const response = await fetch(
+        "https://api.cloudinary.com/v1_1/dzf0esgoy/image/upload",
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setEditForm((prev) => ({ ...prev, image: data.secure_url }));
+        toast.success("Image uploaded successfully");
+      } else {
+        toast.error(data.error?.message || "Failed to upload image");
+      }
+    } catch (error) {
+      toast.error("An error occurred during upload");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
 
   // Editable form state for the edit dialog
   const [editForm, setEditForm] = useState({
     id: null,
+    restId: null,
     name: "",
+    description: "",
     cost: "",
     price: "",
     category: "",
     image: "",
   });
-  const [recipeEdit, setRecipeEdit] = useState([]);
-
-  // Simulate initial data load
-  useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
+  const [ingredientsEdit, setIngredientsEdit] = useState([]);
 
   const toggleRow = (id) => {
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
   const filteredItems = useMemo(() => {
-    return menuItems.filter((item) =>
-      item.name.toLowerCase().includes(search.toLowerCase()),
-    );
-  }, [menuItems, search]);
+    return menuItems.filter((item) => {
+      const matchesSearch = item.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+      const matchesCategory =
+        categoryFilter === "all" || item.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [menuItems, search, categoryFilter]);
 
-  const totalCategories = useMemo(
-    () => new Set(menuItems.map((i) => i.category)).size,
-    [menuItems],
-  );
+  const uniqueCategories = useMemo(() => {
+    const categories = new Set(
+      menuItems.map((i) => i.category).filter(Boolean),
+    );
+    return Array.from(categories).sort();
+  }, [menuItems]);
+
+  const totalCategories = uniqueCategories.length;
   const avgMargin = useMemo(() => {
     if (!menuItems.length) return 0;
-    const sum = menuItems.reduce(
-      (acc, item) => acc + (item.price - item.cost) / item.price,
-      0,
-    );
+    const sum = menuItems.reduce((acc, item) => {
+      if (item.price === 0) return acc;
+      return acc + (item.price - item.cost) / item.price;
+    }, 0);
     return Math.round((sum / menuItems.length) * 100);
   }, [menuItems]);
 
   const openEdit = (item) => {
     setEditForm({
       id: item.id,
+      restId: item.restId,
       name: item.name,
+      description: item.description || "",
       cost: String(item.cost),
       price: String(item.price),
       category: item.category,
       image: item.image || "",
     });
-    setRecipeEdit(item.recipe ? item.recipe.map((r) => ({ ...r })) : []);
+    setIngredientsEdit(
+      item.ingredients ? item.ingredients.map((r) => ({ ...r })) : [],
+    );
     setDialogOpen(true);
   };
 
   const addIngredientRow = () => {
-    setRecipeEdit([...recipeEdit, { ingredientId: "", quantity: "" }]);
+    setIngredientsEdit([
+      ...ingredientsEdit,
+      { inventoryId: "", quantityUsed: "" },
+    ]);
   };
 
   const removeIngredientRow = (index) => {
-    setRecipeEdit(recipeEdit.filter((_, i) => i !== index));
+    setIngredientsEdit(ingredientsEdit.filter((_, i) => i !== index));
   };
 
   const saveEdit = () => {
-    if (!editForm.name.trim()) {
-      toast.error("Item name is required.");
-      return;
-    }
-    if (recipeEdit.some((r) => !r.ingredientId || !r.quantity)) {
+    if (ingredientsEdit.some((r) => !r.inventoryId || !r.quantityUsed)) {
       toast.error("Please fill out all ingredient details.");
       return;
     }
 
-    updateMenuItem({
-      id: editForm.id,
-      payload: {
-        name: editForm.name.trim(),
-        cost: parseFloat(editForm.cost) || 0,
-        price: parseFloat(editForm.price) || 0,
-        category: editForm.category.trim(),
-        image: editForm.image,
-      }
-    });
-    updateMenuItemRecipe({ id: editForm.id, recipe: recipeEdit });
+    const payload = {
+      menuItemId: editForm.id,
+      restaurantId: editForm.restId,
+      itemName: editForm.name,
+      description: editForm.description || "",
+      price: parseFloat(editForm.price) || 0,
+      cost: parseFloat(editForm.cost) || 0,
+      category: editForm.category,
+      imageURL: editForm.image || "",
+      ingredients: ingredientsEdit.map((ing) => ({
+        inventoryID: parseInt(ing.inventoryId, 10),
+        quantityUsed: parseFloat(ing.quantityUsed) || 0,
+      })),
+    };
 
+    updateMenuItem(payload);
     setDialogOpen(false);
-    toast.success("Menu item updated.");
   };
-
-
 
   /* ── Search empty state ─────────────────────────────── */
   const SearchEmptyState = () => (
@@ -170,19 +248,25 @@ export default function MenuManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SummaryCard
           title="Total Items"
-          value={isLoading ? <Skeleton className="h-9 w-12" /> : menuItems.length}
+          value={
+            isMenuLoading ? <Skeleton className="h-9 w-12" /> : menuItems.length
+          }
           icon={Utensils}
           iconWrapper
         />
         <SummaryCard
           title="Categories"
-          value={isLoading ? <Skeleton className="h-9 w-12" /> : totalCategories}
+          value={
+            isMenuLoading ? <Skeleton className="h-9 w-12" /> : totalCategories
+          }
           icon={LayoutGrid}
           iconWrapper
         />
         <SummaryCard
           title="Avg Margin"
-          value={isLoading ? <Skeleton className="h-9 w-16" /> : `${avgMargin}%`}
+          value={
+            isMenuLoading ? <Skeleton className="h-9 w-16" /> : `${avgMargin}%`
+          }
           icon={Percent}
           iconWrapper
           valueColorClass="text-primary"
@@ -191,8 +275,8 @@ export default function MenuManagementPage() {
 
       {/* ── Table Card ───────────────────────────────────── */}
       <div className="bg-card border border-border/40 rounded-xl overflow-hidden">
-        <div className="p-4 border-b border-border/40">
-          <div className="relative w-full">
+        <div className="p-4 border-b border-border/40 flex items-center gap-4">
+          <div className="relative flex-1">
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={search}
@@ -201,6 +285,19 @@ export default function MenuManagementPage() {
               className="pl-9 bg-background/50 border-border/40"
             />
           </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-[180px] bg-background/50 border-border/40">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {uniqueCategories.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <Table>
@@ -208,24 +305,38 @@ export default function MenuManagementPage() {
             <TableRow className="border-border/40 hover:bg-transparent">
               <TableHead className="w-12 text-center"></TableHead>
               <TableHead>Item</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Cost</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Margin</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead className="text-center">Category</TableHead>
+              <TableHead className="text-center">Cost</TableHead>
+              <TableHead className="text-center">Price</TableHead>
+              <TableHead className="text-center">Margin</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
+            {isMenuLoading ? (
               <SkeletonRows />
             ) : filteredItems.length === 0 ? (
               <SearchEmptyState />
             ) : (
               filteredItems.map((item) => {
                 const isExpanded = expandedRows[item.id];
-                const margin = Math.round(
-                  ((item.price - item.cost) / item.price) * 100,
-                );
+                const margin =
+                  item.price > 0
+                    ? Math.round(((item.price - item.cost) / item.price) * 100)
+                    : 0;
+
+                let marginBadgeClass =
+                  "bg-primary/20 text-primary hover:bg-primary/20";
+                if (margin >= 65) {
+                  marginBadgeClass =
+                    "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/15";
+                } else if (margin >= 40) {
+                  marginBadgeClass =
+                    "bg-amber-500/15 text-amber-500 hover:bg-amber-500/15";
+                } else {
+                  marginBadgeClass =
+                    "bg-destructive/15 text-destructive hover:bg-destructive/15";
+                }
 
                 return (
                   <React.Fragment key={item.id}>
@@ -241,31 +352,50 @@ export default function MenuManagementPage() {
                         )}
                       </TableCell>
                       <TableCell className="font-medium">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">{item.image}</span>{" "}
-                          {item.name}
+                        <div className="flex items-center gap-3">
+                          {item.image && item.image.startsWith("http") ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="h-10 w-10 rounded-md object-cover border border-border/40"
+                            />
+                          ) : (
+                            <div className="h-10 w-10 flex items-center justify-center rounded-md bg-background/50 text-xl border  shrink-0">
+                              {item.image || "🍽️"}
+                            </div>
+                          )}
+                          <span>{item.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell cla>
-                        <Badge
-                          variant="outline"
-                          className="bg-background/50 font-normal text-muted-foreground border-border/50 "
-                        >
-                          {item.category}
-                        </Badge>
+                      <TableCell className="text-center">
+                        {item.category ? (
+                          <Badge
+                            variant="outline"
+                            className="bg-background/50 font-normal text-muted-foreground border-border/50"
+                          >
+                            {item.category}
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="bg-muted/50 font-normal text-muted-foreground/70 border-border/30"
+                          >
+                            Uncategorized
+                          </Badge>
+                        )}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
+                      <TableCell className="text-center text-sm text-muted-foreground">
                         ${item.cost.toFixed(2)}
                       </TableCell>
-                      <TableCell className="font-semibold text-foreground">
+                      <TableCell className="text-center font-semibold text-foreground">
                         ${item.price.toFixed(2)}
                       </TableCell>
-                      <TableCell>
-                        <Badge className="bg-primary/20 text-primary hover:bg-primary/20 border-0">
+                      <TableCell className="text-center">
+                        <Badge className={`${marginBadgeClass} border-0`}>
                           {margin}%
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-center">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -287,18 +417,17 @@ export default function MenuManagementPage() {
                               <Box className="h-4 w-4 text-primary" />{" "}
                               Ingredients{" "}
                               <span className="text-muted-foreground text-xs font-normal">
-                                ({item.recipe?.length || 0} items)
+                                ({item.ingredients?.length || 0} items)
                               </span>
                             </div>
 
-                            {item.recipe?.length > 0 ? (
+                            {item.ingredients?.length > 0 ? (
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                {item.recipe.map((r, idx) => {
-                                  const inv =
-                                    inventory.find(
-                                      (i) =>
-                                        String(i.id) === String(r.ingredientId),
-                                    ) || inventory[0];
+                                {item.ingredients.map((r, idx) => {
+                                  const inv = inventory.find(
+                                    (i) =>
+                                      String(i.id) === String(r.inventoryId),
+                                  );
                                   return (
                                     <div
                                       key={idx}
@@ -308,8 +437,8 @@ export default function MenuManagementPage() {
                                         {inv?.name || "Unknown"}
                                       </span>
                                       <span className="text-primary font-mono text-[10px]">
-                                        {r.quantity}&nbsp;
-                                        {inv?.unit || "g"}
+                                        {r.quantityUsed}&nbsp;
+                                        {inv?.unit || ""}
                                       </span>
                                     </div>
                                   );
@@ -334,34 +463,172 @@ export default function MenuManagementPage() {
 
       {/* ── Edit Dialog ──────────────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md bg-card border-border/60">
+        <DialogContent className="max-w-2xl bg-card border-border/60">
           <DialogHeader>
             <DialogTitle className="text-xl">Edit Menu Item</DialogTitle>
+            <DialogDescription className="sr-only">
+              Edit menu item details
+            </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div>
-              <Label className="text-xs text-muted-foreground mb-1 block">
-                Item Name
-              </Label>
-              <Input
-                value={editForm.name}
-                onChange={(e) =>
-                  setEditForm({ ...editForm, name: e.target.value })
-                }
-              />
+
+          <div className="space-y-6 mt-2">
+            {/* ── TOP SECTION: Details & Media Split ──────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+              {/* Left Column: Text Details */}
+              <div className="col-span-1 md:col-span-7 space-y-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    Item Name
+                  </Label>
+                  <Input
+                    value={editForm.name}
+                    disabled
+                    className="bg-muted/50"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    Category
+                  </Label>
+                  <Input
+                    value={editForm.category}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, category: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-1 block">
+                    Description
+                  </Label>
+                  <Input
+                    value={editForm.description}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, description: e.target.value })
+                    }
+                    placeholder="Brief description of the item..."
+                  />
+                </div>
+              </div>
+
+              {/* Right Column: Media Upload */}
+              <div className="col-span-1 md:col-span-5 flex flex-col">
+                <div className="flex items-center justify-between mb-1">
+                  <Label className="text-xs text-muted-foreground block">
+                    Icon / Image
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 text-[10px] px-2 text-muted-foreground hover:text-foreground"
+                      >
+                        Use Emoji
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-2">
+                      <div className="grid grid-cols-5 gap-2">
+                        {[
+                          "🍔",
+                          "🍕",
+                          "🥗",
+                          "🍟",
+                          "🍗",
+                          "🥤",
+                          "🍨",
+                          "🍩",
+                          "🍣",
+                          "🌮",
+                          "🥪",
+                          "🍰",
+                          "🥩",
+                          "🍝",
+                          "🍞",
+                        ].map((emoji) => (
+                          <Button
+                            key={emoji}
+                            variant="ghost"
+                            className="h-10 w-10 p-0 text-xl"
+                            onClick={() =>
+                              setEditForm({ ...editForm, image: emoji })
+                            }
+                          >
+                            {emoji}
+                          </Button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`relative flex-1 min-h-[160px] flex flex-col items-center justify-center w-full rounded-md border-2 border-dashed transition-colors cursor-pointer overflow-hidden ${
+                    isDragging
+                      ? "border-primary bg-primary/5"
+                      : "border-border/60 bg-muted/20 hover:bg-muted/50"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={(e) => {
+                      if (e.target.files?.[0]) processFile(e.target.files[0]);
+                    }}
+                    accept="image/*"
+                    className="hidden"
+                  />
+
+                  {isUploading ? (
+                    <div className="flex flex-col items-center text-muted-foreground">
+                      <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
+                      <span className="text-xs">Uploading...</span>
+                    </div>
+                  ) : editForm.image?.startsWith("http") ? (
+                    <div className="relative w-full h-full group">
+                      <img
+                        src={editForm.image}
+                        alt="Uploaded"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-sm font-medium">
+                          Click to change
+                        </span>
+                      </div>
+                    </div>
+                  ) : editForm.image && !editForm.image.startsWith("http") ? (
+                    <div className="text-5xl">{editForm.image}</div>
+                  ) : (
+                    <div className="flex flex-col items-center text-muted-foreground p-4 text-center">
+                      <UploadCloud className="h-8 w-8 mb-2 opacity-70" />
+                      <span className="text-xs font-medium">
+                        Click or drag image
+                      </span>
+                      <span className="text-[10px] opacity-70 mt-1">
+                        max 2MB
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+
+            {/* ── MIDDLE SECTION: Financials ───────────────────── */}
+            <div className="grid grid-cols-2 gap-6 p-4 bg-muted/30 rounded-lg border border-border/40">
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">
                   Cost ($)
                 </Label>
                 <Input
                   type="number"
-                  step="0.01"
                   value={editForm.cost}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, cost: e.target.value })
-                  }
+                  disabled
+                  className="bg-background/50"
                 />
               </div>
               <div>
@@ -370,90 +637,71 @@ export default function MenuManagementPage() {
                 </Label>
                 <Input
                   type="number"
-                  step="0.01"
                   value={editForm.price}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, price: e.target.value })
-                  }
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">
-                  Category
-                </Label>
-                <Input
-                  value={editForm.category}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, category: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-muted-foreground mb-1 block">
-                  Emoji Icon
-                </Label>
-                <Input
-                  value={editForm.image}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, image: e.target.value })
-                  }
+                  disabled
+                  className="bg-background/50"
                 />
               </div>
             </div>
 
-            {/* ── Ingredients Section ────────────────────────── */}
-            <div className="pt-4 border-t border-border/40">
+            {/* ── BOTTOM SECTION: Ingredients ──────────────────── */}
+            <div>
               <div className="flex justify-between items-center mb-3">
-                <Label>Ingredients</Label>
+                <Label>Recipe Ingredients</Label>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-primary hover:text-primary hover:bg-primary/10 gap-1 h-8"
                   onClick={addIngredientRow}
                 >
-                  <Plus className="h-3 w-3" /> Add
+                  <Plus className="h-3 w-3" /> Add Item
                 </Button>
               </div>
-              <div className="space-y-2 max-h-[250px] overflow-y-auto pr-2">
-                {recipeEdit.map((r, idx) => (
+
+              <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 p-1 -ml-1">
+                {ingredientsEdit.map((r, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <Select
-                      value={String(r.ingredientId)}
+                      value={r.inventoryId ? String(r.inventoryId) : undefined}
                       onValueChange={(v) => {
-                        const newR = [...recipeEdit];
-                        newR[idx].ingredientId = v;
-                        setRecipeEdit(newR);
+                        const newR = [...ingredientsEdit];
+                        newR[idx].inventoryId = v;
+                        setIngredientsEdit(newR);
                       }}
                     >
-                      <SelectTrigger className="flex-1 bg-muted/20 border-border/40">
+                      <SelectTrigger className="flex-1 bg-background/50 border-border/40">
                         <SelectValue placeholder="Select ingredient..." />
                       </SelectTrigger>
                       <SelectContent>
                         {inventory.map((inv) => (
                           <SelectItem key={inv.id} value={String(inv.id)}>
-                            {inv.name}
+                            <div className="flex items-center gap-2">
+                              {/* Automatically shows emoji if available, else a box */}
+                              <span className="text-base opacity-90">
+                                {inv.emoji || "📦"}
+                              </span>
+                              <span>{inv.name}</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
 
-                    <div className="w-24 relative">
+                    <div className="w-28 relative">
                       <Input
                         type="number"
-                        value={r.quantity}
+                        value={r.quantityUsed}
                         onChange={(e) => {
-                          const newR = [...recipeEdit];
-                          newR[idx].quantity = e.target.value;
-                          setRecipeEdit(newR);
+                          const newR = [...ingredientsEdit];
+                          newR[idx].quantityUsed = e.target.value;
+                          setIngredientsEdit(newR);
                         }}
-                        className="bg-muted/20 border-border/40 pr-8"
+                        className="bg-background/50 border-border/40 pr-10"
                         placeholder="Qty"
                       />
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-primary">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-primary font-medium">
                         {inventory.find(
-                          (i) => String(i.id) === String(r.ingredientId),
+                          (i) => String(i.id) === String(r.inventoryId),
                         )?.unit || ""}
                       </span>
                     </div>
@@ -461,22 +709,25 @@ export default function MenuManagementPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive/70 hover:text-destructive hover:bg-destructive/10 shrink-0"
+                      className="h-9 w-9 text-destructive/70 hover:text-destructive hover:bg-destructive/10 shrink-0"
                       onClick={() => removeIngredientRow(idx)}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
-                {recipeEdit.length === 0 && (
-                  <p className="text-sm text-muted-foreground italic text-center py-4">
-                    No recipe ingredients set.
-                  </p>
+
+                {ingredientsEdit.length === 0 && (
+                  <div className="text-sm text-muted-foreground italic text-center py-6 border-2 border-dashed border-border/40 rounded-md">
+                    No ingredients added to this recipe.
+                  </div>
                 )}
               </div>
             </div>
           </div>
-          <div className="flex justify-end gap-2 pt-4 border-t border-border/40 mt-4">
+
+          {/* Footer Actions */}
+          <div className="flex justify-end gap-2 pt-4 border-t border-border/40 mt-2">
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>

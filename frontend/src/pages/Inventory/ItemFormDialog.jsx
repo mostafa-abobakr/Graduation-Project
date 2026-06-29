@@ -137,7 +137,7 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
                 list="form-category-list"
-                placeholder="e.g. Vegetables (defaults to Other)"
+                placeholder="Pick or type..."
               />
             </div>
             <div>

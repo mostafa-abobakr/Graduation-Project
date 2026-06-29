@@ -3,30 +3,30 @@ import { TableRow, TableCell } from "@/components/ui/table";
 
 export function SkeletonRows({ rows = 5, cols = 7 }) {
   return Array.from({ length: rows }).map((_, i) => (
-    <TableRow key={i} className="border-border/20">
+    <TableRow key={i} className="border-border/50">
       <TableCell className="text-center">
         <Skeleton className="h-4 w-4 mx-auto" />
       </TableCell>
       <TableCell>
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-7 w-7 rounded" />
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-10 w-10 rounded-md" />
           <Skeleton className="h-4 w-32" />
         </div>
       </TableCell>
-      <TableCell>
-        <Skeleton className="h-5 w-16 rounded-full" />
+      <TableCell className="text-center">
+        <Skeleton className="h-5 w-20 rounded-full mx-auto" />
       </TableCell>
-      <TableCell>
-        <Skeleton className="h-4 w-14" />
+      <TableCell className="text-center">
+        <Skeleton className="h-4 w-12 mx-auto" />
       </TableCell>
-      <TableCell>
-        <Skeleton className="h-4 w-14" />
+      <TableCell className="text-center">
+        <Skeleton className="h-4 w-14 mx-auto" />
       </TableCell>
-      <TableCell>
-        <Skeleton className="h-5 w-12 rounded-full" />
+      <TableCell className="text-center">
+        <Skeleton className="h-5 w-12 rounded-full mx-auto" />
       </TableCell>
-      <TableCell className="text-right">
-        <Skeleton className="h-8 w-8 ml-auto rounded" />
+      <TableCell className="text-center">
+        <Skeleton className="h-8 w-8 mx-auto rounded" />
       </TableCell>
     </TableRow>
   ));

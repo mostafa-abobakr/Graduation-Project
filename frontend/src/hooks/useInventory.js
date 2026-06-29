@@ -32,7 +32,9 @@ export const useBatchDetails = (restId, itemId) => {
   return useQuery({
     queryKey: ["batchDetails", restId, itemId],
     queryFn: async () => {
-      const res = await api.get(`/InventoryBatch/restaurant/${restId}/item/${itemId}`);
+      const res = await api.get(
+        `/InventoryBatch/restaurant/${restId}/item/${itemId}`,
+      );
       return res.data;
     },
     enabled: !!itemId && !!restId,
@@ -43,7 +45,9 @@ export const useItemTransactions = (restId, itemId) => {
   return useQuery({
     queryKey: ["itemTransactions", restId, itemId],
     queryFn: async () => {
-      const res = await api.get(`/InventoryTransactions/restaurant/${restId}/item/${itemId}`);
+      const res = await api.get(
+        `/InventoryTransactions/restaurant/${restId}/item/${itemId}`,
+      );
       return res.data;
     },
     enabled: !!itemId && !!restId,
@@ -75,7 +79,10 @@ export const useUpdateBatch = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ restId, batchId, payload }) => {
-      await api.put(`/InventoryBatch/restaurant/${restId}/batch/${batchId}`, payload);
+      await api.put(
+        `/InventoryBatch/restaurant/${restId}/batch/${batchId}`,
+        payload,
+      );
     },
     onSuccess: (_, variables) => {
       toast.success(`Batch #${variables.batchId} updated`);

@@ -112,7 +112,7 @@ export default function AIInsightsPage() {
       <PageHeader
         icon={Lightbulb}
         title="AI Insights"
-        description="Forecast Alerts & Revenue Insights Powered By AI"
+        description="Forecast Alerts Powered By AI"
         actions={
           <ViewToggler
             viewMode={period}
@@ -122,49 +122,6 @@ export default function AIInsightsPage() {
           />
         }
       />
-
-      {/* ── Summary stat cards ───────────────────────────────────────────── */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-      ) : isError ? (
-        <Card className="p-6 border-destructive/40 bg-destructive/5 text-destructive text-sm">
-          Failed to load forecast data: {error?.message}
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <SummaryCard
-            title="Actual Revenue (Baseline)"
-            value={fmt(periodData?.total_actual_revenue ?? 0)}
-            sub={`Based on ${periodData?.baseline_date}`}
-            icon={DollarSign}
-            iconColorClass="text-primary"
-            iconWrapper
-          />
-          <SummaryCard
-            title={
-              period === "day"
-                ? "Predicted Revenue (Tomorrow)"
-                : "Predicted Revenue (Next Week)"
-            }
-            value={fmt(periodData?.total_predicted_revenue ?? 0)}
-            icon={TrendingUp}
-            iconColorClass="text-primary"
-            iconWrapper
-          />
-          <SummaryCard
-            title="Expected Surge"
-            value={surgePercent !== null ? `+${surgePercent}%` : "—"}
-            sub="vs baseline period"
-            icon={ArrowUpRight}
-            iconColorClass="text-primary"
-            iconWrapper
-          />
-        </div>
-      )}
 
       {/* ── Alert list ───────────────────────────────────────────────────── */}
       <Card className="flex flex-col bg-card border-border/60 premium-shadow">
