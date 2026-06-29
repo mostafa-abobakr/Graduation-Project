@@ -21,6 +21,7 @@ export const useInventoryItems = (restId) => {
         batchesCount: item.batchesCount ?? 0,
         supplier: item.supplier || "Unknown",
         apiStatus: item.status,
+        imageUrl: item.imageUrl,
       }));
     },
     enabled: !!restId,

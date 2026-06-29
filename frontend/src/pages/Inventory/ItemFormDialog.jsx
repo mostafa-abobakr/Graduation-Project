@@ -33,15 +33,44 @@ import { toast } from "sonner";
 
 const todayStr = () => format(new Date(), "yyyy-MM-dd");
 
+const PRESET_EMOJIS = {
+  Vegetables: ["🍅", "🥦", "🥕", "🥔", "🧅", "🌽", "🧄", "🌶️"],
+  Meat: ["🥩", "🍗", "🥓", "🍔", "🍖", "🌭", "🍤"],
+  Dairy: ["🧀", "🥚", "🥛", "🧈", "🍦", "🍳"],
+  Fruits: ["🍎", "🍌", "🍇", "🍓", "🍋", "🍉", "🍒", "🥝"],
+  Other: ["🍞", "🍚", "🍝", "🧂", "🥫", "📦", "🍯", "🍫"]
+};
+
 export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
   const [form, setForm] = useState({
     ...emptyForm,
     category: "",
     productionDate: todayStr(),
+    imageUrl: "",
   });
+  const [customEmoji, setCustomEmoji] = useState("");
+  const [customEmojiError, setCustomEmojiError] = useState("");
+
+  const handleCustomEmojiChange = (e) => {
+    const val = e.target.value;
+    setCustomEmoji(val);
+    if (!val) {
+      setCustomEmojiError("");
+      return;
+    }
+    const regex = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\uFE0F]+$/u;
+    if (!regex.test(val)) {
+      setCustomEmojiError("Please enter a valid emoji");
+    } else {
+      setCustomEmojiError("");
+      setForm({ ...form, imageUrl: val });
+    }
+  };
 
   useEffect(() => {
     if (open) {
+      setCustomEmoji("");
+      setCustomEmojiError("");
       if (editingItem) {
         setForm({
           name: editingItem.name,
@@ -54,9 +83,10 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
           cost: String(editingItem.cost || 0),
           supplier: editingItem.supplier || "",
           productionDate: todayStr(),
+          imageUrl: editingItem.imageUrl || "",
         });
       } else {
-        setForm({ ...emptyForm, category: "", productionDate: todayStr() });
+        setForm({ ...emptyForm, category: "", productionDate: todayStr(), imageUrl: "" });
       }
     }
   }, [open, editingItem]);
@@ -77,6 +107,7 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
       isNonPerishable: form.isNonPerishable,
       cost: parseFloat(form.cost) || 0,
       supplier: form.supplier.trim() || "Unknown",
+      imageUrl: form.imageUrl || "📦",
     };
 
     // Only include quantity and productionDate when adding a new item
@@ -115,16 +146,71 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
         </datalist>
 
         <div className="grid gap-4 mt-2 max-h-[60vh] overflow-y-auto p-1">
-          {/* Name */}
-          <div>
-            <Label className="text-xs text-muted-foreground mb-1 block">
-              Ingredient Name
-            </Label>
-            <Input
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              placeholder="e.g. Tomato, Flour..."
-            />
+          {/* Name and Emoji */}
+          <div className="flex gap-4">
+            <div className="flex-1">
+              <Label className="text-xs text-muted-foreground mb-1 block">
+                Ingredient Name
+              </Label>
+              <Input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                placeholder="e.g. Tomato, Flour..."
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Icon</Label>
+              <Popover modal={true}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-12 h-10 px-0 text-xl bg-background/50 border-border/40 hover:bg-muted/50">
+                    {form.imageUrl || "📦"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[280px] p-3" align="end">
+                  <div className="space-y-4">
+                    <div className="max-h-[220px] overflow-y-auto pr-2 space-y-3 scrollbar-thin">
+                      {Object.entries(PRESET_EMOJIS).map(([group, emojis]) => (
+                        <div key={group}>
+                          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{group}</div>
+                          <div className="grid grid-cols-6 gap-1">
+                            {emojis.map(e => (
+                              <Button
+                                key={e}
+                                variant="ghost"
+                                className={cn(
+                                  "h-8 w-8 p-0 text-lg hover:bg-muted/50",
+                                  form.imageUrl === e && "bg-muted/80 ring-1 ring-border"
+                                )}
+                                onClick={() => {
+                                  setForm({ ...form, imageUrl: e });
+                                  setCustomEmoji("");
+                                  setCustomEmojiError("");
+                                }}
+                              >
+                                {e}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-3 border-t border-border/40">
+                      <Label className="text-xs text-muted-foreground mb-1.5 block">Custom Emoji</Label>
+                      <Input
+                        value={customEmoji}
+                        onChange={handleCustomEmojiChange}
+                        placeholder="Paste one emoji..."
+                        className={cn(
+                          "bg-background/50 h-8 text-sm",
+                          customEmojiError && "border-destructive focus-visible:ring-destructive"
+                        )}
+                      />
+                      {customEmojiError && <p className="text-[10px] text-destructive mt-1.5 font-medium">{customEmojiError}</p>}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
 
           {/* Category + Supplier */}

@@ -130,15 +130,22 @@ export function InventoryTable({
                 >
                   {/* Item name – clickable, navigates to details */}
                   <td className="py-3 px-4">
-                    <Link
-                      to={`/inventory/${i.id}`}
-                      className="font-medium text-foreground hover:text-primary transition-colors"
-                    >
-                      {i.name}
-                    </Link>
-                    {/* Show category inline on small screens */}
-                    <div className="text-xs text-muted-foreground sm:hidden mt-0.5">
-                      {i.category}
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 flex items-center justify-center rounded-md bg-background/50 text-xl border shrink-0">
+                        {i.imageUrl || "📦"}
+                      </div>
+                      <div>
+                        <Link
+                          to={`/inventory/${i.id}`}
+                          className="font-medium text-foreground hover:text-primary transition-colors block"
+                        >
+                          {i.name}
+                        </Link>
+                        {/* Show category inline on small screens */}
+                        <div className="text-xs text-muted-foreground sm:hidden mt-0.5">
+                          {i.category}
+                        </div>
+                      </div>
                     </div>
                   </td>
 

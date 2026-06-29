@@ -53,6 +53,15 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SummaryCard } from "@/components/shared/SummaryCard";
 import { SkeletonRows } from "@/components/shared/Skeletons";
+import { cn } from "@/lib/utils";
+
+const PRESET_EMOJIS = {
+  Vegetables: ["🍅", "🥦", "🥕", "🥔", "🧅", "🌽", "🧄", "🌶️"],
+  Meat: ["🥩", "🍗", "🥓", "🍔", "🍖", "🌭", "🍤"],
+  Dairy: ["🧀", "🥚", "🥛", "🧈", "🍦", "🍳"],
+  Fruits: ["🍎", "🍌", "🍇", "🍓", "🍋", "🍉", "🍒", "🥝"],
+  Other: ["🍞", "🍚", "🍝", "🧂", "🥫", "📦", "🍯", "🍫"]
+};
 
 export default function MenuManagementPage() {
   const { user } = useAuth();
@@ -138,6 +147,25 @@ export default function MenuManagementPage() {
   });
   const [ingredientsEdit, setIngredientsEdit] = useState([]);
 
+  const [customEmoji, setCustomEmoji] = useState("");
+  const [customEmojiError, setCustomEmojiError] = useState("");
+
+  const handleCustomEmojiChange = (e) => {
+    const val = e.target.value;
+    setCustomEmoji(val);
+    if (!val) {
+      setCustomEmojiError("");
+      return;
+    }
+    const regex = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\uFE0F]+$/u;
+    if (!regex.test(val)) {
+      setCustomEmojiError("Please enter a valid emoji");
+    } else {
+      setCustomEmojiError("");
+      setEditForm({ ...editForm, image: val });
+    }
+  };
+
   const toggleRow = (id) => {
     setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
   };
@@ -184,6 +212,8 @@ export default function MenuManagementPage() {
     setIngredientsEdit(
       item.ingredients ? item.ingredients.map((r) => ({ ...r })) : [],
     );
+    setCustomEmoji("");
+    setCustomEmojiError("");
     setDialogOpen(true);
   };
 
@@ -433,8 +463,9 @@ export default function MenuManagementPage() {
                                       key={idx}
                                       className="flex justify-between items-center text-sm px-3 py-2 border border-border/40 rounded-md bg-muted/50"
                                     >
-                                      <span className="text-foreground text-xs">
-                                        {inv?.name || "Unknown"}
+                                      <span className="text-foreground text-xs flex items-center gap-1.5">
+                                        <span>{inv?.imageUrl || "📦"}</span>
+                                        <span>{inv?.name || "Unknown"}</span>
                                       </span>
                                       <span className="text-primary font-mono text-[10px]">
                                         {r.quantityUsed}&nbsp;
@@ -517,7 +548,7 @@ export default function MenuManagementPage() {
                   <Label className="text-xs text-muted-foreground block">
                     Icon / Image
                   </Label>
-                  <Popover>
+                  <Popover modal={true}>
                     <PopoverTrigger asChild>
                       <Button
                         variant="ghost"
@@ -527,36 +558,47 @@ export default function MenuManagementPage() {
                         Use Emoji
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-64 p-2">
-                      <div className="grid grid-cols-5 gap-2">
-                        {[
-                          "🍔",
-                          "🍕",
-                          "🥗",
-                          "🍟",
-                          "🍗",
-                          "🥤",
-                          "🍨",
-                          "🍩",
-                          "🍣",
-                          "🌮",
-                          "🥪",
-                          "🍰",
-                          "🥩",
-                          "🍝",
-                          "🍞",
-                        ].map((emoji) => (
-                          <Button
-                            key={emoji}
-                            variant="ghost"
-                            className="h-10 w-10 p-0 text-xl"
-                            onClick={() =>
-                              setEditForm({ ...editForm, image: emoji })
-                            }
-                          >
-                            {emoji}
-                          </Button>
-                        ))}
+                    <PopoverContent className="w-[280px] p-3" align="start">
+                      <div className="space-y-4">
+                        <div className="max-h-[220px] overflow-y-auto pr-2 space-y-3 scrollbar-thin">
+                          {Object.entries(PRESET_EMOJIS).map(([group, emojis]) => (
+                            <div key={group}>
+                              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{group}</div>
+                              <div className="grid grid-cols-6 gap-1">
+                                {emojis.map(e => (
+                                  <Button
+                                    key={e}
+                                    variant="ghost"
+                                    className={cn(
+                                      "h-8 w-8 p-0 text-lg hover:bg-muted/50",
+                                      editForm.image === e && "bg-muted/80 ring-1 ring-border"
+                                    )}
+                                    onClick={() => {
+                                      setEditForm({ ...editForm, image: e });
+                                      setCustomEmoji("");
+                                      setCustomEmojiError("");
+                                    }}
+                                  >
+                                    {e}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="pt-3 border-t border-border/40">
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">Custom Emoji</Label>
+                          <Input
+                            value={customEmoji}
+                            onChange={handleCustomEmojiChange}
+                            placeholder="Paste one emoji..."
+                            className={cn(
+                              "bg-background/50 h-8 text-sm",
+                              customEmojiError && "border-destructive focus-visible:ring-destructive"
+                            )}
+                          />
+                          {customEmojiError && <p className="text-[10px] text-destructive mt-1.5 font-medium">{customEmojiError}</p>}
+                        </div>
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -678,7 +720,7 @@ export default function MenuManagementPage() {
                             <div className="flex items-center gap-2">
                               {/* Automatically shows emoji if available, else a box */}
                               <span className="text-base opacity-90">
-                                {inv.emoji || "📦"}
+                                {inv.imageUrl || "📦"}
                               </span>
                               <span>{inv.name}</span>
                             </div>

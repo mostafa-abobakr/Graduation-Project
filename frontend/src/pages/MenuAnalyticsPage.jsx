@@ -182,8 +182,21 @@ export default function MenuAnalyticsPage() {
                     key={idx}
                     className="border-b border-border/30 hover:bg-muted/30 transition-colors"
                   >
-                    <td className="py-4 px-5 text-foreground font-medium">
-                      {item.item_name}
+                    <td className="py-4 px-5 font-medium text-foreground">
+                      <div className="flex items-center gap-3">
+                        {item.image_url && item.image_url.startsWith("http") ? (
+                          <img
+                            src={item.image_url}
+                            alt={item.item_name}
+                            className="h-10 w-10 rounded-md object-cover border border-border/40"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 flex items-center justify-center rounded-md bg-background/50 text-xl border shrink-0">
+                            {item.image_url || "🍽️"}
+                          </div>
+                        )}
+                        <span>{item.item_name}</span>
+                      </div>
                     </td>
                     <td className="py-4 px-5 text-center font-mono font-medium text-muted-foreground">
                       {item.orders.toLocaleString("en-US")}

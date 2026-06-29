@@ -43,6 +43,7 @@ export default function InventoryPage() {
         batchesCount: item.batchesCount ?? 0,
         supplier: item.supplier || "Unknown",
         apiStatus: item.status,
+        imageUrl: item.imageUrl,
       }));
     },
     enabled: !!user?.restId,
