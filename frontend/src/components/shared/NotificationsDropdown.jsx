@@ -31,86 +31,6 @@ import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { Utensils, CalendarDays } from "lucide-react";
 
-// const initialNotifications = [
-//   {
-//     id: 1,
-//     type: "inventory",
-//     title: "Critical: Olive Oil Low",
-//     description:
-//       "Olive Oil stock at 5L — below reorder level of 8L. Place order immediately.",
-//     time: "2 min ago",
-//     read: false,
-//     priority: "critical",
-//   },
-//   {
-//     id: 2,
-//     type: "waste",
-//     title: "Waste Threshold Exceeded",
-//     description:
-//       "Pizza Margherita waste reached 12.4% today, exceeding the 10% threshold.",
-//     time: "15 min ago",
-//     read: false,
-//     priority: "critical",
-//   },
-//   {
-//     id: 3,
-//     type: "inventory",
-//     title: "Low Stock: Pizza Dough",
-//     description: "Pizza Dough at 12kg — approaching reorder level of 15kg.",
-//     time: "32 min ago",
-//     read: false,
-//     priority: "warning",
-//   },
-//   {
-//     id: 4,
-//     type: "waste",
-//     title: "Lettuce Waste Spike",
-//     description:
-//       "Caesar Salad lettuce waste up 28% compared to last week average.",
-//     time: "1 hr ago",
-//     read: false,
-//     priority: "warning",
-//   },
-//   {
-//     id: 5,
-//     type: "inventory",
-//     title: "Low Stock: Lettuce",
-//     description: "Lettuce stock at 8kg — near reorder level of 10kg.",
-//     time: "1 hr ago",
-//     read: true,
-//     priority: "warning",
-//   },
-//   {
-//     id: 6,
-//     type: "alert",
-//     title: "AI Prediction Update",
-//     description:
-//       "Weekend demand forecast updated: expect 35% more Chicken Burger orders.",
-//     time: "2 hr ago",
-//     read: true,
-//     priority: "info",
-//   },
-//   {
-//     id: 7,
-//     type: "waste",
-//     title: "Waste Goal Achieved",
-//     description:
-//       "Overall waste reduction hit 23% this month — exceeding 20% target!",
-//     time: "3 hr ago",
-//     read: true,
-//     priority: "info",
-//   },
-//   {
-//     id: 8,
-//     type: "inventory",
-//     title: "Order Delivered",
-//     description: "Salmon Fillet order of 20kg has been delivered and stocked.",
-//     time: "4 hr ago",
-//     read: true,
-//     priority: "info",
-//   },
-// ];
-
 const iconMap = { waste: Trash2, inventory: Package, alert: AlertTriangle, menu: Utensils, schedule: CalendarDays };
 const priorityStyles = {
   critical: "bg-destructive/10 text-destructive",
@@ -129,8 +49,6 @@ export function NotificationsDropdown() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   
-  const [readIds, setReadIds] = useState(new Set());
-  const [dismissedIds, setDismissedIds] = useState(new Set());
   const [filterCategory, setFilterCategory] = useState("all");
   const [filterSeverity, setFilterSeverity] = useState("all");
   const [sortOrder, setSortOrder] = useState("desc");
@@ -166,6 +84,9 @@ export function NotificationsDropdown() {
           description: n.message,
           time: new Date(n.createdAt),
           priority,
+          inventoryID: n.inventoryID,
+          batchID: n.batchID,
+          referenceDate: n.referenceDate,
         };
       });
     },
@@ -173,23 +94,11 @@ export function NotificationsDropdown() {
   });
 
   const notifications = fetchedNotifications
-    .filter(n => !dismissedIds.has(n.id))
     .filter(n => filterCategory === "all" || n.category.toLowerCase() === filterCategory.toLowerCase())
     .filter(n => filterSeverity === "all" || n.priority === filterSeverity)
-    .sort((a, b) => sortOrder === "desc" ? b.time.getTime() - a.time.getTime() : a.time.getTime() - b.time.getTime())
-    .map(n => ({ ...n, read: readIds.has(n.id) }));
+    .sort((a, b) => sortOrder === "desc" ? b.time.getTime() - a.time.getTime() : a.time.getTime() - b.time.getTime());
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-
-  const markAsRead = (id) => setReadIds(prev => new Set(prev).add(id));
-  
-  const markAllRead = () => {
-    const newRead = new Set(readIds);
-    notifications.forEach(n => newRead.add(n.id));
-    setReadIds(newRead);
-  };
-  
-  const dismissNotification = (id) => setDismissedIds(prev => new Set(prev).add(id));
+  const unreadCount = notifications.length;
 
   const handleOpenChange = (newOpen) => {
     setOpen(newOpen);
@@ -201,15 +110,26 @@ export function NotificationsDropdown() {
   };
 
   const handleNotificationClick = (notification) => {
-    markAsRead(notification.id);
-    if (notification.category === "Inventory" && notification.referenceID) {
-      navigate(`/inventory/${notification.referenceID}`);
+    if (notification.category === "Inventory" && notification.inventoryID) {
+      const state = {};
+      if (notification.batchID) {
+        state.highlightBatchId = notification.batchID;
+      }
+      navigate(`/inventory/${notification.inventoryID}`, { state });
       setOpen(false);
     } else if (notification.category === "Menu") {
-      navigate(`/menu`);
+      const state = {};
+      if (notification.referenceID) {
+        state.highlightMenuItemId = notification.referenceID;
+      }
+      navigate(`/dashboard/menu`, { state });
       setOpen(false);
     } else if (notification.category === "Schedule") {
-      navigate(`/schedule`);
+      const state = {};
+      if (notification.referenceDate) {
+        state.targetDate = notification.referenceDate;
+      }
+      navigate(`/dashboard/schedule`, { state });
       setOpen(false);
     }
   };
@@ -302,7 +222,7 @@ export function NotificationsDropdown() {
                 return (
                   <div
                     key={notification.id}
-                    className={`group flex gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-muted/30 ${!notification.read ? "bg-primary/[0.02]" : ""}`}
+                    className="group flex gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-muted/30 bg-primary/[0.02]"
                     onClick={() => handleNotificationClick(notification)}
                   >
                     <div
@@ -313,26 +233,15 @@ export function NotificationsDropdown() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          {!notification.read && (
-                            <span
-                              className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotStyles[notification.priority]}`}
-                            />
-                          )}
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotStyles[notification.priority]}`}
+                          />
                           <p
-                            className={`text-sm truncate ${!notification.read ? "font-semibold text-foreground" : "font-medium text-foreground/80"}`}
+                            className="text-sm truncate font-semibold text-foreground"
                           >
                             {notification.title}
                           </p>
                         </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            dismissNotification(notification.id);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                        >
-                          <X className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                        </button>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-2">
                         {notification.description}
