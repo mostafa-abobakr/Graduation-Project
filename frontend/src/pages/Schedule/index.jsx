@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { getWeekDates, formatWeekRange } from "@/lib/scheduleData"
@@ -34,7 +36,7 @@ export default function SchedulePage() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [customRange, setCustomRange] = useState(null)
   const [isRangePickerOpen, setIsRangePickerOpen] = useState(false)
-  const [rangeInputs, setRangeInputs] = useState({ from: "", to: "" })
+  const [dateRange, setDateRange] = useState({ from: undefined, to: undefined })
 
   const [formData, setFormData] = useState({
     empID: "",
@@ -60,7 +62,7 @@ export default function SchedulePage() {
     const daysToSubtract = day === 6 ? 0 : day + 1
     const sat = new Date(d)
     sat.setDate(d.getDate() - daysToSubtract)
-    
+
     return Array.from({ length: 7 }, (_, i) => {
       const current = new Date(sat)
       current.setDate(sat.getDate() + i)
@@ -81,8 +83,8 @@ export default function SchedulePage() {
     return dates
   }
 
-  const displayedDates = customRange 
-    ? getDatesInRange(customRange.from, customRange.to) 
+  const displayedDates = customRange
+    ? getDatesInRange(customRange.from, customRange.to)
     : (viewMode === "week" ? getSaturdayToWednesdayDates(baseDate) : [baseDate])
 
   const { data: employees = [] } = useEmployees()
@@ -174,7 +176,7 @@ export default function SchedulePage() {
       shiftType: formData.shiftType,
     }
     console.log(payload);
-    
+
     if (isEditMode) {
       payload.scheduleID = editingShiftId
       if (formData.source === "AI") {
@@ -214,7 +216,7 @@ export default function SchedulePage() {
 
     const restId = user?.restId || 54
     console.log(targetDateStr);
-    
+
     try {
       const response = await fetch(
         `https://youseef-awaad-zerobite-ai-engine.hf.space/scheduling/generate/${restId}?target_date=${targetDateStr}`,
@@ -231,9 +233,9 @@ export default function SchedulePage() {
       }
 
       const data = await response.json()
-      
+
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
-      
+
       toast.success("AI Schedule Generated!", {
         description: data.message || "Schedule generated successfully for the week."
       })
@@ -259,7 +261,7 @@ export default function SchedulePage() {
     const prevStart = new Date(currentStart)
     prevStart.setDate(prevStart.getDate() - 7)
     const prevEnd = new Date(currentEnd)
-    prevEnd.setDate(prevEnd.getDate() - 7)
+    prevEnd.setDate(prevEnd.getDate() - 6)
 
     copyLastWeekMutation.mutate({
       prevStartDate: prevStart,
@@ -285,16 +287,12 @@ export default function SchedulePage() {
   }
 
   const handleApplyRange = () => {
-    if (!rangeInputs.from || !rangeInputs.to) {
+    if (!dateRange?.from || !dateRange?.to) {
       toast.error("Please select both start and end dates.")
       return
     }
-    const fromDate = new Date(rangeInputs.from + "T00:00:00")
-    const toDate = new Date(rangeInputs.to + "T00:00:00")
-    if (fromDate > toDate) {
-      toast.error("Start date must be before or equal to end date.")
-      return
-    }
+    const fromDate = dateRange.from
+    const toDate = dateRange.to
     const diffTime = Math.abs(toDate - fromDate)
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     if (diffDays > 31) {
@@ -308,7 +306,7 @@ export default function SchedulePage() {
 
   const handleResetRange = () => {
     setCustomRange(null)
-    setRangeInputs({ from: "", to: "" })
+    setDateRange({ from: undefined, to: undefined })
     setIsRangePickerOpen(false)
   }
 
@@ -321,10 +319,7 @@ export default function SchedulePage() {
       const newTo = new Date(customRange.to)
       newTo.setDate(newTo.getDate() - diffDays)
       setCustomRange({ from: newFrom, to: newTo })
-      setRangeInputs({
-        from: newFrom.toISOString().split("T")[0],
-        to: newTo.toISOString().split("T")[0]
-      })
+      setDateRange({ from: newFrom, to: newTo })
     } else {
       setWeekOffset((o) => o - 1)
     }
@@ -339,10 +334,7 @@ export default function SchedulePage() {
       const newTo = new Date(customRange.to)
       newTo.setDate(newTo.getDate() + diffDays)
       setCustomRange({ from: newFrom, to: newTo })
-      setRangeInputs({
-        from: newFrom.toISOString().split("T")[0],
-        to: newTo.toISOString().split("T")[0]
-      })
+      setDateRange({ from: newFrom, to: newTo })
     } else {
       setWeekOffset((o) => o + 1)
     }
@@ -477,11 +469,10 @@ export default function SchedulePage() {
                     setViewMode("day")
                     setCustomRange(null)
                   }}
-                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${
-                    viewMode === "day" && !customRange
+                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${viewMode === "day" && !customRange
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   This Day
                 </button>
@@ -491,11 +482,10 @@ export default function SchedulePage() {
                     setViewMode("week")
                     setCustomRange(null)
                   }}
-                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${
-                    viewMode === "week" && !customRange
+                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${viewMode === "week" && !customRange
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   This Week
                 </button>
@@ -505,11 +495,10 @@ export default function SchedulePage() {
                     setViewMode("custom")
                     setIsRangePickerOpen(true)
                   }}
-                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${
-                    customRange
+                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${customRange
                       ? "bg-background text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   Custom Range
                 </button>
@@ -523,72 +512,56 @@ export default function SchedulePage() {
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <div 
-                  className="relative flex items-center gap-2 text-foreground font-medium cursor-pointer hover:text-primary transition-colors select-none py-1.5 px-3 rounded-lg hover:bg-muted/30"
-                  onClick={() => setIsRangePickerOpen(!isRangePickerOpen)}
-                >
-                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                  {customRange ? (
-                    <span>
-                      {customRange.from.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {customRange.to.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                  ) : viewMode === "week" ? (
-                    <span>
-                      {displayedDates[0]?.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {displayedDates[displayedDates.length - 1]?.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                  ) : (
-                    <span>
-                      {baseDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}
-                    </span>
-                  )}
-
-                  {isRangePickerOpen && (
-                    <div 
-                      className="absolute top-full left-1/2 -translate-x-1/2 mt-2 z-50 w-72 p-4 bg-card border border-border/80 rounded-xl shadow-xl space-y-3 text-sm text-foreground"
-                      onClick={(e) => e.stopPropagation()}
+                <Popover open={isRangePickerOpen} onOpenChange={setIsRangePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <div
+                      className="flex items-center gap-2 text-foreground font-medium cursor-pointer hover:text-primary transition-colors select-none py-1.5 px-3 rounded-lg hover:bg-muted/30"
                     >
-                      <h4 className="font-semibold text-center border-b border-border/40 pb-2">Select Custom Date Range</h4>
-                      <div className="space-y-2">
-                        <div className="flex flex-col gap-1 text-left">
-                          <label className="text-xs text-muted-foreground font-medium">Start Date</label>
-                          <input
-                            type="date"
-                            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-80"
-                            value={rangeInputs.from}
-                            onChange={(e) => setRangeInputs({ ...rangeInputs, from: e.target.value })}
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1 text-left">
-                          <label className="text-xs text-muted-foreground font-medium">End Date</label>
-                          <input
-                            type="date"
-                            className="w-full h-9 px-3 rounded-md border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring [&::-webkit-calendar-picker-indicator]:invert [&::-webkit-calendar-picker-indicator]:opacity-80"
-                            value={rangeInputs.to}
-                            onChange={(e) => setRangeInputs({ ...rangeInputs, to: e.target.value })}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex gap-2 pt-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 text-xs"
-                          onClick={handleResetRange}
-                        >
-                          Reset
-                        </Button>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="flex-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white"
-                          onClick={handleApplyRange}
-                        >
-                          Apply
-                        </Button>
-                      </div>
+                      <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                      {customRange ? (
+                        <span>
+                          {customRange.from.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {customRange.to.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      ) : viewMode === "week" ? (
+                        <span>
+                          {displayedDates[0]?.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {displayedDates[displayedDates.length - 1]?.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      ) : (
+                        <span>
+                          {baseDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", year: "numeric" })}
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-4 flex flex-col gap-3" align="center">
+                    <h4 className="font-semibold text-center border-b border-border/40 pb-2">Select Custom Date Range</h4>
+                    <Calendar
+                      initialFocus
+                      mode="range"
+                      defaultMonth={dateRange?.from || baseDate}
+                      selected={dateRange}
+                      onSelect={setDateRange}
+                    />
+                    <div className="flex gap-2 pt-1 border-t border-border/40">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 text-xs border-border/60 hover:bg-muted/50"
+                        onClick={handleResetRange}
+                      >
+                        Reset
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="flex-1 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
+                        onClick={handleApplyRange}
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <Button
                   variant="ghost"
                   size="icon"

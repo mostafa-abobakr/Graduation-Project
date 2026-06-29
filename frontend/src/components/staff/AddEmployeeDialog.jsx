@@ -25,7 +25,6 @@ const employeeSchema = z.object({
   phone: z.string().min(1, "Phone is required"),
   shift: z.string().min(1, "Shift is required"),
   email: z.string().email("Invalid email"),
-  password: z.string().min(6, "Password must be at least 6 chars"),
   workingHoursPerDay: z.coerce.number().min(1, "Required").max(24, "Max 24"),
   workingDaysPerWeek: z.coerce.number().min(1, "Required").max(7, "Max 7"),
 })
@@ -38,12 +37,11 @@ export function AddEmployeeDialog({ isOpen, onOpenChange }) {
     resolver: zodResolver(employeeSchema),
     defaultValues: {
       fullName: "",
-      role: "Cook",
+      role: "chef",
       salary: 0,
       phone: "",
       shift: "Morning",
       email: "",
-      password: "",
       workingHoursPerDay: 8,
       workingDaysPerWeek: 6,
     }
@@ -53,6 +51,7 @@ export function AddEmployeeDialog({ isOpen, onOpenChange }) {
     addEmployeeMutation.mutate({
       restID: user?.restId || 0,
       ...data,
+      password: data.phone,
       status: "Active",
     }, {
       onSuccess: () => {
@@ -91,9 +90,10 @@ export function AddEmployeeDialog({ isOpen, onOpenChange }) {
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Casher">Casher</SelectItem>
-                        <SelectItem value="Cook">Cook</SelectItem>
-                        <SelectItem value="Waiter">Waiter</SelectItem>
+                        <SelectItem value="employee">Casher</SelectItem>
+                        <SelectItem value="chef">Cook</SelectItem>
+                        <SelectItem value="employee">Waiter</SelectItem>
+
                       </SelectContent>
                     </Select>
                   )}
@@ -175,16 +175,9 @@ export function AddEmployeeDialog({ isOpen, onOpenChange }) {
               />
               {errors.email && <span className="text-xs text-destructive">{errors.email.message}</span>}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="staffPassword">Initial Password</Label>
-              <Input
-                id="staffPassword"
-                type="password"
-                placeholder="Password123!"
-                {...register("password")}
-                autoComplete="new-password"
-              />
-              {errors.password && <span className="text-xs text-destructive">{errors.password.message}</span>}
+            <div className="p-3 bg-muted/40 rounded-lg border border-border/50 text-xs text-muted-foreground flex gap-2">
+              <span className="shrink-0">ℹ️</span>
+              <span>The employee's phone number will be automatically set as their initial login password.</span>
             </div>
           </div>
           <DialogFooter className="mt-2">

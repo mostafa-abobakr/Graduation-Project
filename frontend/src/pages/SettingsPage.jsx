@@ -21,8 +21,9 @@ export default function SettingsPage() {
   const [avatarUrl, setAvatarUrl] = useState(user?.photoUrl || "");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [isLoadingSettings, setIsLoadingSettings] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const fileInputRef = useRef(null);
+  const [isSaving, setIsSaving] = useState(false)
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+  const fileInputRef = useRef(null)
 
   // Profile Settings
   const [profile, setProfile] = useState({
@@ -30,10 +31,11 @@ export default function SettingsPage() {
     lastName: user?.lastName || "",
     email: user?.email || "",
     role: user?.role || "",
+    imageUrl: user?.photoUrl || user?.imageUrl || "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
-  });
+  })
 
   // Restaurant Settings
   const [restaurant, setRestaurant] = useState({
@@ -85,7 +87,11 @@ export default function SettingsPage() {
             lastName: data.profile.lastName || "",
             email: data.profile.email || "",
             role: data.profile.role || "",
+            imageUrl: data.profile.imageUrl || "",
           }))
+          if (data.profile.imageUrl) {
+            setAvatarUrl(data.profile.imageUrl)
+          }
         }
         if (data.restaurant) {
           setRestaurant({
@@ -141,6 +147,7 @@ export default function SettingsPage() {
           lastName: profile.lastName,
           email: profile.email,
           role: profile.role,
+          imageUrl: avatarUrl || profile.imageUrl || null,
         },
         restaurant,
         scheduling,
@@ -180,8 +187,9 @@ export default function SettingsPage() {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      const newUrl = response.data?.photoUrl || response.data?.url || URL.createObjectURL(file);
-      setAvatarUrl(newUrl);
+      const newUrl = response.data?.imageUrl || response.data?.photoUrl || response.data?.url || URL.createObjectURL(file)
+      setAvatarUrl(newUrl)
+      setProfile((prev) => ({ ...prev, imageUrl: newUrl }))
       toast.success("Photo updated successfully!");
     } catch (error) {
       console.error("Failed to upload photo:", error);
@@ -405,13 +413,27 @@ export default function SettingsPage() {
                       Cancel
                     </Button>
                     <Button
-                      disabled={!canSubmit}
-                      onClick={() => {
-                        toast.success("Password updated successfully!");
-                        setIsChangingPassword(false);
-                        setProfile({ ...profile, currentPassword: "", newPassword: "", confirmPassword: "" });
+                      disabled={!canSubmit || isUpdatingPassword}
+                      onClick={async () => {
+                        setIsUpdatingPassword(true)
+                        try {
+                          await api.post("/Settings/change-password", {
+                            currentPassword: profile.currentPassword,
+                            newPassword: profile.newPassword,
+                            confirmPassword: profile.confirmPassword,
+                          })
+                          toast.success("Password updated successfully!")
+                          setIsChangingPassword(false)
+                          setProfile({ ...profile, currentPassword: "", newPassword: "", confirmPassword: "" })
+                        } catch (error) {
+                          console.error("Failed to update password:", error)
+                          toast.error(error.response?.data?.message || error.message || "Failed to update password.")
+                        } finally {
+                          setIsUpdatingPassword(false)
+                        }
                       }}
                     >
+                      {isUpdatingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Update Password
                     </Button>
                   </div>

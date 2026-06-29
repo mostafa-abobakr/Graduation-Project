@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/contexts/AuthContext"
-import { useStaffQuery } from "@/hooks/useStaff"
+import { useStaffQuery, useDeleteEmployee } from "@/hooks/useStaff"
 import { useShifts } from "@/hooks/useSchedule"
 import { Users, Clock, UserCheck, DollarSign, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -92,6 +92,16 @@ export default function StaffPage() {
     const role = (employee.role || "").toLowerCase()
     return name.includes(q) || role.includes(q)
   })
+
+  const deleteEmployeeMutation = useDeleteEmployee()
+
+  const handleDeleteEmployee = (empId) => {
+    if (!empId) return
+    const confirmed = window.confirm("Are you sure you want to delete this employee? This action cannot be undone.")
+    if (confirmed) {
+      deleteEmployeeMutation.mutate(empId)
+    }
+  }
 
   const handleEditEmployee = (emp) => {
     setEmployeeToEdit(emp)
@@ -195,6 +205,7 @@ export default function StaffPage() {
         search={search}
         setSearch={setSearch}
         onEdit={handleEditEmployee}
+        onDelete={handleDeleteEmployee}
       />
 
       {/* ── Modals ──────────────────────────────────────────── */}

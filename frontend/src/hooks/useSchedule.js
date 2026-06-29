@@ -155,56 +155,51 @@ export const useCopyLastWeekSchedule = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: async ({ prevStartDate, prevEndDate, currentStartDate }) => {
-      const startFormatted = `${prevStartDate.getFullYear()}/${prevStartDate.getMonth() + 1}/${prevStartDate.getDate()}`
-      const endFormatted = `${prevEndDate.getFullYear()}/${prevEndDate.getMonth() + 1}/${prevEndDate.getDate()}`
+      const sourceStart = `${prevStartDate.getFullYear()}/${String(prevStartDate.getMonth() + 1).padStart(2, "0")}/${String(prevStartDate.getDate()).padStart(2, "0")}`
+      const sourceEnd = `${prevEndDate.getFullYear()}/${String(prevEndDate.getMonth() + 1).padStart(2, "0")}/${String(prevEndDate.getDate()).padStart(2, "0")}`
+      const newWeekStart = `${currentStartDate.getFullYear()}/${String(currentStartDate.getMonth() + 1).padStart(2, "0")}/${String(currentStartDate.getDate()).padStart(2, "0")}`
 
-      const response = await api.get(`/Schedule/range?startDate=${startFormatted}&endDate=${endFormatted}`, {
-        headers: getAuthHeaders(),
-      })
-
-      const prevShifts = response.data
-
-      if (!prevShifts || prevShifts.length === 0) {
-        throw new Error("No shifts found in the previous week to copy.")
-      }
-
-      const dayDiff = Math.round((currentStartDate - prevStartDate) / (1000 * 60 * 60 * 24))
-
-      const mappedShifts = prevShifts.map((shift) => {
-        const prevDay = new Date(shift.day)
-        const newDay = new Date(prevDay)
-        newDay.setDate(prevDay.getDate() + dayDiff)
-
-        return {
-          scheduleID: 0,
-          empID: shift.empID || shift.empId || shift.employeeId,
-          restID: shift.restID || shift.restId,
-          day: newDay.toISOString(),
-          startTime: shift.startTime,
-          endTime: shift.endTime,
-          shiftType: shift.shiftType,
+      const response = await api.post(
+        `/Schedule/copy-week?sourceStart=${sourceStart}&sourceEnd=${sourceEnd}&newWeekStart=${newWeekStart}`,
+        {},
+        {
+          headers: getAuthHeaders(),
         }
-      })
-
-      const results = await Promise.all(
-        mappedShifts.map((payload) =>
-          api.put("/Schedule/range", payload, {
-            headers: getAuthHeaders(),
-          })
-        )
       )
 
-      return results
+      return response.data
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Check if backend returned a success message but with 0 shifts copied
+      if (data && (data.count === 0 || data.copiedShiftsCount === 0 || data.message?.toLowerCase().includes("no shifts") || data.message?.toLowerCase().includes("no data"))) {
+        toast.error("No shifts found to copy", {
+          description: data.message || "No shifts were found in the previous week to copy.",
+        })
+        return
+      }
+
+      // Check if backend returned an explicit logical failure
+      if (data && (data.success === false || data.status === "fail" || data.status === "error")) {
+        toast.error("Failed to copy schedule", {
+          description: data.message || "Something went wrong on the server.",
+        })
+        return
+      }
+
       toast.success("Previous week schedule copied!", {
-        description: "All shifts have been copied to the current week.",
+        description: data?.message || "All shifts have been copied to the current week.",
       })
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
     },
     onError: (error) => {
+      const errMsg = error.response?.data?.message || 
+                     error.response?.data?.error ||
+                     (typeof error.response?.data === "string" ? error.response.data : null) ||
+                     error.message || 
+                     "Something went wrong."
+      
       toast.error("Failed to copy schedule.", {
-        description: error.message || "Something went wrong.",
+        description: errMsg,
       })
     },
   })

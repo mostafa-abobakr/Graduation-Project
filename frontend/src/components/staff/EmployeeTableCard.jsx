@@ -2,7 +2,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
-import { Search, Users } from "lucide-react"
+import { Search, Users, Trash2 } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 
 const initials = (name = "") =>
@@ -13,7 +13,7 @@ const initials = (name = "") =>
     .map((part) => part[0].toUpperCase())
     .join("")
 
-export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEdit }) {
+export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEdit, onDelete }) {
   if (filtered.length === 0 && !isLoading && !search) {
     return (
       <Card className="bg-card border-border/60 premium-shadow overflow-hidden p-8">
@@ -132,9 +132,10 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
               </tr>
             ) : (
               filtered.map((e, index) => (
-                <tr
+                 <tr
                   key={e.id || e.empId || e.empID || index}
-                  className="border-b border-border/30 hover:bg-muted/20 transition-colors"
+                  className="border-b border-border/30 hover:bg-muted/20 transition-colors cursor-pointer"
+                  onClick={() => onEdit && onEdit(e)}
                 >
                   <td className="py-4 px-5">
                     <div className="flex items-center gap-3">
@@ -188,13 +189,19 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
                       
                     </Badge>
                   </td>
-                  <td className="py-4 px-5 text-right">
-                    <button 
-                      onClick={() => onEdit && onEdit(e)}
-                      className="text-primary hover:text-primary/80 transition-colors text-sm font-medium"
-                    >
-                      Edit
-                    </button>
+                  <td className="py-4 px-5">
+                    <div className="flex items-center justify-end gap-3">
+                      <button 
+                        onClick={(evt) => {
+                          evt.stopPropagation()
+                          onDelete && onDelete(e.id || e.empID || e.empId)
+                        }}
+                        className="text-destructive hover:text-destructive/80 transition-colors p-1"
+                        title="Delete Employee"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

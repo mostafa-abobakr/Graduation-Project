@@ -57,5 +57,24 @@ export const useUpdateEmployee = () => {
       console.error("Error updating employee:", error);
       toast.error(error.message || "Failed to update employee.");
     },
-  });
-};
+  })
+}
+
+export const useDeleteEmployee = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (empId) => {
+      const response = await api.delete(`/Employees/${empId}`)
+      return response.data
+    },
+    onSuccess: () => {
+      toast.success("Employee deleted successfully!")
+      queryClient.invalidateQueries({ queryKey: ["staff"] })
+      queryClient.invalidateQueries({ queryKey: ["employees"] })
+    },
+    onError: (error) => {
+      console.error("Error deleting employee:", error)
+      toast.error(error.response?.data?.message || error.message || "Failed to delete employee.")
+    },
+  })
+}
