@@ -1,4 +1,5 @@
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -24,8 +25,15 @@ export default function ForecastSettingsModal({
   setWeeklyEvents,
   onApply
 }) {
-  const [searchQuery, setSearchQuery] = useState("")
+  const { user } = useAuth()
+  const [searchQuery, setSearchQuery] = useState(user?.address || "")
   const [suggestions, setSuggestions] = useState([])
+
+  useEffect(() => {
+    if (open && user?.address) {
+      setSearchQuery(user.address)
+    }
+  }, [open, user?.address])
   const [isSearching, setIsSearching] = useState(false)
   const [isFetchingWeather, setIsFetchingWeather] = useState(false)
 
