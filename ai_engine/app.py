@@ -323,14 +323,15 @@ def pos_submit(request: PosOrderRequest):
                 },
             )
 
-        session.commit()
-
-    try:
-        inventory_consumption = consume_inventory(restaurant_id, order_id)
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Inventory consume failed: {exc}")
+        try:
+            inventory_consumption = consume_inventory(restaurant_id, order_id, session=session)
+            session.commit()
+        except ValueError as exc:
+            session.rollback()
+            raise HTTPException(status_code=400, detail=str(exc))
+        except Exception as exc:
+            session.rollback()
+            raise HTTPException(status_code=500, detail=f"Inventory consume failed: {exc}")
 
     return {
         "status": "success",
