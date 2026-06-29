@@ -1,7 +1,8 @@
 import { useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/contexts/AuthContext"
-import { useStaffQuery, useActiveStaffCount } from "@/hooks/useStaff"
+import { useStaffQuery } from "@/hooks/useStaff"
+import { useShifts } from "@/hooks/useSchedule"
 import { Users, Clock, UserCheck, DollarSign, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -11,6 +12,26 @@ import { SummaryCard } from "@/components/shared/SummaryCard"
 import { AddEmployeeDialog } from "@/components/staff/AddEmployeeDialog"
 import { EditEmployeeDialog } from "@/components/staff/EditEmployeeDialog"
 import { EmployeeTableCard } from "@/components/staff/EmployeeTableCard"
+
+const parseTimeToMinutes = (timeStr) => {
+  if (!timeStr) return null
+  try {
+    const cleaned = timeStr.trim().toLowerCase()
+    if (cleaned.includes("am") || cleaned.includes("pm")) {
+      const [time, modifier] = cleaned.split(" ")
+      let [hours, minutes] = time.split(":")
+      hours = parseInt(hours, 10)
+      if (hours === 12) hours = 0
+      if (modifier === "pm") hours += 12
+      return hours * 60 + parseInt(minutes, 10)
+    } else {
+      const [hours, minutes] = cleaned.split(":")
+      return parseInt(hours, 10) * 60 + parseInt(minutes, 10)
+    }
+  } catch {
+    return null
+  }
+}
 
 export default function StaffPage() {
   const { isAdmin } = useAuth()
@@ -25,7 +46,42 @@ export default function StaffPage() {
   const employees = data?.employees ?? []
   const totalStaff = data?.totalStaff ?? 0
 
-  const { data: totalActive = 0, isLoading: isActiveLoading } = useActiveStaffCount()
+  const [baseDate] = useState(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
+
+  const [tomorrowDate] = useState(() => {
+    const d = new Date(baseDate)
+    d.setDate(d.getDate() + 1)
+    return d
+  })
+
+  const { data: shifts = [], isLoading: isShiftsLoading } = useShifts(baseDate, tomorrowDate)
+
+  // Calculate active members manually on EVERY render
+  const now = new Date()
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+
+  const activeShifts = shifts.filter(shift => {
+    if (!shift.startTime || !shift.endTime || !shift.date) return false
+    if (shift.date !== todayStr) return false
+
+    const start = parseTimeToMinutes(shift.rawStartTime || shift.startTime)
+    const end = parseTimeToMinutes(shift.rawEndTime || shift.endTime)
+
+    if (start === null || end === null) return false
+
+    if (end > start) {
+      return currentMinutes >= start && currentMinutes < end
+    } else {
+      return currentMinutes >= start || currentMinutes < end
+    }
+  })
+
+  const totalActive = new Set(activeShifts.map(s => s.staffId)).size
   const weeklyHrs = data?.weeklyHrs ?? 0
   const monthlySalary = data?.monthlySalary ?? 0
 
@@ -106,7 +162,7 @@ export default function StaffPage() {
         />
         <SummaryCard
           title="Active Members"
-          value={isLoading || isActiveLoading ? <Skeleton className="h-8 w-20" /> : totalActive}
+          value={isLoading ? <Skeleton className="h-8 w-20" /> : totalActive}
           icon={UserCheck}
           iconWrapper
           valueColorClass="text-primary"

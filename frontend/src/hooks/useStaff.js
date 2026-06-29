@@ -22,67 +22,6 @@ export const useStaffQuery = () => {
   })
 }
 
-const parse24HourToMinutes = (timeStr) => {
-  if (!timeStr) return null
-  try {
-    const [hours, minutes] = timeStr.substring(0, 5).split(":")
-    return parseInt(hours, 10) * 60 + parseInt(minutes, 10)
-  } catch {
-    return null
-  }
-}
-
-export const useActiveStaffCount = () => {
-  const now = new Date()
-  const today = new Date(now)
-  today.setHours(0, 0, 0, 0)
-  const tomorrow = new Date(today)
-  tomorrow.setDate(tomorrow.getDate() + 1)
-
-  const formatDate = (d) =>
-    `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`
-
-  return useQuery({
-    queryKey: ["activeStaffCount"],
-    queryFn: async () => {
-      const response = await api.get(
-        `/Schedule/range?startDate=${formatDate(today)}&endDate=${formatDate(tomorrow)}`
-      )
-
-      const shifts = response.data ?? []
-      const currentNow = new Date()
-      const currentMinutes = currentNow.getHours() * 60 + currentNow.getMinutes()
-      const todayStr = `${currentNow.getFullYear()}-${String(currentNow.getMonth() + 1).padStart(2, "0")}-${String(currentNow.getDate()).padStart(2, "0")}`
-
-      const activeStaffIds = new Set()
-
-      shifts.forEach((item) => {
-        const shiftDate = item.day ? item.day.split("T")[0] : ""
-        if (shiftDate !== todayStr) return
-        if (!item.startTime || !item.endTime) return
-
-        const start = parse24HourToMinutes(item.startTime)
-        const end = parse24HourToMinutes(item.endTime)
-        if (start === null || end === null) return
-
-        const isActive = end > start
-          ? currentMinutes >= start && currentMinutes < end
-          : currentMinutes >= start || currentMinutes < end
-
-        if (isActive) {
-          const empId = item.empID || item.empId || item.employeeId || item.staffId || item.id
-          activeStaffIds.add(empId)
-        }
-      })
-
-      return activeStaffIds.size
-    },
-    staleTime: 0,
-    refetchOnMount: "always",
-    retry: 1,
-  })
-}
-
 export const useAddEmployee = () => {
   const queryClient = useQueryClient();
   return useMutation({
