@@ -170,6 +170,7 @@ def get_revenue_trend(restaurant_id: str, granularity: str, timeframe: str = "al
 _MENU_PERFORMANCE_SQL = """
     SELECT
         mi.ItemName                   AS item_name,
+        mi.ImageUrl                   AS image_url,
         COUNT(DISTINCT oi.OrderId)    AS orders,
         SUM(oi.LineTotal)             AS revenue,
         SUM(oi.LineTotal - (mi.Cost * oi.Quantity)) AS profit,
@@ -178,7 +179,7 @@ _MENU_PERFORMANCE_SQL = """
     JOIN Orders    o  ON oi.OrderId    = o.OrderId
     JOIN MenuItems mi ON oi.MenuItemId = mi.MenuItemId
     WHERE o.RestaurantId = :restaurant_id {timeframe_clause}
-    GROUP BY mi.ItemName, mi.Price
+    GROUP BY mi.ItemName, mi.Price, mi.ImageUrl
     ORDER BY revenue DESC
 """
 
@@ -198,7 +199,13 @@ def get_menu_performance(restaurant_id: str, timeframe: str = "all") -> list[dic
     # Aggregate across items that might share a name with different prices
     agg = (
         df.groupby("item_name", as_index=False)
-        .agg({"orders": "sum", "revenue": "sum", "profit": "sum", "avg_price": "mean"})
+        .agg({
+            "image_url": "first",
+            "orders": "sum",
+            "revenue": "sum",
+            "profit": "sum",
+            "avg_price": "mean",
+        })
     )
 
     def margin_pct(row):
