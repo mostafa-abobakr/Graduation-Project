@@ -55,12 +55,12 @@ import { SummaryCard } from "@/components/shared/SummaryCard";
 import { SkeletonRows } from "@/components/shared/Skeletons";
 import { cn } from "@/lib/utils";
 
-const PRESET_EMOJIS = {
-  Vegetables: ["🍅", "🥦", "🥕", "🥔", "🧅", "🌽", "🧄", "🌶️"],
-  Meat: ["🥩", "🍗", "🥓", "🍔", "🍖", "🌭", "🍤"],
-  Dairy: ["🧀", "🥚", "🥛", "🧈", "🍦", "🍳"],
-  Fruits: ["🍎", "🍌", "🍇", "🍓", "🍋", "🍉", "🍒", "🥝"],
-  Other: ["🍞", "🍚", "🍝", "🧂", "🥫", "📦", "🍯", "🍫"]
+const MENU_ITEM_EMOJIS = {
+  "Drinks": ["☕", "🫖", "🧋", "🥤", "🧃"],
+  "Mains & Fast Food": ["🍔", "🍟", "🍕", "🥪", "🌮", "🌯", "🥩", "🍗", "🍝", "🍜", "🍣"],
+  "Starters & Sides": ["🥗", "🥣", "🫓", "🥖", "🍞", "🧀"],
+  "Breakfast & Bakery": ["🥐", "🥯", "🥞", "🧇", "🍳", "🥓"],
+  "Desserts": ["🍰", "🧁", "🍩", "🍪", "🥧", "🍦", "🍨"],
 };
 
 export default function MenuManagementPage() {
@@ -561,7 +561,7 @@ export default function MenuManagementPage() {
                     <PopoverContent className="w-[280px] p-3" align="start">
                       <div className="space-y-4">
                         <div className="max-h-[220px] overflow-y-auto pr-2 space-y-3 scrollbar-thin">
-                          {Object.entries(PRESET_EMOJIS).map(([group, emojis]) => (
+                          {Object.entries(MENU_ITEM_EMOJIS).map(([group, emojis]) => (
                             <div key={group}>
                               <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{group}</div>
                               <div className="grid grid-cols-6 gap-1">
