@@ -18,6 +18,18 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { formatDistanceToNow } from "date-fns";
+import { Utensils, CalendarDays } from "lucide-react";
 
 // const initialNotifications = [
 //   {
@@ -98,9 +110,8 @@ import { Separator } from "@/components/ui/separator";
 //     priority: "info",
 //   },
 // ];
-const initialNotifications = []
 
-const iconMap = { waste: Trash2, inventory: Package, alert: AlertTriangle };
+const iconMap = { waste: Trash2, inventory: Package, alert: AlertTriangle, menu: Utensils, schedule: CalendarDays };
 const priorityStyles = {
   critical: "bg-destructive/10 text-destructive",
   warning: "bg-warning/10 text-warning",
@@ -113,20 +124,98 @@ const dotStyles = {
 };
 
 export function NotificationsDropdown() {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const { user } = useAuth();
+  const restId = user?.restId || 2;
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  
+  const [readIds, setReadIds] = useState(new Set());
+  const [dismissedIds, setDismissedIds] = useState(new Set());
+  const [filterCategory, setFilterCategory] = useState("all");
+  const [filterSeverity, setFilterSeverity] = useState("all");
+  const [sortOrder, setSortOrder] = useState("desc");
+
+  const { data: fetchedNotifications = [] } = useQuery({
+    queryKey: ["notifications", restId],
+    queryFn: async () => {
+      const res = await fetch(`https://resturantai.runasp.net/api/Notifications/${restId}`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      
+      const combined = [
+        ...(data.inventory || []),
+        ...(data.menu || []),
+        ...(data.schedule || [])
+      ];
+      
+      combined.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      
+      return combined.map((n, i) => {
+        const type = n.category.toLowerCase();
+        const severity = n.severity.toLowerCase();
+        let priority = "info";
+        if (severity === "high") priority = "critical";
+        else if (severity === "medium") priority = "warning";
+        
+        return {
+          id: `${n.category}-${n.referenceID || i}-${i}`,
+          type,
+          category: n.category,
+          referenceID: n.referenceID,
+          title: n.title,
+          description: n.message,
+          time: new Date(n.createdAt),
+          priority,
+        };
+      });
+    },
+    refetchInterval: 60000,
+  });
+
+  const notifications = fetchedNotifications
+    .filter(n => !dismissedIds.has(n.id))
+    .filter(n => filterCategory === "all" || n.category.toLowerCase() === filterCategory.toLowerCase())
+    .filter(n => filterSeverity === "all" || n.priority === filterSeverity)
+    .sort((a, b) => sortOrder === "desc" ? b.time.getTime() - a.time.getTime() : a.time.getTime() - b.time.getTime())
+    .map(n => ({ ...n, read: readIds.has(n.id) }));
+
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const markAsRead = (id) =>
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
-  const markAllRead = () =>
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  const dismissNotification = (id) =>
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+
+  const markAsRead = (id) => setReadIds(prev => new Set(prev).add(id));
+  
+  const markAllRead = () => {
+    const newRead = new Set(readIds);
+    notifications.forEach(n => newRead.add(n.id));
+    setReadIds(newRead);
+  };
+  
+  const dismissNotification = (id) => setDismissedIds(prev => new Set(prev).add(id));
+
+  const handleOpenChange = (newOpen) => {
+    setOpen(newOpen);
+    if (!newOpen) {
+      setFilterCategory("all");
+      setFilterSeverity("all");
+      setSortOrder("desc");
+    }
+  };
+
+  const handleNotificationClick = (notification) => {
+    markAsRead(notification.id);
+    if (notification.category === "Inventory" && notification.referenceID) {
+      navigate(`/inventory/${notification.referenceID}`);
+      setOpen(false);
+    } else if (notification.category === "Menu") {
+      navigate(`/menu`);
+      setOpen(false);
+    } else if (notification.category === "Schedule") {
+      navigate(`/schedule`);
+      setOpen(false);
+    }
+  };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -160,16 +249,44 @@ export function NotificationsDropdown() {
               </Badge>
             )}
           </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={markAllRead}
-              className="text-xs text-primary hover:text-primary/80 font-medium transition-colors"
-            >
-              Mark all read
-            </button>
-          )}
         </div>
-        <ScrollArea className="max-h-[420px]">
+        <div className="px-4 py-2 flex flex-col gap-2 border-b border-border/60 bg-muted/10">
+          <div className="flex gap-2">
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="h-8 text-xs bg-background/50 border-border/60 flex-1">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="inventory">Inventory</SelectItem>
+                <SelectItem value="menu">Menu</SelectItem>
+                <SelectItem value="schedule">Schedule</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterSeverity} onValueChange={setFilterSeverity}>
+              <SelectTrigger className="h-8 text-xs bg-background/50 border-border/60 flex-1">
+                <SelectValue placeholder="All Severities" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Severities</SelectItem>
+                <SelectItem value="critical">High</SelectItem>
+                <SelectItem value="warning">Medium</SelectItem>
+                <SelectItem value="info">Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Select value={sortOrder} onValueChange={setSortOrder}>
+            <SelectTrigger className="h-8 text-xs bg-background/50 border-border/60 w-full">
+              <SelectValue placeholder="Sort Order" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desc">Newest First</SelectItem>
+              <SelectItem value="asc">Oldest First</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="max-h-[420px] overflow-y-auto overflow-x-hidden scrollbar-thin">
           {notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
               <Bell className="h-8 w-8 text-muted-foreground/30 mb-3" />
@@ -181,12 +298,12 @@ export function NotificationsDropdown() {
           ) : (
             <div className="divide-y divide-border/30">
               {notifications.map((notification) => {
-                const Icon = iconMap[notification.type];
+                const Icon = iconMap[notification.type] || Bell;
                 return (
                   <div
                     key={notification.id}
                     className={`group flex gap-3 px-4 py-3 transition-colors cursor-pointer hover:bg-muted/30 ${!notification.read ? "bg-primary/[0.02]" : ""}`}
-                    onClick={() => markAsRead(notification.id)}
+                    onClick={() => handleNotificationClick(notification)}
                   >
                     <div
                       className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${priorityStyles[notification.priority]}`}
@@ -223,7 +340,7 @@ export function NotificationsDropdown() {
                       <div className="flex items-center gap-2 mt-1.5">
                         <Clock className="h-3 w-3 text-muted-foreground/50" />
                         <span className="text-[11px] text-muted-foreground/60">
-                          {notification.time}
+                          {formatDistanceToNow(notification.time, { addSuffix: true })}
                         </span>
                       </div>
                     </div>
@@ -232,17 +349,7 @@ export function NotificationsDropdown() {
               })}
             </div>
           )}
-        </ScrollArea>
-        {notifications.length > 0 && (
-          <>
-            <Separator />
-            <div className="p-2">
-              <button className="w-full text-center text-xs text-primary hover:text-primary/80 font-medium py-2 rounded-md hover:bg-muted/30 transition-colors">
-                View all notifications
-              </button>
-            </div>
-          </>
-        )}
+        </div>
       </PopoverContent>
     </Popover>
   );

@@ -24,7 +24,13 @@ api.interceptors.request.use(
 );
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const method = response.config?.method?.toLowerCase();
+    if (method && ["post", "put", "delete", "patch"].includes(method)) {
+      window.dispatchEvent(new Event("data-mutated"));
+    }
+    return response;
+  },
   (error) => {
     if (error.response && error.response.status === 401) {
       window.dispatchEvent(new Event("auth-unauthorized"));

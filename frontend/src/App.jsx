@@ -18,6 +18,10 @@ const queryClient = new QueryClient({
   },
 });
 
+window.addEventListener("data-mutated", () => {
+  queryClient.invalidateQueries({ queryKey: ["notifications"] });
+});
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
