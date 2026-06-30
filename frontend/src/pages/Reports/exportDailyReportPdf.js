@@ -50,9 +50,11 @@ export const exportDailyReportPdf = async (user, setIsExporting, reportName = "D
     return;
   }
 
-  setIsExporting(true);
+  setIsExporting(true)
   try {
-    const { start, end } = getWeekRange();
+    const { start, end } = getWeekRange()
+    const startSched = start.replace(/-/g, "/")
+    const endSched = end.replace(/-/g, "/")
 
     const [
       dashboardRes,
@@ -66,29 +68,30 @@ export const exportDailyReportPdf = async (user, setIsExporting, reportName = "D
       safeApiCall(api.get(`${ANALYTICS_BASE}/analytics/dashboard/${user.restId}`)),
       safeApiCall(api.get(`${ANALYTICS_BASE}/analytics/dashboard/revenue/${user.restId}`)),
       safeApiCall(api.get(`${ANALYTICS_BASE}/analytics/menu/performance/${user.restId}`)),
-      safeApiCall(api.get(`${ANALYTICS_BASE}/inventory/items/${user.restId}`)),
+      safeApiCall(api.get(`/Inventory/restaurant/${user.restId}`)),
       safeApiCall(api.post(`${ANALYTICS_BASE}/analytics/alerts/forecast/${user.restId}`, {})),
       safeApiCall(api.get(`/Employees`)),
-      safeApiCall(api.get(`/Schedule/range?start_date=${start}&end_date=${end}`)),
-    ]);
+      safeApiCall(api.get(`/Schedule/range?startDate=${startSched}&endDate=${endSched}`)),
+    ])
 
-    const dayDashboard = dashboardRes.data?.data?.day ?? null;
-    const dayRevenue = revenueRes.data?.data?.day ?? null;
-    const menuDay = menuRes.data?.data?.day ?? [];
-    const inventoryItems = Array.isArray(inventoryRes.data) ? inventoryRes.data : [];
-    const forecastDay = forecastAlertsRes.data?.day ?? null;
-    const employees = Array.isArray(employeesRes.data) ? employeesRes.data : [];
-    const schedules = Array.isArray(scheduleRes.data) ? scheduleRes.data : [];
+    const dayDashboard = dashboardRes.data?.data?.day ?? null
+    const dayRevenue = revenueRes.data?.data?.day ?? null
+    const menuDay = menuRes.data?.data?.day ?? []
+    const inventoryItems = Array.isArray(inventoryRes.data) ? inventoryRes.data : []
+    const forecastDay = forecastAlertsRes.data?.day ?? null
+    const employeesData = employeesRes.data?.employees ?? employeesRes.data ?? []
+    const employees = Array.isArray(employeesData) ? employeesData : []
+    const schedules = Array.isArray(scheduleRes.data) ? scheduleRes.data : []
 
-    const revenueData = dayDashboard?.revenue ?? {};
-    const peakHours = dayDashboard?.peaks?.peak_hours ?? [];
-    const dashboardAlerts = dayDashboard?.alerts ?? [];
-    const yesterdayRevenue = dayRevenue?.revenue_trend?.at(-2)?.revenue ?? null;
-    const todayRevenueFromTrend = dayRevenue?.revenue_trend?.at(-1)?.revenue ?? revenueData.total_revenue ?? 0;
+    const revenueData = dayDashboard?.revenue ?? {}
+    const peakHours = dayDashboard?.peaks?.peak_hours ?? []
+    const dashboardAlerts = dayDashboard?.alerts ?? []
+    const yesterdayRevenue = dayRevenue?.revenue_trend?.at(-2)?.revenue ?? null
+    const todayRevenueFromTrend = dayRevenue?.revenue_trend?.at(-1)?.revenue ?? revenueData.total_revenue ?? 0
 
     const lowStockItems = inventoryItems.filter(
-      (item) => Number(item.stock ?? 0) <= Number(item.reorder_level ?? 0),
-    );
+      (item) => Number(item.stock ?? 0) <= Number(item.reorderLevel ?? item.reorder_level ?? 0),
+    )
     const activeEmployees = employees.filter(
       (emp) => String(emp.status || "").toLowerCase() === "active",
     ).length;

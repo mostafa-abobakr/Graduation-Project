@@ -56,14 +56,18 @@ export const addReportToHistory = (reportName) => {
 const fetchReportsData = async (restId) => {
   const { start, end } = getWeekRange()
 
+  const startSched = start.replace(/-/g, "/")
+  const endSched = end.replace(/-/g, "/")
+
   const [inventoryRes, employeesRes, scheduleRes] = await Promise.all([
     safe(api.get(`/Inventory/restaurant/${restId}`)),
     safe(api.get("/Employees")),
-    safe(api.get(`/Schedule/range?start_date=${start}&end_date=${end}`)),
+    safe(api.get(`/Schedule/range?startDate=${startSched}&endDate=${endSched}`)),
   ])
 
   const inventoryItems = Array.isArray(inventoryRes.data) ? inventoryRes.data : []
-  const employees = Array.isArray(employeesRes.data) ? employeesRes.data : []
+  const employeesData = employeesRes.data?.employees ?? employeesRes.data ?? []
+  const employees = Array.isArray(employeesData) ? employeesData : []
   const schedules = Array.isArray(scheduleRes.data) ? scheduleRes.data : []
 
   const lowStockCount = inventoryItems.filter(

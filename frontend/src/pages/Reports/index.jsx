@@ -16,8 +16,9 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react"
-import { useReports } from "@/hooks/useReports"
+import { useReports, addReportToHistory } from "@/hooks/useReports"
 import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { exportDailyReportPdf } from "./exportDailyReportPdf"
@@ -81,10 +82,18 @@ export default function ReportsPage() {
 
   const handleGenerateReport = useCallback(async () => {
     if (exportingId) return
-    setExportingId("daily")
-    await exportDailyReportPdf(user, (v) => !v && setExportingId(null), "Daily Report")
-    setExportingId(null)
-    queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
+    setExportingId("generating")
+
+    try {
+      await queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
+      addReportToHistory("Daily Report")
+      toast.success("Reports generated successfully")
+    } catch (err) {
+      console.error("Failed to generate reports:", err)
+      toast.error("Failed to generate reports")
+    } finally {
+      setExportingId(null)
+    }
   }, [user, exportingId, queryClient])
 
   const isAnyExporting = exportingId !== null
@@ -102,7 +111,7 @@ export default function ReportsPage() {
             onClick={handleGenerateReport}
           >
             <FileText className="h-4 w-4 mr-2" />
-            {exportingId === "daily" ? "Exporting..." : "Generate Report"}
+            {exportingId === "generating" ? "Generating..." : "Generate Report"}
           </Button>
         }
       />
@@ -197,7 +206,7 @@ export default function ReportsPage() {
 
         {!isLoading && !isError && (
           <div className="divide-y divide-border/30">
-            {reportsData?.data?.filter((r) => !HIDDEN_REPORTS.has(r.name)).map((report) => {
+            {reportsData?.data?.map((report) => {
               const IconComponent = ICON_MAP[report.icon] || FileText
               const isThisExporting = exportingId === report.id
               const isError = report.status === "error"

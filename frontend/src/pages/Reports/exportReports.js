@@ -64,6 +64,7 @@ export const exportWeeklyRevenueReport = async (user, setIsExporting) => {
   if (!user?.restId) { toast.error("Restaurant ID missing"); return }
   setIsExporting(true)
   try {
+    const { start, end } = getWeekRange()
     const [dashboardRes, revenueRes] = await Promise.all([
       safe(api.get(`${ANALYTICS_BASE}/analytics/dashboard/${user.restId}`)),
       safe(api.get(`${ANALYTICS_BASE}/analytics/dashboard/revenue/${user.restId}`)),
@@ -300,12 +301,15 @@ export const exportStaffHoursReport = async (user, setIsExporting) => {
   setIsExporting(true)
   try {
     const { start, end } = getWeekRange()
+    const startSched = start.replace(/-/g, "/")
+    const endSched = end.replace(/-/g, "/")
     const [employeesRes, scheduleRes] = await Promise.all([
       safe(api.get("/Employees")),
-      safe(api.get(`/Schedule/range?start_date=${start}&end_date=${end}`)),
+      safe(api.get(`/Schedule/range?startDate=${startSched}&endDate=${endSched}`)),
     ])
 
-    const employees = Array.isArray(employeesRes.data) ? employeesRes.data : []
+    const employeesData = employeesRes.data?.employees ?? employeesRes.data ?? []
+    const employees = Array.isArray(employeesData) ? employeesData : []
     const schedules = Array.isArray(scheduleRes.data) ? scheduleRes.data : []
 
     // Aggregate hours per employee from schedule
@@ -368,7 +372,9 @@ export const exportWeeklyScheduleReport = async (user, setIsExporting) => {
   setIsExporting(true)
   try {
     const { start, end } = getWeekRange()
-    const scheduleRes = await safe(api.get(`/Schedule/range?start_date=${start}&end_date=${end}`))
+    const startSched = start.replace(/-/g, "/")
+    const endSched = end.replace(/-/g, "/")
+    const scheduleRes = await safe(api.get(`/Schedule/range?startDate=${startSched}&endDate=${endSched}`))
     const schedules = Array.isArray(scheduleRes.data) ? scheduleRes.data : []
 
     // Group by day
