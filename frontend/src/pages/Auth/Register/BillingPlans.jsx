@@ -39,7 +39,7 @@ export default function BillingPlans() {
   const [selectedPlan, setSelectedPlan] = useState("Pro")
 
   const handleContinue = (planName) => {
-    navigate(`/register/stripe?plan=${planName}`)
+    navigate(`/register/payment?plan=${planName}`)
   }
 
   return (

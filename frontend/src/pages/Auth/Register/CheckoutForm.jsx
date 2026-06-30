@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext"
 import { usePayment } from "@/hooks/usePayment"
 import { useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from "@stripe/react-stripe-js"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import AuthContainer from "@/components/AuthContainer"
 
@@ -18,28 +18,31 @@ export default function CheckoutForm({ plan }) {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     const userId = user?.userID || 30;
 
-    // useEffect(() => { if (success) { handleLoginAfterPayment(); } }, [success]);
+  useEffect(() => {
+    if (success) {
+      handleLoginAfterPayment()
+    }
+  }, [success])
 
-    // const handleLoginAfterPayment = async () => {
-    //     try {
-    //         const stored = localStorage.getItem("register");
+  const handleLoginAfterPayment = async () => {
+    try {
+      const stored = localStorage.getItem("register")
 
-    //         if (stored) {
-    //             const parsed = JSON.parse(stored);
-    //             const { email, password } = parsed;
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        const { email, password } = parsed
 
-    //             if (email && password) {
-    //                 const res = await login(email, password);
-    //                 if (!res) return;
-    //             }
-    //         }
+        if (email && password) {
+          const res = await login(email, password)
+          if (!res) return
+        }
+      }
 
-    //         navigate("/dashboard");
-
-    //     } catch (err) {
-    //         console.error("Login after payment failed", err);
-    //     }
-    // };
+      navigate("/dashboard")
+    } catch (err) {
+      console.error("Login after payment failed", err)
+    }
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()

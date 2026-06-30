@@ -1,7 +1,48 @@
-import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, CreditCard, Lock, CheckCircle } from "lucide-react";
-import { useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext"
+import { Loader2, CreditCard, Lock, CheckCircle } from "lucide-react"
+import { useState } from "react"
+import { useNavigate, useSearchParams } from "react-router-dom"
+import { toast } from "sonner"
+import axios from "axios"
+
+const validateLuhn = (cardNumber) => {
+  const digits = cardNumber.replace(/\s+/g, "").split("").map(Number)
+  let sum = 0
+  let isEven = false
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let digit = digits[i]
+    if (isEven) {
+      digit *= 2
+      if (digit > 9) {
+        digit -= 9
+      }
+    }
+    sum += digit
+    isEven = !isEven
+  }
+  return sum % 10 === 0
+}
+
+const validateExpiry = (expiry) => {
+  const parts = expiry.split("/")
+  if (parts.length !== 2) return false
+  const month = parseInt(parts[0], 10)
+  const year = parseInt("20" + parts[1], 10)
+  if (isNaN(month) || isNaN(year)) return false
+  if (month < 1 || month > 12) return false
+
+  const now = new Date()
+  const currentMonth = now.getMonth() + 1
+  const currentYear = now.getFullYear()
+
+  if (year < currentYear) return false
+  if (year === currentYear && month < currentMonth) return false
+  return true
+}
+
+const validateCVV = (cvv) => {
+  return /^\d{3,4}$/.test(cvv)
+}
 
 
 
@@ -24,32 +65,66 @@ export default function PaymentGateway() {
     const price = prices[plan] || 49;
 
     const handlePayment = async (e) => {
-        e.preventDefault();
-        setLoading(true);
+        e.preventDefault()
+
+        if (price > 0) {
+            const rawCard = formData.cardNumber.replace(/\s+/g, "")
+
+            if (rawCard.length < 15 || rawCard.length > 16) {
+                toast.error("Invalid card number length. Must be 15 or 16 digits.")
+                return
+            }
+
+            if (!validateLuhn(rawCard)) {
+                toast.error("Invalid card number. Please check the digits.")
+                return
+            }
+
+            if (!validateExpiry(formData.expiry)) {
+                toast.error("Invalid expiration date. Use MM/YY format (and ensure not expired).")
+                return
+            }
+
+            if (!validateCVV(formData.cvv)) {
+                toast.error("Invalid CVV. Must be 3 or 4 digits.")
+                return
+            }
+        }
+
+        setLoading(true)
 
         // Simulating Payment Gateway Delay
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise(resolve => setTimeout(resolve, 2000))
 
-        setSuccess(true);
-        setLoading(false);
+        setSuccess(true)
+        setLoading(false)
 
         // Simulating login and redirect
         setTimeout(async () => {
             try {
-                const stored = localStorage.getItem("register");
+                const stored = localStorage.getItem("register")
                 if (stored) {
-                    const parsed = JSON.parse(stored);
-                    const { email, password } = parsed;
+                    const parsed = JSON.parse(stored)
+                    const { email, password } = parsed
                     if (login && email && password) {
-                        await login(email, password);
+                        const res = await login(email, password)
+                        const resId = res?.user?.restId || res?.restId || parsed?.restId
+                        if (resId) {
+                            try {
+                                await axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`)
+                                console.log("Seeding complete")
+                            } catch (seedErr) {
+                                console.error("Seeding error:", seedErr)
+                            }
+                        }
                     }
                 }
             } catch (err) {
-                console.error("Login after payment failed", err);
+                console.error("Login after payment failed", err)
             }
-            navigate("/dashboard");
-        }, 1500);
-    };
+            navigate("/dashboard")
+        }, 1500)
+    }
 
     if (success) {
         return (
