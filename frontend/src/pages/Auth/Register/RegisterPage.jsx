@@ -9,7 +9,7 @@ import AuthContainer from "@/components/AuthContainer";
 
 import { signupValidationSchema } from "@/schemas/auth/validations";
 import { useRegisterContext } from "@/contexts/Valdation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const validationSchema = signupValidationSchema.pick([
@@ -24,6 +24,7 @@ const RegisterPage = () => {
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const { formData, updateFromData } = useRegisterContext()
 
 
@@ -130,11 +131,18 @@ const RegisterPage = () => {
             <Input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="••••••••"
               className="pl-[2.5rem] rtl:pr-[2.5rem] rtl:pl-3 bg-muted/20 border-border/80 h-[3rem]"
               {...formik.getFieldProps("password")}
             />
+            <button
+              type="button"
+              className="absolute right-3 rtl:left-3 rtl:right-auto top-3 text-muted-foreground hover:text-foreground z-10"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
           </div>
           {formik.touched.password && formik.errors.password && (
             <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>

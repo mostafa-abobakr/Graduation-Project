@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import AuthContainer from "@/components/AuthContainer";
 import img from "@/assets/Auth/SignUp.png";
@@ -38,9 +39,6 @@ const RegisterRestaurant = () => {
     <AuthContainer
       title="Restaurant Details"
       description="Tell us about your business"
-      footerText="Already have an account?"
-      footerLinkText="Log in"
-      footerLinkTo="/login"
       className="min-h-0 py-6 bg-transparent "
     >
       <form
@@ -83,6 +81,23 @@ const RegisterRestaurant = () => {
             />
           </div>
           {formik.touched.restaurantPhone && formik.errors.restaurantPhone && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.restaurantPhone}</p>}
+          
+          <div className="flex items-center space-x-2 mt-2">
+            <Checkbox 
+              id="samePhone" 
+              checked={formik.values.restaurantPhone === formData.userPhone && formData.userPhone !== ""}
+              onCheckedChange={(checked) => {
+                if (checked && formData.userPhone) {
+                  formik.setFieldValue("restaurantPhone", formData.userPhone);
+                } else {
+                  formik.setFieldValue("restaurantPhone", "");
+                }
+              }}
+            />
+            <Label htmlFor="samePhone" className="text-sm font-normal cursor-pointer text-muted-foreground">
+              Same as personal phone number
+            </Label>
+          </div>
         </div>
 
         {submitError && (
@@ -91,9 +106,19 @@ const RegisterRestaurant = () => {
           </p>
         )}
 
-        <Button type="submit" className="w-full mt-6 h-12 text-[1rem] shadow-md" disabled={isSubmitting}>
-          {isSubmitting ? <Loader2 className="animate-spin" /> : "Next: Set Location"}
-        </Button>
+        <div className="flex gap-4 mt-6">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-12 text-[1rem] shadow-sm"
+            onClick={() => navigate(-1)}
+          >
+            Back
+          </Button>
+          <Button type="submit" className="w-full h-12 text-[1rem] shadow-md" disabled={isSubmitting}>
+            {isSubmitting ? <Loader2 className="animate-spin" /> : "Next: Set Location"}
+          </Button>
+        </div>
       </form>
     </AuthContainer>
   )

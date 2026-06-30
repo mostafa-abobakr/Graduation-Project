@@ -99,7 +99,7 @@ export default function ConnectPOS() {
       title="Connect Your POS System"
       description="Choose your point of sale platform to get started"
       className="min-h-0 py-6 bg-transparent "
-      maxWidth="max-w-4xl"
+      maxWidth="max-w-5xl"
     >
       {/* POS Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8  w-full">
@@ -131,7 +131,7 @@ export default function ConnectPOS() {
               {/* Brand Icon */}
               <div
                 className={`w-16 h-16 mx-auto mb-5 rounded-xl border border-border/40 bg-muted/30 flex items-center justify-center transition-colors ${
-                  isSelected ? "bg-primary/10 border-primary/20" : ""
+                  isSelected ? " border-primary/20" : ""
                 }`}
               >
                 {pos.icon}
@@ -144,7 +144,7 @@ export default function ConnectPOS() {
       </div>
 
       {/* Connect Button */}
-      <div className="flex flex-col items-center gap-4">
+      <div className="flex flex-col items-center gap-5">
         <button
           onClick={handleConnect}
           disabled={loading}

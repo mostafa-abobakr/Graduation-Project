@@ -44,7 +44,11 @@ const Register = () => {
 
   const matchedStep = STEPS.find(step => step.paths.includes(normalizedPath))
   const currentStepId = matchedStep ? matchedStep.id : 1
-  const showProgress = !!matchedStep
+  
+  const searchParams = new URLSearchParams(location.search)
+  const isExternalPosFlow = currentPath.includes("connect-pos") && (searchParams.has("pos") || searchParams.has("auth"))
+  
+  const showProgress = !!matchedStep && !isExternalPosFlow
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

@@ -16,25 +16,27 @@ function AuthContainer({
 }) {
   return (
     <div className={cn("min-h-screen bg-background flex items-center justify-center p-6 w-full", className)}>
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
+        <Link to="/" className="inline-flex items-center gap-2.5">
+          <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Leaf className="h-4.5 w-4.5 text-primary" />
+          </div>
+          <span
+            className="text-lg font-bold text-foreground"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}
+          >
+            ZeroBite
+          </span>
+        </Link>
+      </div>
+
+      <div className="absolute top-4 sm:top-6 right-4 z-10 rtl:right-auto rtl:left-4">
         <ThemeToggle />
       </div>
 
       <div className={cn("w-full", maxWidth)}>
         {/* Header */}
         <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Leaf className="h-4.5 w-4.5 text-primary" />
-            </div>
-            <span
-              className="text-lg font-bold text-foreground"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            >
-              ZeroBite
-            </span>
-          </Link>
-
           {title && <h1 className="text-2xl font-bold text-foreground">{title}</h1>}
           {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>

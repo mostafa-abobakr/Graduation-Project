@@ -249,9 +249,6 @@ const RestaurantLocation = () => {
     <AuthContainer
       title="Restaurant Location"
       description="Select your restaurant location"
-      footerText="Already have an account?"
-      footerLinkText="Log in"
-      footerLinkTo="/login"
       className="min-h-0 py-6 bg-transparent w-full"
     >
       <form

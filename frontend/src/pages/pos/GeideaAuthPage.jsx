@@ -1,7 +1,8 @@
-import { Shield, CheckCircle } from "lucide-react"
+import { CheckCircle } from "lucide-react"
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import AuthorizationSuccess from "./AuthorizationSuccess"
+import geideaIcon from "@/assets/posIcons/geidea.svg"
 
 const permissions = [
   {
@@ -55,8 +56,8 @@ export default function PosAuthorizePage() {
     return (
       <AuthorizationSuccess
         title="Geidea"
-        icon={<Shield size={32} />}
-        bgColor="bg-orange-600"
+        icon={<img src={geideaIcon} alt="Geidea" className="w-14 h-14 object-contain drop-shadow-sm" />}
+        bgColor="bg-transparent"
         textColor="text-orange-600 dark:text-orange-400"
         buttonText="Continue to Geidea"
       />
@@ -65,12 +66,14 @@ export default function PosAuthorizePage() {
 
   return (
     <div className="min-h-screen p-4 flex items-center justify-center bg-background text-foreground animate-fade-in">
-      <div className="w-full max-w-md text-center">
-        <div className="mb-6">
-          <div className="w-14 h-14 mx-auto p-4 rounded-lg bg-orange-600 flex items-center justify-center shadow-sm">
-            <Shield className="text-white" />
-          </div>
-          <h1 className="text-2xl font-bold mt-3 text-foreground">
+      <div className="w-full max-w-lg text-center">
+        <div className="mb-6 flex flex-col items-center">
+          <img
+            src={geideaIcon}
+            alt="Geidea"
+            className="w-16 h-16 object-contain drop-shadow-sm"
+          />
+          <h1 className="text-2xl font-bold mt-4 text-foreground">
             Geidea
           </h1>
         </div>

@@ -1,9 +1,14 @@
 import { useAuth } from "@/contexts/AuthContext"
-import { Loader2, CreditCard, Lock, CheckCircle } from "lucide-react"
+import { Loader2, CreditCard, Lock, CheckCircle, Leaf } from "lucide-react"
 import { useState } from "react"
-import { useNavigate, useSearchParams } from "react-router-dom"
+import { useNavigate, useSearchParams, Link } from "react-router-dom"
 import { toast } from "sonner"
 import axios from "axios"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { ThemeToggle } from "@/components/shared/ThemeToggle"
 
 const validateLuhn = (cardNumber) => {
   const digits = cardNumber.replace(/\s+/g, "").split("").map(Number)
@@ -128,44 +133,75 @@ export default function PaymentGateway() {
 
     if (success) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
-                <div className="bg-white rounded-3xl shadow-2xl p-10 max-w-md w-full text-center animate-in zoom-in-95 duration-500 fade-in">
-                    <div className="mx-auto w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                        <CheckCircle className="text-green-500 w-12 h-12" />
+            <div className="min-h-screen bg-background flex items-center justify-center p-6 relative w-full">
+                <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
+                    <Link to="/" className="inline-flex items-center gap-2.5">
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Leaf className="h-4.5 w-4.5 text-primary" />
+                        </div>
+                        <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                            ZeroBite
+                        </span>
+                    </Link>
+                </div>
+
+                <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-10">
+                    <ThemeToggle />
+                </div>
+
+                <Card className="p-10 max-w-md w-full text-center animate-in zoom-in-95 duration-500 fade-in bg-card border-border/60 premium-shadow-md">
+                    <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                        <CheckCircle className="text-primary w-12 h-12" />
                     </div>
-                    <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Payment Successful!</h2>
-                    <p className="text-gray-500 mb-6">Your subscription to the {plan} plan is confirmed. Welcome aboard!</p>
-                    <div className="flex items-center justify-center text-sm text-gray-400 gap-2">
+                    <h2 className="text-3xl font-extrabold text-foreground mb-2">Payment Successful!</h2>
+                    <p className="text-muted-foreground mb-6">Your subscription to the {plan} plan is confirmed. Welcome aboard!</p>
+                    <div className="flex items-center justify-center text-sm text-muted-foreground gap-2">
                         <Loader2 className="animate-spin w-4 h-4" />
                         Redirecting to dashboard...
                     </div>
-                </div>
+                </Card>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-5xl w-full mx-auto grid lg:grid-cols-2 gap-12 items-start animate-in slide-in-from-bottom-8 fade-in duration-700">
+        <div className="w-full bg-background flex items-center justify-center pb-12 px-4 sm:px-6 lg:px-8">
+            {/* Header: Logo and ThemeToggle */}
+            <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
+                <Link to="/" className="inline-flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Leaf className="h-4.5 w-4.5 text-primary" />
+                    </div>
+                    <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        ZeroBite
+                    </span>
+                </Link>
+            </div>
+
+            <div className="absolute top-4 sm:top-6 right-4 rtl:right-auto rtl:left-4 z-10">
+                <ThemeToggle />
+            </div>
+
+            <div className="max-w-5xl w-full mx-auto grid lg:grid-cols-2 gap-8 items-stretch animate-in slide-in-from-bottom-8 fade-in duration-700 pt-16">
 
                 {/* Payment Form */}
-                <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+                <Card className="p-8 bg-card border-border/60 premium-shadow-md">
                     <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                            <CreditCard className="text-orange-500" />
+                        <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                            <CreditCard className="text-primary" />
                             Payment Method
                         </h2>
-                        <p className="text-gray-500 mt-1">Enter your card details securely.</p>
+                        <p className="text-muted-foreground mt-1">Enter your card details securely.</p>
                     </div>
 
                     <form onSubmit={handlePayment} className="space-y-6">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name on Card</label>
-                            <input
+                            <Label className="text-foreground text-sm mb-1.5 block">Name on Card</Label>
+                            <Input
                                 required={price > 0}
                                 type="text"
                                 placeholder="John Doe"
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:text-gray-400"
+                                className="bg-muted/30 border-border/60"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 disabled={price === 0}
@@ -173,14 +209,14 @@ export default function PaymentGateway() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Card Number</label>
+                            <Label className="text-foreground text-sm mb-1.5 block">Card Number</Label>
                             <div className="relative">
-                                <input
+                                <Input
                                     required={price > 0}
                                     type="text"
                                     placeholder="0000 0000 0000 0000"
                                     maxLength="19"
-                                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="pl-10 rtl:pr-10 rtl:pl-3 bg-muted/30 border-border/60"
                                     value={formData.cardNumber}
                                     onChange={e => {
                                         let val = e.target.value.replace(/\D/g, '');
@@ -189,19 +225,19 @@ export default function PaymentGateway() {
                                     }}
                                     disabled={price === 0}
                                 />
-                                <CreditCard className="absolute left-3 top-3.5 text-gray-400 w-5 h-5" />
+                                <CreditCard className="absolute left-3 rtl:right-3 rtl:left-auto top-2.5 text-muted-foreground w-5 h-5" />
                             </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Expiry Date</label>
-                                <input
+                                <Label className="text-foreground text-sm mb-1.5 block">Expiry Date</Label>
+                                <Input
                                     required={price > 0}
                                     type="text"
                                     placeholder="MM/YY"
                                     maxLength="5"
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="bg-muted/30 border-border/60"
                                     value={formData.expiry}
                                     onChange={e => {
                                         let val = e.target.value.replace(/\D/g, '');
@@ -212,13 +248,13 @@ export default function PaymentGateway() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                                <input
+                                <Label className="text-foreground text-sm mb-1.5 block">CVV</Label>
+                                <Input
                                     required={price > 0}
                                     type="password"
                                     placeholder="123"
                                     maxLength="4"
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all disabled:bg-gray-100 disabled:text-gray-400"
+                                    className="bg-muted/30 border-border/60"
                                     value={formData.cvv}
                                     onChange={e => setFormData({ ...formData, cvv: e.target.value.replace(/\D/g, '') })}
                                     disabled={price === 0}
@@ -226,52 +262,54 @@ export default function PaymentGateway() {
                             </div>
                         </div>
 
-                        <button
+                        <Button
                             type="submit"
                             disabled={loading || (price > 0 && (!formData.cardNumber || !formData.expiry || !formData.cvv))}
-                            className="w-full bg-orange-500 hover:bg-orange-600 text-white py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="w-full h-12 text-lg font-bold mt-2"
                         >
-                            {loading ? <Loader2 className="animate-spin w-6 h-6" /> : (
+                            {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                                 <>
-                                    <Lock size={18} />
+                                    <Lock className="w-5 h-5 me-2" />
                                     {price === 0 ? "Start Free Plan" : `Pay $${price}`}
                                 </>
                             )}
-                        </button>
-                        <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1 mt-2">
+                        </Button>
+                        <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1 mt-4">
                             <Lock size={12} /> Payments are secure and encrypted.
                         </p>
                     </form>
-                </div>
+                </Card>
 
                 {/* Order Summary */}
-                <div className="bg-gray-900 text-white rounded-3xl shadow-xl p-8 sticky top-12">
-                    <h3 className="text-2xl font-bold mb-6">Order Summary</h3>
+                <Card className="p-8 bg-card border-border/60 premium-shadow-md flex flex-col h-full lg:sticky lg:top-24">
+                    <div>
+                        <h3 className="text-2xl font-bold mb-6 text-foreground">Order Summary</h3>
 
-                    <div className="space-y-4 mb-6 border-b border-gray-700 pb-6">
-                        <div className="flex justify-between items-center text-gray-300">
-                            <span>{plan} Plan (Monthly)</span>
-                            <span className="font-semibold text-white">${price}.00</span>
+                        <div className="space-y-4 mb-6 border-b border-border pb-6">
+                            <div className="flex justify-between items-center text-muted-foreground">
+                                <span>{plan} Plan (Monthly)</span>
+                                <span className="font-semibold text-foreground">${price}.00</span>
+                            </div>
+                            <div className="flex justify-between items-center text-muted-foreground">
+                                <span>Setup Fee</span>
+                                <span className="font-semibold text-foreground">$0.00</span>
+                            </div>
                         </div>
-                        <div className="flex justify-between items-center text-gray-300">
-                            <span>Setup Fee</span>
-                            <span className="font-semibold text-white">$0.00</span>
+
+                        <div className="flex justify-between items-center mb-8">
+                            <span className="text-lg font-medium text-foreground">Total</span>
+                            <div className="text-right">
+                                <span className="text-3xl font-bold text-primary">${price}.00</span>
+                                <p className="text-sm text-muted-foreground">per month</p>
+                            </div>
                         </div>
                     </div>
 
-                    <div className="flex justify-between items-center mb-8">
-                        <span className="text-lg font-medium">Total</span>
-                        <div className="text-right">
-                            <span className="text-3xl font-bold text-orange-500">${price}.00</span>
-                            <p className="text-sm text-gray-400">per month</p>
-                        </div>
-                    </div>
-
-                    <div className="bg-gray-800 rounded-xl p-4 text-sm text-gray-300">
-                        <strong className="text-white block mb-1">Guaranteed Satisfaction</strong>
+                    <div className="bg-muted/50 rounded-xl p-4 text-sm text-muted-foreground border border-border/50 mt-auto">
+                        <strong className="text-foreground block mb-1">Guaranteed Satisfaction</strong>
                         Change your plan or cancel at any time. We'll prorate your billing automatically.
                     </div>
-                </div>
+                </Card>
 
             </div>
         </div>

@@ -11,6 +11,7 @@ import {ThemeToggle} from "@/components/shared/ThemeToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMutation } from "@tanstack/react-query";
+import AuthContainer from "@/components/AuthContainer";
 
 function Login() {
   const { t } = useLanguage();
@@ -64,47 +65,37 @@ function Login() {
   });
 
   return (
-    <>
-      <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4"><ThemeToggle /></div>
-      <div className="w-full max-w-sm  mx-auto py-16 ">
-        <div className="text-center mb-8">
-          <Link to="/" className="inline-flex items-center gap-2.5 mb-6">
-            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center"><Leaf className="h-4.5 w-4.5 text-primary" /></div>
-            <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>ZeroBite</span>
-          </Link>
-          <h1 className="text-2xl font-bold text-foreground">{t("Welcome back")}</h1>
-          <p className="text-sm text-muted-foreground mt-1">{t("Log in to your dashboard")}</p>
+    <AuthContainer
+      title={t("Welcome back")}
+      description={t("Log in to your dashboard")}
+      footerText={t("Don't have an account?")}
+      footerLinkText={t("Sign up")}
+      footerLinkTo="/register"
+    >
+      <form onSubmit={formik.handleSubmit} className="space-y-4">
+        <div>
+          <Label htmlFor="email" className="text-foreground text-sm">{t("Email")}</Label>
+          <Input id="email" type="email" placeholder={t("you@restaurant.com")} className="mt-1.5 bg-muted/30 border-border/60" {...formik.getFieldProps("email")} required />
+          {formik.touched.email && formik.errors.email && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.email}</p>}
         </div>
-        <Card className="p-7 bg-card border-border/60 premium-shadow-md">
-          <form onSubmit={formik.handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="email" className="text-foreground text-sm">{t("Email")}</Label>
-              <Input id="email" type="email" placeholder={t("you@restaurant.com")} className="mt-1.5 bg-muted/30 border-border/60" {...formik.getFieldProps("email")} required />
-              {formik.touched.email && formik.errors.email && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.email}</p>}
-            </div>
-            <div>
-              <Label htmlFor="password" className="text-foreground text-sm">{t("Password")}</Label>
-              <Input id="password" type="password" placeholder="••••••••" className="mt-1.5 bg-muted/30 border-border/60" {...formik.getFieldProps("password")} required />
-              {formik.touched.password && formik.errors.password && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>}
-            </div>
+        <div>
+          <Label htmlFor="password" className="text-foreground text-sm">{t("Password")}</Label>
+          <Input id="password" type="password" placeholder="••••••••" className="mt-1.5 bg-muted/30 border-border/60" {...formik.getFieldProps("password")} required />
+          {formik.touched.password && formik.errors.password && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>}
+        </div>
 
-            {submitError && <div className="text-destructive text-[14px] font-medium bg-destructive/10 p-3 rounded-md">{submitError}</div>}
-            
-            <div className="flex justify-end mt-2">
-              <Link to="/login/forgot-password" className="text-[0.875rem] font-bold text-primary hover:text-primary/80 transition-colors">{t("forgot password?")}</Link>
-            </div>
+        {submitError && <div className="text-destructive text-[14px] font-medium bg-destructive/10 p-3 rounded-md">{submitError}</div>}
+        
+        <div className="flex justify-end mt-2">
+          <Link to="/login/forgot-password" className="text-[0.875rem] font-bold text-primary hover:text-primary/80 transition-colors">{t("forgot password?")}</Link>
+        </div>
 
-            <Button type="submit" className="w-full h-10" disabled={isSubmitting || !formik.isValid}>
-              {isSubmitting && <Loader2 className="h-4 w-4 me-2 animate-spin" />}
-              {t("Log In")}
-            </Button>
-          </form>
-        </Card>
-        <p className="text-center text-sm text-muted-foreground mt-6">
-          {t("Don't have an account?")} <Link to="/register" className="text-primary hover:underline font-medium">{t("Sign up")}</Link>
-        </p>
-      </div>
-    </>
+        <Button type="submit" className="w-full h-10" disabled={isSubmitting || !formik.isValid}>
+          {isSubmitting && <Loader2 className="h-4 w-4 me-2 animate-spin" />}
+          {t("Log In")}
+        </Button>
+      </form>
+    </AuthContainer>
   );
 }
 
