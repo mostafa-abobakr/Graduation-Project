@@ -67,7 +67,7 @@ export default function PosAuthorizePage() {
 
   return (
     <div className="min-h-screen p-4 flex items-center justify-center bg-background text-foreground animate-fade-in">
-      <div className="w-full max-w-md text-center">
+      <div className="w-full max-w-2xl text-center">
         {/* Header */}
         <div className="mb-6">
           <div className="w-14 h-14 mx-auto p-3.5 rounded-lg bg-orange-600 flex items-center justify-center shadow-sm">
@@ -77,7 +77,7 @@ export default function PosAuthorizePage() {
         </div>
 
         {/* Card */}
-        <div className="border border-border/60 bg-card text-card-foreground rounded-xl shadow-lg p-6 text-left">
+        <div className="border border-border/60 bg-card text-card-foreground rounded-xl shadow-lg p-6 text-start">
           <h2 className="text-lg font-bold mb-1 text-foreground">
             Authorize Application
           </h2>

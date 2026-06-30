@@ -1,6 +1,7 @@
-import React from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import React from "react"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { useLanguage } from "@/contexts/LanguageContext"
 import {
   TriangleAlert,
   TrendingDown,
@@ -14,7 +15,7 @@ import {
   BadgeAlert,
   Rocket,
   Info,
-} from "lucide-react";
+} from "lucide-react"
 
 // Helper component to render the correct icon based on alert type
 const AlertIcon = ({ type, severity }) => {
@@ -34,33 +35,35 @@ const AlertIcon = ({ type, severity }) => {
     high_margin_surge: { Icon: Rocket, color: "text-emerald-600" },
     forecast_revenue_drop: { Icon: TrendingDown, color: "text-rose-500" },
     forecast_revenue_spike: { Icon: TrendingUp, color: "text-emerald-500" },
-  };
+  }
 
-  const config = iconMap[type];
+  const config = iconMap[type]
 
   // Fallback if an unknown alert type is passed
   if (!config) {
-    const FallbackIcon = severity === "warning" ? AlertTriangle : Info;
+    const FallbackIcon = severity === "warning" ? AlertTriangle : Info
     const defaultColor =
-      severity === "warning" ? "text-rose-500" : "text-emerald-500";
+      severity === "warning" ? "text-rose-500" : "text-emerald-500"
     return (
       <FallbackIcon className={`h-4 w-4 ${defaultColor}`} strokeWidth={3} />
-    );
+    )
   }
 
-  const { Icon, color } = config;
-  return <Icon className={`h-4 w-4 ${color}`} strokeWidth={3} />;
-};
+  const { Icon, color } = config
+  return <Icon className={`h-4 w-4 ${color}`} strokeWidth={3} />
+}
 
 const Alerts = ({ data }) => {
-  if (!data) return null;
+  const { t } = useLanguage()
+
+  if (!data) return null
 
   return (
     <Card className="flex flex-col h-full bg-card border-border/60 premium-shadow">
       <CardHeader className="p-6 pb-3 shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg md:text-xl font-bold text-foreground">
-            Smart Alerts
+            {t("Smart Alerts")}
           </CardTitle>
           <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
             <TriangleAlert className="w-4 h-4" />
@@ -77,7 +80,7 @@ const Alerts = ({ data }) => {
                 strokeWidth={1.5}
               />
             </div>
-            <span className="text-base font-semibold">No alerts for now</span>
+            <span className="text-base font-semibold">{t("No alerts for now")}</span>
           </div>
         ) : (
           <ScrollArea className="h-full px-4 pb-4">
@@ -93,7 +96,7 @@ const Alerts = ({ data }) => {
                       <AlertIcon type={alert.type} severity={alert.severity} />
                     </div>
                     <p className="text-xs sm:text-sm text-foreground leading-relaxed">
-                      {alert.message}
+                      {t(alert.message)}
                     </p>
                   </div>
                 </li>
@@ -103,7 +106,7 @@ const Alerts = ({ data }) => {
         )}
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default Alerts;
+export default Alerts

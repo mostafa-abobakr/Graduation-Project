@@ -107,7 +107,7 @@ function AppSidebar() {
   const renderGroup = (label, items) => (
     <SidebarGroup>
       <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground/70 px-3">
-        {label}
+        {t(label)}
       </SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
