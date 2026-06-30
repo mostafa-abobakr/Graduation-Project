@@ -35,7 +35,7 @@ const parseTimeToMinutes = (timeStr) => {
 }
 
 export default function StaffPage() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
   const { isAdmin } = useAuth()
   const [search, setSearch] = useState("")
   const queryClient = useQueryClient()
@@ -83,7 +83,15 @@ export default function StaffPage() {
     }
   })
 
-  const totalActive = new Set(activeShifts.map(s => s.staffId)).size
+  const activeStaffIds = Array.from(new Set(activeShifts.map(s => s.staffId)))
+  const activeEmployees = employees.filter(emp => {
+    const empId = emp.id || emp.empID || emp.empId
+    return activeStaffIds.some(id => String(id) === String(empId))
+  })
+  const activeMorning = activeEmployees.filter(emp => emp.shift?.toLowerCase() === "morning").length
+  const activeNight = activeEmployees.filter(emp => emp.shift?.toLowerCase() === "night").length
+
+  const totalActive = activeStaffIds.length
   const weeklyHrs = data?.weeklyHrs ?? 0
   const monthlySalary = data?.monthlySalary ?? 0
 
@@ -175,6 +183,13 @@ export default function StaffPage() {
         <SummaryCard
           title={t("Active Members")}
           value={isLoading ? <Skeleton className="h-8 w-20" /> : totalActive}
+          sub={
+            isLoading
+              ? undefined
+              : language === "ar"
+                ? `${activeMorning} صباحي / ${activeNight} مسائي`
+                : `${activeMorning} Morning / ${activeNight} Night`
+          }
           icon={UserCheck}
           iconWrapper
           valueColorClass="text-primary"
