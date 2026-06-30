@@ -1,12 +1,13 @@
-import React, { useState } from "react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import React, { useState } from "react"
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from "recharts"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
-import { BarChart3 } from "lucide-react";
+} from "@/components/ui/chart"
+import { BarChart3 } from "lucide-react"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const chartConfig = {
   revenue: {
@@ -17,32 +18,34 @@ const chartConfig = {
     label: "Profit",
     color: "#10b981",
   },
-};
+}
 
 const SalesProfitDashboard = ({ data, viewMode }) => {
-  if (!data) return null;
+  const { t } = useLanguage()
+
+  if (!data) return null
 
   const getChartData = () => {
     switch (viewMode) {
       case "today":
-        return data.hourly || [];
+        return data.hourly || []
       case "week":
-        return data.weekly || [];
+        return data.weekly || []
       case "month":
-        return data.monthly || [];
+        return data.monthly || []
       default:
-        return data.hourly || [];
+        return data.hourly || []
     }
-  };
+  }
 
-  const currentData = getChartData();
+  const currentData = getChartData()
 
   return (
     <Card className="lg:col-span-2 flex flex-col bg-card border-border/60 premium-shadow overflow-hidden transition-all">
       <CardHeader className="p-6 pb-4 shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg md:text-xl font-bold text-foreground">
-            Sales & Profit Trend
+            {t("Sales & Profit Trend")}
           </CardTitle>
           <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
             <BarChart3 className="w-4 h-4" />
@@ -55,11 +58,11 @@ const SalesProfitDashboard = ({ data, viewMode }) => {
         <div className="flex gap-5 mb-6 text-sm font-semibold text-muted-foreground ml-2">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-blue-500 shadow-sm shadow-blue-500/20" />
-            <span>Revenue</span>
+            <span>{t("Revenue")}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-emerald-500 shadow-sm shadow-emerald-500/20" />
-            <span>Profit</span>
+            <span>{t("Profit")}</span>
           </div>
         </div>
 

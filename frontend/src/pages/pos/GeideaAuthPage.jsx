@@ -78,7 +78,7 @@ export default function PosAuthorizePage() {
           </h1>
         </div>
 
-        <div className="border border-border/60 bg-card text-card-foreground rounded-xl shadow-lg p-6 text-left">
+        <div className="border border-border/60 bg-card text-card-foreground rounded-xl shadow-lg p-6 text-start">
           <h2 className="text-lg font-bold mb-1 text-foreground">
             Authorize Application
           </h2>

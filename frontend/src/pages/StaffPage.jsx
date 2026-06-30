@@ -12,6 +12,7 @@ import { SummaryCard } from "@/components/shared/SummaryCard"
 import { AddEmployeeDialog } from "@/components/staff/AddEmployeeDialog"
 import { EditEmployeeDialog } from "@/components/staff/EditEmployeeDialog"
 import { EmployeeTableCard } from "@/components/staff/EmployeeTableCard"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const parseTimeToMinutes = (timeStr) => {
   if (!timeStr) return null
@@ -34,6 +35,7 @@ const parseTimeToMinutes = (timeStr) => {
 }
 
 export default function StaffPage() {
+  const { t } = useLanguage()
   const { isAdmin } = useAuth()
   const [search, setSearch] = useState("")
   const queryClient = useQueryClient()
@@ -97,7 +99,7 @@ export default function StaffPage() {
 
   const handleDeleteEmployee = (empId) => {
     if (!empId) return
-    const confirmed = window.confirm("Are you sure you want to delete this employee? This action cannot be undone.")
+    const confirmed = window.confirm(t("Are you sure you want to delete this employee? This action cannot be undone."))
     if (confirmed) {
       deleteEmployeeMutation.mutate(empId)
     }
@@ -114,10 +116,10 @@ export default function StaffPage() {
       {isError && (
         <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
           <p className="text-destructive font-medium">
-            Failed to load employees
+            {t("Failed to load employees")}
           </p>
           <p className="text-destructive/70 text-sm mt-1">
-            {error?.message || "Please try refreshing the page"}
+            {error?.message || t("Please try refreshing the page")}
           </p>
           <Button
             variant="outline"
@@ -127,7 +129,7 @@ export default function StaffPage() {
             }
             className="mt-2"
           >
-            Retry
+            {t("Retry")}
           </Button>
         </div>
       )}
@@ -135,18 +137,18 @@ export default function StaffPage() {
       {/* ── Header ──────────────────────────────────────────── */}
       <PageHeader
         icon={Users}
-        title={isAdmin ? "Staff Management Dashboard" : "Staff Management"}
+        title={isAdmin ? t("Staff Management Dashboard") : t("Staff Management")}
         description={
           isAdmin
-            ? "Global employee overview and directories"
-            : "Manage your employees and schedules"
+            ? t("Global employee overview and directories")
+            : t("Manage your employees and schedules")
         }
         actions={
           <Button
             onClick={() => setIsAddModalOpen(true)}
             className="gap-2 shrink-0"
           >
-            <Plus className="h-4 w-4" /> Add Employee
+            <Plus className="h-4 w-4" /> {t("Add Employee")}
           </Button>
         }
       >
@@ -155,7 +157,7 @@ export default function StaffPage() {
             variant="outline"
             className="border-primary/30 text-primary text-xs"
           >
-            Admin
+            {t("Admin")}
           </Badge>
         )}
       </PageHeader>
@@ -163,7 +165,7 @@ export default function StaffPage() {
       {/* ── KPI Cards ───────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
-          title="Total Staff"
+          title={t("Total Staff")}
           value={
             isLoading ? <Skeleton className="h-8 w-20" /> : totalStaff
           }
@@ -171,14 +173,14 @@ export default function StaffPage() {
           iconWrapper
         />
         <SummaryCard
-          title="Active Members"
+          title={t("Active Members")}
           value={isLoading ? <Skeleton className="h-8 w-20" /> : totalActive}
           icon={UserCheck}
           iconWrapper
           valueColorClass="text-primary"
         />
         <SummaryCard
-          title="Weekly Hrs"
+          title={t("Weekly Hrs")}
           value={
             isLoading ? <Skeleton className="h-8 w-20" /> : `${weeklyHrs}h`
           }
@@ -186,7 +188,7 @@ export default function StaffPage() {
           iconWrapper
         />
         <SummaryCard
-          title="Monthly Salary Bill"
+          title={t("Monthly Salary Bill")}
           value={
             isLoading ? (
               <Skeleton className="h-8 w-20" />

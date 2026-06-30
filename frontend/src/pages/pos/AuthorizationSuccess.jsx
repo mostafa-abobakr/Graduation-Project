@@ -15,7 +15,7 @@ export default function AuthorizationSuccess({
   const { login } = useAuth()
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  
+
   const signInHandler = async () => {
     setLoading(true)
     setTimeout(() => {
@@ -34,7 +34,7 @@ export default function AuthorizationSuccess({
       </div>
 
       {/* Card */}
-      <div className="bg-card text-card-foreground border border-border/60 rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
+      <div className="bg-card text-card-foreground border border-border/60 rounded-2xl shadow-xl p-8 w-full max-w-2xl text-center">
         {/* Success Icon */}
         <div className="flex justify-center mb-4">
           <div className="bg-green-500/10 p-3 rounded-full">
@@ -47,7 +47,7 @@ export default function AuthorizationSuccess({
         <p className="text-muted-foreground text-sm mb-6">{description}</p>
 
         {/* Steps */}
-        <div className="space-y-4 text-left mb-6">
+        <div className="space-y-4 text-start mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-green-500/10 p-2 rounded-lg">

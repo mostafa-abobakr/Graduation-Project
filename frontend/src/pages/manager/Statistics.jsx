@@ -1,15 +1,18 @@
-import React from "react";
-import { DollarSign, ShoppingBag, Receipt, PieChart } from "lucide-react";
-import { SummaryCard } from "@/components/shared/SummaryCard";
+import React from "react"
+import { DollarSign, ShoppingBag, Receipt, PieChart } from "lucide-react"
+import { SummaryCard } from "@/components/shared/SummaryCard"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const Statistics = ({ data }) => {
-  if (!data) return null;
+  const { t } = useLanguage()
+
+  if (!data) return null
 
   const fmt = (v) =>
     Intl.NumberFormat("en-US", {
       notation: "compact",
       maximumFractionDigits: 1,
-    }).format(v);
+    }).format(v)
 
   const statsData = [
     {
@@ -40,14 +43,14 @@ const Statistics = ({ data }) => {
       change: data.avg_order_value_change_pct,
       icon: Receipt,
     },
-  ];
+  ]
 
   return (
     <>
       {statsData.map((stat) => (
         <SummaryCard
           key={stat.title}
-          title={stat.title}
+          title={t(stat.title)}
           value={`${stat.prefix}${fmt(stat.value)}`}
           icon={stat.icon}
           iconColorClass="text-primary"
@@ -56,7 +59,7 @@ const Statistics = ({ data }) => {
         />
       ))}
     </>
-  );
-};
+  )
+}
 
-export default Statistics;
+export default Statistics

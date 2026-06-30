@@ -1,34 +1,37 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Clock, Calendar, Activity } from "lucide-react";
+import React from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
+import { Clock, Calendar, Activity } from "lucide-react"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const PeakTimes = ({ data, viewMode }) => {
-  if (!data) return null;
+  const { t } = useLanguage()
+
+  if (!data) return null
 
   const formatTo12Hr = (timeStr) => {
-    const [hours] = timeStr.split(":");
-    const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    return `${hour12} ${ampm}`;
-  };
+    const [hours] = timeStr.split(":")
+    const hour = parseInt(hours, 10)
+    const ampm = hour >= 12 ? "PM" : "AM"
+    const hour12 = hour % 12 || 12
+    return `${hour12} ${t(ampm)}`
+  }
 
   // On Today view, show more hours and hide Top Days
-  const hoursLimit = viewMode === "today" ? 5 : 3;
-  const hours = data.peak_hours?.slice(0, hoursLimit) || [];
-  const days = data.peak_days?.slice(0, 3) || [];
-  const maxOrderCount = Math.max(...hours.map((h) => h.order_count), 1);
+  const hoursLimit = viewMode === "today" ? 5 : 3
+  const hours = data.peak_hours?.slice(0, hoursLimit) || []
+  const days = data.peak_days?.slice(0, 3) || []
+  const maxOrderCount = Math.max(...hours.map((h) => h.order_count), 1)
   const maxRevenueDayIndex = days.length > 0
     ? days.reduce((maxIdx, day, idx, arr) => day.revenue > arr[maxIdx].revenue ? idx : maxIdx, 0)
-    : -1;
+    : -1
 
   return (
     <Card className="flex flex-col bg-card border-border/60 premium-shadow h-full">
       <CardHeader className="p-6 pb-2 shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg md:text-xl font-bold text-foreground">
-            Peak Times
+            {t("Peak Times")}
           </CardTitle>
           <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
             <Activity className="w-4 h-4" />
@@ -43,7 +46,7 @@ const PeakTimes = ({ data, viewMode }) => {
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" />
               <span className="text-sm font-semibold text-foreground tracking-tight">
-                Busiest Hours
+                {t("Busiest Hours")}
               </span>
             </div>
 
@@ -55,7 +58,7 @@ const PeakTimes = ({ data, viewMode }) => {
                       {formatTo12Hr(item.hour)}
                     </span>
                     <span className="text-xs font-semibold text-muted-foreground bg-muted/50 px-2.5 py-0.5 rounded-full border border-border/50">
-                      {item.order_count.toLocaleString()} orders
+                      {item.order_count.toLocaleString()} {t("orders")}
                     </span>
                   </div>
                   <Progress
@@ -76,38 +79,38 @@ const PeakTimes = ({ data, viewMode }) => {
               <div className="flex items-center gap-2 mb-3">
                 <Calendar className="h-4 w-4 text-primary" />
                 <span className="text-sm font-semibold text-foreground tracking-tight">
-                  Top Days (Revenue)
+                  {t("Top Days (Revenue)")}
                 </span>
               </div>
-            <div className="grid grid-cols-3 gap-3">
-              {days.map((day, index) => (
-                <div
-                  key={index}
-                  className={`p-3 rounded-xl border flex flex-col items-center justify-center transition-colors duration-300 ${
-                    index === maxRevenueDayIndex
-                      ? "border-amber-500/30 bg-amber-500/10 shadow-sm"
-                      : "border-border/40 bg-muted/30"
-                  }`}
-                >
-                  <span
-                    className={`block text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1 ${
-                      index === maxRevenueDayIndex ? "text-amber-500" : "text-muted-foreground"
+              <div className="grid grid-cols-3 gap-3">
+                {days.map((day, index) => (
+                  <div
+                    key={index}
+                    className={`p-3 rounded-xl border flex flex-col items-center justify-center transition-colors duration-300 ${
+                      index === maxRevenueDayIndex
+                        ? "border-amber-500/30 bg-amber-500/10 shadow-sm"
+                        : "border-border/40 bg-muted/30"
                     }`}
                   >
-                    {day.day.substring(0, 3)}
-                  </span>
-                  <span className="text-sm md:text-base font-black tracking-tight text-foreground truncate max-w-full">
-                    ${(day.revenue / 1000).toFixed(1)}k
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
+                    <span
+                      className={`block text-[10px] md:text-xs font-bold uppercase tracking-widest mb-1 ${
+                        index === maxRevenueDayIndex ? "text-amber-500" : "text-muted-foreground"
+                      }`}
+                    >
+                      {t(day.day)}
+                    </span>
+                    <span className="text-sm md:text-base font-black tracking-tight text-foreground truncate max-w-full">
+                      ${(day.revenue / 1000).toFixed(1)}{t("k")}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
           )}
         </div>
       </CardContent>
     </Card>
-  );
-};
+  )
+}
 
-export default PeakTimes;
+export default PeakTimes

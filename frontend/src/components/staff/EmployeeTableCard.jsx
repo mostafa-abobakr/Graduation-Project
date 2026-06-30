@@ -4,6 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Input } from "@/components/ui/input"
 import { Search, Users, Trash2 } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const initials = (name = "") =>
   name
@@ -14,6 +15,8 @@ const initials = (name = "") =>
     .join("")
 
 export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEdit, onDelete }) {
+  const { t } = useLanguage()
+
   if (filtered.length === 0 && !isLoading && !search) {
     return (
       <Card className="bg-card border-border/60 premium-shadow overflow-hidden p-8">
@@ -22,8 +25,8 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
             searchItemName="employees"
             onAction={() => setSearch("")}
             icon={Users}
-            title="No employees found"
-            description="You don't have any employees yet."
+            title={t("No employees found")}
+            description={t("You don't have any employees yet.")}
           />
       </Card>
     )
@@ -32,24 +35,24 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
   return (
     <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
       <div className="p-5 pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-foreground">
-          Staff Directory
+        <h3 className="text-base font-semibold text-foreground flex items-center">
+          {t("Staff Directory")}
           {!isLoading && (
             <Badge
               variant="secondary"
-              className="ml-2 bg-primary/10 text-primary border-0 text-xs font-semibold"
+              className="ms-2 bg-primary/10 text-primary border-0 text-xs font-semibold"
             >
               {filtered.length}
             </Badge>
           )}
         </h3>
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 rtl:left-auto rtl:right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by name or role…"
+            placeholder={t("Search by name or role…")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 bg-card border-border/60"
+            className="pl-9 rtl:pl-3 rtl:pr-9 bg-card border-border/60"
           />
         </div>
       </div>
@@ -58,29 +61,29 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border/60 bg-muted/40">
-              <th className="text-left py-3 px-5 text-muted-foreground font-semibold">
-                Employee
+              <th className="text-start py-3 px-5 text-muted-foreground font-semibold">
+                {t("Employee")}
               </th>
-              <th className="text-left py-3 px-5 text-muted-foreground font-semibold">
-                Role
+              <th className="text-start py-3 px-5 text-muted-foreground font-semibold">
+                {t("Role")}
               </th>
-              <th className="text-left py-3 px-5 text-muted-foreground font-semibold">
-                Contact
+              <th className="text-start py-3 px-5 text-muted-foreground font-semibold">
+                {t("Contact")}
               </th>
-              <th className="text-left py-3 px-5 text-muted-foreground font-semibold">
-                Hire Date
-              </th>
-              <th className="text-center py-3 px-5 text-muted-foreground font-semibold">
-                Schedule
-              </th>
-              <th className="text-right py-3 px-5 text-muted-foreground font-semibold">
-                Salary
+              <th className="text-start py-3 px-5 text-muted-foreground font-semibold">
+                {t("Hire Date")}
               </th>
               <th className="text-center py-3 px-5 text-muted-foreground font-semibold">
-                Status
+                {t("Schedule")}
               </th>
-              <th className="text-right py-3 px-5 text-muted-foreground font-semibold">
-                Actions
+              <th className="text-end py-3 px-5 text-muted-foreground font-semibold">
+                {t("Salary")}
+              </th>
+              <th className="text-center py-3 px-5 text-muted-foreground font-semibold">
+                {t("Status")}
+              </th>
+              <th className="text-end py-3 px-5 text-muted-foreground font-semibold">
+                {t("Actions")}
               </th>
             </tr>
           </thead>
@@ -110,7 +113,7 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
                     <Skeleton className="h-4 w-24 mx-auto" />
                   </td>
                   <td className="py-4 px-5">
-                    <Skeleton className="h-4 w-16 ml-auto" />
+                    <Skeleton className="h-4 w-16 ms-auto" />
                   </td>
                   <td className="py-4 px-5">
                     <Skeleton className="h-6 w-16 rounded-full mx-auto" />
@@ -119,14 +122,14 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="p-0">
+                <td colSpan={8} className="p-0">
                   <EmptyState
                     searchQuery={search}
                     searchItemName="employees"
                     onAction={() => setSearch("")}
                     icon={Users}
-                    title="No employees found"
-                    description="You don't have any employees yet."
+                    title={t("No employees found")}
+                    description={t("You don't have any employees yet.")}
                   />
                 </td>
               </tr>
@@ -148,7 +151,7 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
                     </div>
                   </td>
                   <td className="py-4 px-5 text-muted-foreground">
-                    {e.role}
+                    {t(e.role)}
                   </td>
                   <td className="py-4 px-5">
                     <div className="text-sm text-foreground">{e.email}</div>
@@ -171,7 +174,7 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
                       {e.workingDaysPerWeek}d × {e.workingHoursPerDay}h
                     </div>
                   </td>
-                  <td className="py-4 px-5 text-right font-mono font-medium text-foreground">
+                  <td className="py-4 px-5 text-end font-mono font-medium text-foreground">
                     ${e.salary?.toLocaleString()}
                   </td>
                   <td className="py-4 px-5 text-center">
@@ -185,8 +188,7 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
                           : ""
                       }
                     >
-                      {e.status} 
-                      
+                      {t(e.status)}
                     </Badge>
                   </td>
                   <td className="py-4 px-5">
@@ -197,7 +199,7 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
                           onDelete && onDelete(e.id || e.empID || e.empId)
                         }}
                         className="text-destructive hover:text-destructive/80 transition-colors p-1"
-                        title="Delete Employee"
+                        title={t("Delete Employee")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

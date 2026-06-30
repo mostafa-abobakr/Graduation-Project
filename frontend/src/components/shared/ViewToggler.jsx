@@ -1,3 +1,5 @@
+import { useLanguage } from "@/contexts/LanguageContext"
+
 export function ViewToggler({
   viewMode,
   setViewMode,
@@ -5,6 +7,8 @@ export function ViewToggler({
   labels,
   className = "",
 }) {
+  const { t } = useLanguage()
+
   return (
     <div
       className={`relative grid bg-muted/60 p-1.5 rounded-xl w-full sm:w-max min-w-[280px] shadow-inner border border-border/40 ${className}`}
@@ -29,9 +33,9 @@ export function ViewToggler({
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
-          {labels ? labels[index] : mode}
+          {t(labels ? labels[index] : mode)}
         </button>
       ))}
     </div>
-  );
+  )
 }

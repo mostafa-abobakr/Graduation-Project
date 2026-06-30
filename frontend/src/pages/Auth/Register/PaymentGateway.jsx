@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ThemeToggle } from "@/components/shared/ThemeToggle"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const validateLuhn = (cardNumber) => {
   const digits = cardNumber.replace(/\s+/g, "").split("").map(Number)
@@ -49,87 +50,86 @@ const validateCVV = (cvv) => {
   return /^\d{3,4}$/.test(cvv)
 }
 
-
-
 export default function PaymentGateway() {
-    const { login } = useAuth();
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const plan = searchParams.get("plan") || "Pro";
+  const { login } = useAuth()
+  const { t } = useLanguage()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const plan = searchParams.get("plan") || "Pro"
 
-    const [loading, setLoading] = useState(false);
-    const [success, setSuccess] = useState(false);
-    const [formData, setFormData] = useState({
-        name: "",
-        cardNumber: "",
-        expiry: "",
-        cvv: ""
-    });
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [formData, setFormData] = useState({
+    name: "",
+    cardNumber: "",
+    expiry: "",
+    cvv: ""
+  })
 
-    const prices = { Basic: 0, Pro: 49, Enterprise: 199 };
-    const price = prices[plan] || 49;
+  const prices = { Basic: 0, Pro: 49, Enterprise: 199 }
+  const price = prices[plan] || 49
 
-    const handlePayment = async (e) => {
-        e.preventDefault()
+  const handlePayment = async (e) => {
+    e.preventDefault()
 
-        if (price > 0) {
-            const rawCard = formData.cardNumber.replace(/\s+/g, "")
+    if (price > 0) {
+      const rawCard = formData.cardNumber.replace(/\s+/g, "")
 
-            if (rawCard.length < 15 || rawCard.length > 16) {
-                toast.error("Invalid card number length. Must be 15 or 16 digits.")
-                return
-            }
+      if (rawCard.length < 15 || rawCard.length > 16) {
+        toast.error(t("Invalid card number length. Must be 15 or 16 digits."))
+        return
+      }
 
-            if (!validateLuhn(rawCard)) {
-                toast.error("Invalid card number. Please check the digits.")
-                return
-            }
+      if (!validateLuhn(rawCard)) {
+        toast.error(t("Invalid card number. Please check the digits."))
+        return
+      }
 
-            if (!validateExpiry(formData.expiry)) {
-                toast.error("Invalid expiration date. Use MM/YY format (and ensure not expired).")
-                return
-            }
+      if (!validateExpiry(formData.expiry)) {
+        toast.error(t("Invalid expiration date. Use MM/YY format (and ensure not expired)."))
+        return
+      }
 
-            if (!validateCVV(formData.cvv)) {
-                toast.error("Invalid CVV. Must be 3 or 4 digits.")
-                return
-            }
-        }
-
-        setLoading(true)
-
-        // Simulating Payment Gateway Delay
-        await new Promise(resolve => setTimeout(resolve, 2000))
-
-        setSuccess(true)
-        setLoading(false)
-
-        // Simulating login and redirect
-        setTimeout(async () => {
-            try {
-                const stored = localStorage.getItem("register")
-                if (stored) {
-                    const parsed = JSON.parse(stored)
-                    const { email, password } = parsed
-                    if (login && email && password) {
-                        const res = await login(email, password)
-                        const resId = res?.user?.restId || res?.restId || parsed?.restId
-                        if (resId) {
-                            try {
-                                await axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`)
-                                console.log("Seeding complete")
-                            } catch (seedErr) {
-                                console.error("Seeding error:", seedErr)
-                            }
-                        }
-                    }
-                }
-            } catch (err) {
-                console.error("Login after payment failed", err)
-            }
-            navigate("/dashboard")
-        }, 1500)
+      if (!validateCVV(formData.cvv)) {
+        toast.error(t("Invalid CVV. Must be 3 or 4 digits."))
+        return
+      }
     }
+
+    setLoading(true)
+
+    // Simulating Payment Gateway Delay
+    await new Promise((resolve) => setTimeout(resolve, 2000))
+
+    setSuccess(true)
+    setLoading(false)
+
+    // Simulating login and redirect
+    setTimeout(async () => {
+      try {
+        const stored = localStorage.getItem("register")
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          const { email, password } = parsed
+          if (login && email && password) {
+            const res = await login(email, password)
+            const resId = res?.user?.restId || res?.restId || parsed?.restId
+            if (resId) {
+              try {
+                await axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`)
+                console.log("Seeding complete")
+              } catch (seedErr) {
+                console.error("Seeding error:", seedErr)
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Login after payment failed", err)
+      }
+      navigate("/dashboard")
+    }, 1500)
+  }
 
     if (success) {
         return (
@@ -311,7 +311,7 @@ export default function PaymentGateway() {
                     </div>
                 </Card>
 
-            </div>
-        </div>
-    );
+      </div>
+    </div>
+  )
 }

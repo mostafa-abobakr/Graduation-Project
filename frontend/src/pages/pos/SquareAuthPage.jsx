@@ -2,7 +2,7 @@ import { Square, CheckCircle } from "lucide-react"
 import { useState } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import AuthorizationSuccess from "./AuthorizationSuccess"
-
+import squareIcon from "@/assets/posIcons/square.svg"
 const permissions = [
   {
     title: "Read payment information",
@@ -55,7 +55,7 @@ export default function PosAuthorizePage() {
     return (
       <AuthorizationSuccess
         title="Square"
-        icon={<div className="w-5 h-5 bg-background rounded-sm" />}
+        icon={<img src={squareIcon} alt="Toast" className="w-8 h-8 object-contain" />}
         bgColor="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
         textColor="text-foreground"
         buttonText="Continue to Square"
@@ -65,15 +65,15 @@ export default function PosAuthorizePage() {
 
   return (
     <div className="min-h-screen p-4 flex items-center justify-center bg-background text-foreground animate-fade-in">
-      <div className="w-full max-w-md text-center">
+      <div className="w-full max-w-2xl text-center">
         <div className="mb-6">
           <div className="w-14 h-14 mx-auto p-4 rounded-lg bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center shadow-sm">
-            <Square className="text-white dark:text-zinc-900" />
+          <img src={squareIcon} alt="Toast" className="w-8 h-8 object-contain" />
           </div>
           <h1 className="text-2xl font-bold mt-3 text-foreground">Square</h1>
         </div>
 
-        <div className="border border-border/60 bg-card text-card-foreground rounded-xl shadow-lg p-6 text-left">
+        <div className="border border-border/60 bg-card text-card-foreground rounded-xl shadow-lg p-6 text-start">
           <h2 className="text-lg font-bold mb-1 text-foreground">
             Authorize Application
           </h2>
