@@ -7,31 +7,31 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle"
 export default function BillingPlans() {
   const navigate = useNavigate()
   const { t } = useLanguage()
-  const [selectedPlan, setSelectedPlan] = useState("Pro")
+  const [selectedPlan, setSelectedPlan] = useState("Operations Pro")
 
   const plans = [
     {
-      name: "Pro",
+      name: "Operations Pro",
       price: "49",
-      description: t("Ideal for growing restaurants."),
+      description: t("Ideal for growing restaurants focusing on core operations."),
       features: [
-        t("1 POS connection"),
-        t("Basic Inventory & Waste Tracking"),
-        t("No Staff Scheduling"),
-        t("Standard AI Forecasting")
+        t("Dashboard & POS System"),
+        t("AI Insights & Demand Forecasting"),
+        t("Inventory Alerts & Forecasting"),
+        t("Menu Management & Analytics"),
+        t("Revenue Tracking & Reports")
       ],
       badge: t("Most Popular")
     },
     {
-      name: "Enterprise",
-      price: "199",
-      description: t("For premium restaurants with advanced needs."),
+      name: "Full Management Suite",
+      price: "129",
+      description: t("For premium restaurants that need full staff and operations management."),
       features: [
-        t("Unlimited POS connections"),
-        t("Advanced Inventory & Forecasting"),
+        t("All Operations Pro Features"),
+        t("Staff Management"),
         t("Smart Staff Scheduling"),
-        t("Real-time AI Insights & Optimization"),
-        t("24/7 Dedicated Support")
+        t("Advanced Priority Support")
       ]
     }
   ]

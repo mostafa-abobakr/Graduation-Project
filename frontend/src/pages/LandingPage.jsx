@@ -55,28 +55,28 @@ export default function LandingPage() {
 
   const pricing = [
     {
-      name: "Professional",
+      name: "Operations Pro",
       price: 49,
-      description: t("Ideal for growing restaurants."),
+      description: t("Ideal for growing restaurants focusing on core operations."),
       features: [
-        t("1 POS connection"),
-        t("Basic Inventory & Waste Tracking"),
-        t("No Staff Scheduling"),
-        t("Standard AI Forecasting")
+        t("Dashboard & POS System"),
+        t("AI Insights & Demand Forecasting"),
+        t("Inventory Alerts & Forecasting"),
+        t("Menu Management & Analytics"),
+        t("Revenue Tracking & Reports")
       ],
       popular: true,
       badge: t("Most Popular")
     },
     {
-      name: "Enterprise",
-      price: 199,
-      description: t("For premium restaurants with advanced needs."),
+      name: "Full Management Suite",
+      price: 129,
+      description: t("For premium restaurants that need full staff and operations management."),
       features: [
-        t("Unlimited POS connections"),
-        t("Advanced Inventory & Forecasting"),
+        t("All Operations Pro Features"),
+        t("Staff Management"),
         t("Smart Staff Scheduling"),
-        t("Real-time AI Insights & Optimization"),
-        t("24/7 Dedicated Support")
+        t("Advanced Priority Support")
       ],
       popular: false
     }
@@ -151,7 +151,7 @@ export default function LandingPage() {
             <p className="text-muted-foreground text-center mb-14">{t("Start free. Scale when you're ready.")}</p>
           </motion.div>
           <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-            {pricing.map((p) => (<motion.div key={p.name} variants={fadeUpVariant}><Card className={`h-full p-7 bg-card border-border/60 relative premium-shadow ${p.popular ? "border-primary glow-green" : ""}`}>{p.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">{p.badge}</div>}<h3 className="text-lg font-semibold text-foreground mb-1">{p.name}</h3><p className="text-xs text-muted-foreground mb-5">{p.description}</p><div className="mb-5"><span className="stat-number text-foreground">${p.price}</span><span className="text-muted-foreground text-sm">/{t("mo")}</span></div><ul className="space-y-2.5 mb-7">{p.features.map((f) => (<li key={f} className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="h-4 w-4 text-primary shrink-0" />{f}</li>))}</ul><Link to="/register"><Button className="w-full" variant={p.popular ? "default" : "outline"}>Get Started</Button></Link></Card></motion.div>))}
+            {pricing.map((p) => (<motion.div key={p.name} variants={fadeUpVariant}><Card className={`h-full flex flex-col p-7 bg-card border-border/60 relative premium-shadow ${p.popular ? "border-primary glow-green" : ""}`}>{p.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">{p.badge}</div>}<h3 className="text-lg font-semibold text-foreground mb-1">{p.name}</h3><p className="text-xs text-muted-foreground mb-5">{p.description}</p><div className="mb-5"><span className="stat-number text-foreground">${p.price}</span><span className="text-muted-foreground text-sm">/{t("mo")}</span></div><ul className="space-y-2.5 mb-7 flex-1">{p.features.map((f) => (<li key={f} className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="h-4 w-4 text-primary shrink-0" />{f}</li>))}</ul><Link to="/register" className="mt-auto"><Button className="w-full" variant={p.popular ? "default" : "outline"}>Get Started</Button></Link></Card></motion.div>))}
           </motion.div>
         </div>
       </section>

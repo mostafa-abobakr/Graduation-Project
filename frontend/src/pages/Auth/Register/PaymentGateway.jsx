@@ -55,7 +55,7 @@ export default function PaymentGateway() {
   const { t } = useLanguage()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const plan = searchParams.get("plan") || "Pro"
+  const plan = searchParams.get("plan") || "Operations Pro"
 
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -67,8 +67,8 @@ export default function PaymentGateway() {
     cvv: ""
   })
 
-  const prices = { Basic: 0, Pro: 49, Enterprise: 199 }
-  const price = prices[plan] || 49
+  const prices = { Basic: 0, "Operations Pro": 49, "Full Management Suite": 129 }
+  const price = prices[plan] !== undefined ? prices[plan] : 49
 
   const handlePayment = async (e) => {
     e.preventDefault()

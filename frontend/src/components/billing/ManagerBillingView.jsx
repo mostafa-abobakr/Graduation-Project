@@ -5,9 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { CreditCard, Check, Zap, Crown, Building2, Download, ArrowUpRight } from "lucide-react";
 
 const plans = [
-  { name: "Starter", price: "$0", interval: "forever", description: "For small restaurants getting started", features: ["1 restaurant", "Basic analytics", "7-day data retention", "Email support"], current: false, cta: "Downgrade", accent: false },
-  { name: "Pro", price: "$49", interval: "/month", description: "For growing restaurants that need insights", features: ["Up to 3 restaurants", "Advanced analytics & AI insights", "90-day data retention", "Waste forecasting", "Priority support"], current: true, cta: "Current Plan", accent: true },
-  { name: "Enterprise", price: "$149", interval: "/month", description: "For chains and multi-location operators", features: ["Unlimited restaurants", "Custom AI models", "Unlimited data retention", "API access", "Dedicated account manager", "SSO & audit logs"], current: false, cta: "Upgrade", accent: false },
+  { name: "Operations Pro", price: "$49", interval: "/month", description: "Ideal for growing restaurants focusing on core operations.", features: ["Dashboard & POS System", "AI Insights & Demand Forecasting", "Inventory Alerts & Forecasting", "Menu Management & Analytics", "Revenue Tracking & Reports"], current: true, cta: "Current Plan", accent: true },
+  { name: "Full Management Suite", price: "$129", interval: "/month", description: "For premium restaurants that need full staff and operations management.", features: ["All Operations Pro Features", "Staff Management", "Smart Staff Scheduling", "Advanced Priority Support"], current: false, cta: "Upgrade", accent: false },
 ];
 
 const paymentHistory = [
@@ -67,9 +66,8 @@ export default function ManagerBillingView() {
           {plans.map((plan) => (
             <Card key={plan.name} className={`p-6 flex flex-col border-border/60 ${plan.accent ? "ring-2 ring-primary/40 bg-primary/[0.03]" : "bg-card"}`}>
               <div className="flex items-center gap-2 mb-1">
-                {plan.name === "Starter" && <Zap className="h-4 w-4 text-muted-foreground" />}
-                {plan.name === "Pro" && <Crown className="h-4 w-4 text-primary" />}
-                {plan.name === "Enterprise" && <Building2 className="h-4 w-4 text-muted-foreground" />}
+                {plan.name === "Operations Pro" && <Crown className="h-4 w-4 text-primary" />}
+                {plan.name === "Full Management Suite" && <Building2 className="h-4 w-4 text-muted-foreground" />}
                 <h3 className="font-semibold text-foreground">{plan.name}</h3>
                 {plan.current && <Badge className="ml-auto text-[10px]">Current</Badge>}
               </div>
