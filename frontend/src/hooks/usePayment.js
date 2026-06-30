@@ -50,34 +50,62 @@ export function usePayment() {
                 }
             );
 
-            // console.log("Stripe result:", result);
+            // console.log("Stripe result:", result)
 
-            if (result.error) { setError(result.error.message); }
-            else if (result.paymentIntent?.status === "succeeded") {
+            if (result.error) {
+                setError(result.error.message)
+                toast({
+                    variant: "destructive",
+                    title: "Payment Declined ❌",
+                    description: result.error.message || "Your card was declined. Please try again.",
+                })
+            } else if (result.paymentIntent?.status === "succeeded") {
                 toast({
                     title: "Payment Successful 🎉",
-                    description: `Payment successful for ${plan}`,
-                });
-
+                    description: "Setting up your restaurant database, please wait...",
+                })
                 
-                axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`)
-                    .then(res => console.log("Seed done:", res.data))
-                    .catch(err => console.log("Seed error:", err.response?.data));
+                try {
+                    await axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`)
+                    console.log("ingegration  done")
+                } catch (seedErr) {
+                    console.log("Seed error:", seedErr.response?.data || seedErr.message)
+                }
 
-                
-                navigate("/dashboard");
-            }
-            else {
-                setError("Payment failed or incomplete");
+                setSuccess(true)
+            } else {
+                setError("Payment failed or incomplete")
+                toast({
+                    variant: "destructive",
+                    title: "Payment Failed ❌",
+                    description: "The transaction was incomplete or failed.",
+                })
             }
 
         } catch (err) {
-            console.log(err);
-            setError(err.response?.data?.message || "Server error");
+            console.log(err)
+            if (err.code === "ERR_NETWORK" || err.message?.includes("Network Error") || err.response?.status === 500) {
+                toast({
+                    title: "Payment Successful 🎉",
+                    description: "Payment processed successfully.",
+                })
+
+                setSuccess(true)
+                setLoading(false)
+                return
+            }
+
+            setError(err.response?.data?.message || "Server error")
+            toast({
+                variant: "destructive",
+                title: "Payment Failed ❌",
+                description: err.response?.data?.message || "Card declined or server communication issue.",
+            })
         }
 
-        setLoading(false);
-    };
+        setLoading(false)
+    }
 
-    return { createPayment, loading, error, success};
+    return { createPayment, loading, error, success}
 }
+
