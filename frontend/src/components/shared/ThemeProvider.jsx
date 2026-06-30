@@ -4,7 +4,7 @@ const ThemeContext = createContext({ theme: "dark", toggleTheme: () => {} });
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    const stored = localStorage.getItem("zerowaste-theme");
+    const stored = localStorage.getItem("zerobite-theme");
     return stored || "dark";
   });
 
@@ -12,7 +12,7 @@ export function ThemeProvider({ children }) {
     const root = document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(theme);
-    localStorage.setItem("zerowaste-theme", theme);
+    localStorage.setItem("zerobite-theme", theme);
   }, [theme]);
 
   const toggleTheme = () => setTheme(t => (t === "dark" ? "light" : "dark"));

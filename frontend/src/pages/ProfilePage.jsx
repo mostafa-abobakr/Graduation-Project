@@ -149,7 +149,7 @@ export default function ProfilePage() {
             [
               "marketingEmails",
               "Marketing Emails",
-              "Receive product updates and tips from ZeroWaste",
+              "Receive product updates and tips from ZeroBite",
               Mail,
             ],
             [

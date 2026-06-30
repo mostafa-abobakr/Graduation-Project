@@ -289,7 +289,7 @@ export default function MenuManagementPage() {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in py-5 max-w-7xl mx-auto">
+    <div className="space-y-6 animate-fade-in py-5 w-full">
       <PageHeader
         icon={Utensils}
         title="Menu Management"
