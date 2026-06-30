@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { useInventoryItems } from "@/hooks/useInventory";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuQuery, useUpdateMenuItem } from "@/hooks/useMenu";
@@ -78,6 +79,27 @@ export default function MenuManagementPage() {
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  
+  const location = useLocation();
+  const highlightedItemId = location.state?.highlightMenuItemId;
+  const [activeHighlightId, setActiveHighlightId] = useState(null);
+
+  useEffect(() => {
+    if (highlightedItemId && menuItems.length > 0) {
+      setExpandedRows({ [highlightedItemId]: true });
+      setActiveHighlightId(highlightedItemId);
+      setTimeout(() => {
+        const el = document.getElementById(`menu-item-${highlightedItemId}`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+      
+      const timer = setTimeout(() => {
+        setActiveHighlightId(null);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedItemId, menuItems]);
 
   const processFile = async (file) => {
     if (!file.type.startsWith("image/")) {
@@ -167,7 +189,7 @@ export default function MenuManagementPage() {
   };
 
   const toggleRow = (id) => {
-    setExpandedRows((prev) => ({ ...prev, [id]: !prev[id] }));
+    setExpandedRows((prev) => (prev[id] ? {} : { [id]: true }));
   };
 
   const filteredItems = useMemo(() => {
@@ -371,7 +393,11 @@ export default function MenuManagementPage() {
                 return (
                   <React.Fragment key={item.id}>
                     <TableRow
-                      className="border-border/20 cursor-pointer group"
+                      id={`menu-item-${item.id}`}
+                      className={cn(
+                        "border-border/20 cursor-pointer group transition-colors",
+                        activeHighlightId === item.id ? "bg-amber-500/15 hover:bg-amber-500/15 ring-2 ring-amber-500/50" : ""
+                      )}
                       onClick={() => toggleRow(item.id)}
                     >
                       <TableCell className="text-center text-muted-foreground">

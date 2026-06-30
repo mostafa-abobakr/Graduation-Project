@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { useLocation } from "react-router-dom"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { Card } from "@/components/ui/card"
@@ -47,6 +48,17 @@ export default function SchedulePage() {
     isOverridden: false,
     updatedAt: null,
   })
+
+  const location = useLocation()
+  const targetDateStr = location.state?.targetDate
+  
+  useEffect(() => {
+    if (targetDateStr) {
+      const target = new Date(targetDateStr)
+      setViewMode("day")
+      setCustomRange({ from: target, to: target })
+    }
+  }, [targetDateStr])
 
   const baseDate = useMemo(() => {
     const d = new Date()

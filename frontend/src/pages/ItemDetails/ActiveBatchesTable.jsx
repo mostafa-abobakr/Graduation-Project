@@ -9,7 +9,8 @@ export function ActiveBatchesTable({
   batchesError, 
   sortedBatches, 
   onEditBatch, 
-  onDeleteBatch 
+  onDeleteBatch,
+  highlightBatchId
 }) {
   return (
     <Card className="border-border/50 shadow-sm bg-card h-full">
@@ -73,7 +74,13 @@ export function ActiveBatchesTable({
                   return (
                     <tr
                       key={batch.batchId ?? idx}
-                      className="border-b border-border/30 last:border-0 hover:bg-muted/20 transition-colors group"
+                      className={`border-b border-border/30 last:border-0 transition-colors group ${
+                        highlightBatchId && String(highlightBatchId) === String(batch.batchId)
+                          ? isExpired
+                            ? "bg-destructive/15 hover:bg-destructive/15 ring-2 ring-destructive/50"
+                            : "bg-amber-500/15 hover:bg-amber-500/15 ring-2 ring-amber-500/50"
+                          : "hover:bg-muted/20"
+                      }`}
                     >
                       <td className="py-2.5 px-3">
                         <span className="font-medium text-muted-foreground">

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -80,9 +80,23 @@ import { TransactionHistory } from "./TransactionHistory";
 export default function ItemDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const restId = user?.restId || 2;
   const token = user?.token;
+  
+  const highlightBatchIdFromState = location.state?.highlightBatchId;
+  const [activeHighlightBatchId, setActiveHighlightBatchId] = useState(null);
+
+  React.useEffect(() => {
+    if (highlightBatchIdFromState) {
+      setActiveHighlightBatchId(highlightBatchIdFromState);
+      const timer = setTimeout(() => {
+        setActiveHighlightBatchId(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightBatchIdFromState]);
 
   const [editingBatch, setEditingBatch] = useState(null);
   const [deletingBatch, setDeletingBatch] = useState(null);
@@ -261,6 +275,7 @@ export default function ItemDetailsPage() {
           sortedBatches={sortedBatches} 
           onEditBatch={setEditingBatch} 
           onDeleteBatch={setDeletingBatch} 
+          highlightBatchId={activeHighlightBatchId}
         />
         <TransactionHistory 
           transactionsLoading={transactionsLoading} 
