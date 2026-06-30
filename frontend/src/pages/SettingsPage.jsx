@@ -9,13 +9,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
 import { User, Store, Palette, Bell, Settings, Save, Clock, Bot, CalendarDays, Camera, Key, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
-import { PageHeader } from "@/components/shared/PageHeader";
-import api from "@/api/axios";
+import { useAuth } from "@/contexts/AuthContext"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { useTheme } from "@/components/shared/ThemeProvider"
+import { useLanguage } from "@/contexts/LanguageContext"
+import api from "@/api/axios"
 
 export default function SettingsPage() {
-  const { user, isAdmin } = useAuth();
-  const [activeTab, setActiveTab] = useState("profile");
+  const { user, isAdmin } = useAuth()
+  const { setTheme } = useTheme()
+  const { changeLanguage, t } = useLanguage()
+  const [activeTab, setActiveTab] = useState("profile")
 
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.photoUrl || "");
@@ -154,6 +158,13 @@ export default function SettingsPage() {
         preferences,
         notifications,
       })
+      if (preferences.theme) {
+        setTheme(preferences.theme)
+      }
+      if (preferences.language) {
+        changeLanguage(preferences.language)
+      }
+
       toast.success("Settings saved successfully!")
     } catch (error) {
       console.error("Failed to save settings:", error)
@@ -161,7 +172,7 @@ export default function SettingsPage() {
     } finally {
       setIsSaving(false)
     }
-  };
+  }
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
@@ -504,7 +515,14 @@ export default function SettingsPage() {
                     <Input
                       id="open-time"
                       type="time"
-                      value={scheduling.openTime}
+                      className="[color-scheme:light] dark:[color-scheme:dark] bg-background text-foreground"
+                      value={(() => {
+                        if (!scheduling.openTime) return ""
+                        if (scheduling.openTime.includes("T")) {
+                          return scheduling.openTime.split("T")[1].substring(0, 5)
+                        }
+                        return scheduling.openTime.substring(0, 5)
+                      })()}
                       onChange={(e) => setScheduling({ ...scheduling, openTime: e.target.value })}
                     />
                   </div>
@@ -513,7 +531,14 @@ export default function SettingsPage() {
                     <Input
                       id="close-time"
                       type="time"
-                      value={scheduling.closeTime}
+                      className="[color-scheme:light] dark:[color-scheme:dark] bg-background text-foreground"
+                      value={(() => {
+                        if (!scheduling.closeTime) return ""
+                        if (scheduling.closeTime.includes("T")) {
+                          return scheduling.closeTime.split("T")[1].substring(0, 5)
+                        }
+                        return scheduling.closeTime.substring(0, 5)
+                      })()}
                       onChange={(e) => setScheduling({ ...scheduling, closeTime: e.target.value })}
                     />
                   </div>
@@ -556,8 +581,13 @@ export default function SettingsPage() {
                       <SelectValue placeholder="Select first day" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="sunday">Sunday</SelectItem>
-                      <SelectItem value="monday">Monday</SelectItem>
+                      <SelectItem value="sunday">{t("Sunday")}</SelectItem>
+                      <SelectItem value="monday">{t("Monday")}</SelectItem>
+                      <SelectItem value="tuesday">{t("Tuesday")}</SelectItem>
+                      <SelectItem value="wednesday">{t("Wednesday")}</SelectItem>
+                      <SelectItem value="thursday">{t("Thursday")}</SelectItem>
+                      <SelectItem value="friday">{t("Friday")}</SelectItem>
+                      <SelectItem value="saturday">{t("Saturday")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">This will adjust how the Schedule Grid is displayed.</p>

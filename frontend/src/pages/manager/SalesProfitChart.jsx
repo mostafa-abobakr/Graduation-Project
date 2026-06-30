@@ -41,7 +41,7 @@ const SalesProfitDashboard = ({ data, viewMode }) => {
   const currentData = getChartData()
 
   return (
-    <Card className="lg:col-span-2 flex flex-col bg-card border-border/60 premium-shadow overflow-hidden transition-all">
+    <Card className="lg:col-span-2 flex flex-col bg-card border-border/60 premium-shadow overflow-hidden transition-all" >
       <CardHeader className="p-6 pb-4 shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg md:text-xl font-bold text-foreground">

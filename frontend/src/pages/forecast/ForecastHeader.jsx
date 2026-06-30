@@ -1,9 +1,11 @@
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Settings, Brain } from "lucide-react";
+import React from "react"
+import { Button } from "@/components/ui/button"
+import { Settings, Brain } from "lucide-react"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function ForecastHeader({ alignment, setAlignment, setModalOpen }) {
-  const now = new Date();
+  const { t, language } = useLanguage()
+  const now = new Date()
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-background">
@@ -12,14 +14,15 @@ export default function ForecastHeader({ alignment, setAlignment, setModalOpen }
           <Brain className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Sales Forecast</h1>
-          <p className="text-muted-foreground text-sm">{now.toDateString()}</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("Sales Forecast")}</h1>
+          <p className="text-muted-foreground text-sm">
+            {language === 'ar' 
+              ? now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) 
+              : now.toDateString()}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-3">
-        {/* <Button variant="outline" size="sm" onClick={() => setModalOpen(true)}>
-          <Settings className="h-4 w-4 mr-1.5" /> Settings
-        </Button> */}
         <div className="relative flex bg-muted/60 p-1.5 rounded-xl shadow-inner border border-border/40">
           <div
             className="absolute top-1.5 bottom-1.5 w-[calc(50%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"
@@ -28,8 +31,8 @@ export default function ForecastHeader({ alignment, setAlignment, setModalOpen }
             }}
           />
           {[
-            { id: "day", label: "Tomorrow" },
-            { id: "week", label: "This Week" },
+            { id: "day", label: t("Tomorrow") },
+            { id: "week", label: t("This Week") },
           ].map((mode) => (
             <button
               key={mode.id}
@@ -47,5 +50,5 @@ export default function ForecastHeader({ alignment, setAlignment, setModalOpen }
         </div>
       </div>
     </div>
-  );
+  )
 }

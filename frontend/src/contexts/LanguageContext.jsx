@@ -15,15 +15,19 @@ export const LanguageProvider = ({ children }) => {
   }, [language]);
 
   const toggleLanguage = () => {
-    const newLang = language === 'en' ? 'ar' : 'en';
-    i18n.changeLanguage(newLang);
-  };
+    const newLang = language === 'en' ? 'ar' : 'en'
+    i18n.changeLanguage(newLang)
+  }
+
+  const changeLanguage = (newLang) => {
+    i18n.changeLanguage(newLang)
+  }
 
   return (
-    <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+    <LanguageContext.Provider value={{ language, toggleLanguage, changeLanguage, t }}>
       {children}
     </LanguageContext.Provider>
-  );
-};
+  )
+}
 
 export const useLanguage = () => useContext(LanguageContext);
