@@ -490,15 +490,358 @@ def _sample_quantity(item_profile: Dict[str, Any], rng: random.Random) -> int:
     return 1 if rng.random() < 0.84 else 2
 
 
+def _get_seed_profile(restaurant_id: str) -> Tuple[random.Random, Dict[str, Any]]:
+    rng = random.Random(f"restaurant-seed::{restaurant_id}")
+    profile = rng.choice(RESTAURANT_CATEGORIES)
+    return rng, profile
+
+
+def _load_existing_menu_metadata(conn, restaurant_id: str) -> Tuple[List[Dict[str, Any]], Dict[int, float]]:
+    rows = conn.execute(
+        text("""
+            SELECT MenuItemId, ItemName, Price
+            FROM MenuItems
+            WHERE RestaurantId = :rid
+            ORDER BY MenuItemId
+        """),
+        {"rid": restaurant_id}
+    ).fetchall()
+
+    menu_items_metadata = []
+    menu_items_prices = {}
+
+    for rank, row in enumerate(rows):
+        item_id = int(row[0])
+        item_name = str(row[1])
+        price = row[2]
+        if price is None:
+            raise ValueError(
+                f"Menu item '{item_name}' for restaurant '{restaurant_id}' has no price. "
+                "Cannot generate POS seed orders."
+            )
+
+        item_price = float(price)
+        menu_items_metadata.append({
+            "item_id": item_id,
+            "item_name": item_name,
+            "price": item_price,
+            "rank": rank,
+        })
+        menu_items_prices[item_id] = item_price
+
+    return menu_items_metadata, menu_items_prices
+
+
+def _coerce_datetime(value: Any) -> Optional[datetime]:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        normalized = value.replace("Z", "+00:00")
+        coerced = datetime.fromisoformat(normalized)
+        if coerced.tzinfo is not None:
+            coerced = coerced.replace(tzinfo=None)
+        return coerced
+    raise ValueError(f"Unsupported datetime value returned from database: {value!r}")
+
+
+def _generate_pos_order_payloads(
+    menu_items_metadata: List[Dict[str, Any]],
+    menu_items_prices: Dict[int, float],
+    category_name: str,
+    size_multiplier: float,
+    open_hour: int,
+    close_hour: int,
+    start_date: datetime,
+    end_date: datetime,
+    rng: random.Random,
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    current_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+    period_start = start_date
+    all_generated_orders = []
+    all_generated_order_items = []
+
+    item_profiles = [
+        _build_item_profile(
+            item_name=item["item_name"],
+            category_name=category_name,
+            item_id=item["item_id"],
+            price=item["price"],
+            rank=item["rank"],
+            rng=rng,
+        )
+        for item in menu_items_metadata
+    ]
+    main_pool = [item for item in item_profiles if item["role"] == "main"]
+    side_pool = [item for item in item_profiles if item["role"] == "side"]
+    beverage_pool = [item for item in item_profiles if item["role"] == "beverage"]
+    dessert_pool = [item for item in item_profiles if item["role"] == "dessert"]
+    breakfast_food_pool = [
+        item for item in item_profiles
+        if item["role"] != "beverage" and item["is_breakfast"]
+    ]
+    lunch_main_pool = [
+        item for item in main_pool
+        if item["is_lunch"] or not item["is_breakfast"]
+    ]
+
+    while current_date <= end_date:
+        weekday = current_date.weekday()
+        is_weekend = weekday in (4, 5)
+        prob_event = 0.16 if is_weekend else 0.05
+        is_event = 1 if rng.random() < prob_event else 0
+        daily_temp = _generate_daily_temperature(current_date, rng)
+
+        progress_ratio = (current_date - period_start).days / max((end_date - period_start).days, 1)
+        weekday_factor = _get_weekday_factor(category_name, weekday)
+        weather_factor = _get_weather_factor(category_name, daily_temp)
+        trend_factor = 0.96 + (0.10 * progress_ratio)
+        noise_factor = max(rng.gauss(1.0, 0.05), 0.88)
+        event_factor = rng.uniform(1.22, 1.45) if is_event else 1.0
+
+        mean_vol = 52 * size_multiplier
+        base_vol = mean_vol * weekday_factor * weather_factor * trend_factor * noise_factor * event_factor
+        daily_target_orders = max(int(round(base_vol)), 10)
+        hourly_orders = _allocate_hourly_orders(
+            daily_target_orders=daily_target_orders,
+            open_hour=open_hour,
+            close_hour=close_hour,
+            category_name=category_name,
+            is_weekend=is_weekend,
+            is_event=bool(is_event),
+        )
+
+        for order_hour, order_count in hourly_orders.items():
+            for _ in range(order_count):
+                rand_min = rng.randint(0, 59)
+                rand_sec = rng.randint(0, 59)
+                rand_ms = rng.randint(0, 999)
+                order_time = current_date.replace(
+                    hour=order_hour,
+                    minute=rand_min,
+                    second=rand_sec,
+                    microsecond=rand_ms * 1000,
+                )
+
+                if "Cafe" in category_name:
+                    primary_pool = main_pool + beverage_pool
+                else:
+                    primary_pool = main_pool
+                if not primary_pool:
+                    primary_pool = item_profiles
+
+                used_item_ids = set()
+                order_items_to_add = []
+                total_value = 0.0
+                total_qty = 0
+
+                primary_item = _choose_weighted_item(
+                    primary_pool,
+                    order_hour,
+                    daily_temp,
+                    is_weekend,
+                    bool(is_event),
+                    rng,
+                    used_item_ids,
+                )
+                if primary_item is None:
+                    continue
+
+                primary_qty = _sample_quantity(primary_item, rng)
+                primary_price = menu_items_prices[primary_item["item_id"]]
+                primary_line_total = float(primary_qty * primary_price)
+                order_items_to_add.append({
+                    "temp_corr": order_time,
+                    "menu_item_id": primary_item["item_id"],
+                    "qty": primary_qty,
+                    "unit_price": primary_price,
+                    "line_total": primary_line_total,
+                })
+                used_item_ids.add(primary_item["item_id"])
+                total_value += primary_line_total
+                total_qty += primary_qty
+
+                if "Cafe" in category_name:
+                    pastry_probability = 0.44 if primary_item["role"] == "beverage" else 0.18
+                    sandwich_probability = 0.14 if 11 <= order_hour <= 15 else 0.05
+                    beverage_probability = 0.78 if primary_item["role"] != "beverage" else 0.0
+
+                    companion_pools = [
+                        (breakfast_food_pool, pastry_probability),
+                        (lunch_main_pool, sandwich_probability),
+                        (beverage_pool, beverage_probability),
+                    ]
+                else:
+                    side_probability = 0.34 + (0.10 if primary_item["is_shareable"] else 0.0)
+                    beverage_probability = 0.42 + (0.12 if daily_temp >= 30 else 0.0)
+                    dessert_probability = 0.08 + (0.08 if (is_weekend or is_event) else 0.0)
+
+                    if "Fine Dining" in category_name or "Seafood" in category_name:
+                        beverage_probability += 0.12
+                        dessert_probability += 0.10
+
+                    companion_pools = [
+                        (side_pool, min(side_probability, 0.75)),
+                        (beverage_pool, min(beverage_probability, 0.85)),
+                        (dessert_pool, min(dessert_probability, 0.50)),
+                    ]
+
+                for pool, probability in companion_pools:
+                    if not pool or rng.random() >= probability:
+                        continue
+
+                    companion = _choose_weighted_item(
+                        pool,
+                        order_hour,
+                        daily_temp,
+                        is_weekend,
+                        bool(is_event),
+                        rng,
+                        used_item_ids,
+                    )
+                    if companion is None:
+                        continue
+
+                    companion_qty = _sample_quantity(companion, rng)
+                    companion_price = menu_items_prices[companion["item_id"]]
+                    companion_line_total = float(companion_qty * companion_price)
+                    order_items_to_add.append({
+                        "temp_corr": order_time,
+                        "menu_item_id": companion["item_id"],
+                        "qty": companion_qty,
+                        "unit_price": companion_price,
+                        "line_total": companion_line_total,
+                    })
+                    used_item_ids.add(companion["item_id"])
+                    total_value += companion_line_total
+                    total_qty += companion_qty
+
+                if not order_items_to_add:
+                    continue
+
+                if is_event and order_hour >= 18 and rng.random() < 0.08 and main_pool:
+                    extra_main = _choose_weighted_item(
+                        main_pool,
+                        order_hour,
+                        daily_temp,
+                        is_weekend,
+                        bool(is_event),
+                        rng,
+                        used_item_ids,
+                    )
+                    if extra_main is not None:
+                        extra_qty = 1
+                        extra_price = menu_items_prices[extra_main["item_id"]]
+                        extra_line_total = float(extra_qty * extra_price)
+                        order_items_to_add.append({
+                            "temp_corr": order_time,
+                            "menu_item_id": extra_main["item_id"],
+                            "qty": extra_qty,
+                            "unit_price": extra_price,
+                            "line_total": extra_line_total,
+                        })
+                        used_item_ids.add(extra_main["item_id"])
+                        total_value += extra_line_total
+                        total_qty += extra_qty
+
+                total_value = round(total_value, 2)
+
+                all_generated_orders.append({
+                    "ts": order_time,
+                    "temp": daily_temp,
+                    "event": is_event,
+                    "item_count": total_qty,
+                    "total_value": total_value,
+                })
+                all_generated_order_items.extend(order_items_to_add)
+
+        current_date += timedelta(days=1)
+
+    return all_generated_orders, all_generated_order_items
+
+
+def _insert_pos_order_payloads(
+    conn,
+    restaurant_id: str,
+    all_generated_orders: List[Dict[str, Any]],
+    all_generated_order_items: List[Dict[str, Any]],
+) -> Dict[str, int]:
+    inserted_orders = 0
+    inserted_order_items = 0
+    chunk_size = 200
+    order_time_to_id_map = {}
+
+    for i in range(0, len(all_generated_orders), chunk_size):
+        chunk = all_generated_orders[i:i + chunk_size]
+        value_strings = []
+        params = {"rid": restaurant_id}
+
+        for index, ord_data in enumerate(chunk):
+            value_strings.append(f"(:rid, :ts_{index}, :temp_{index}, :event_{index}, :ic_{index}, :tv_{index})")
+            params[f"ts_{index}"] = ord_data["ts"]
+            params[f"temp_{index}"] = ord_data["temp"]
+            params[f"event_{index}"] = ord_data["event"]
+            params[f"ic_{index}"] = ord_data["item_count"]
+            params[f"tv_{index}"] = ord_data["total_value"]
+
+        batch_sql = text(f"""
+            INSERT INTO Orders (RestaurantId, OrderTimestamp, TemperatureCelsius, EventDay, ItemCount, TotalOrderValue)
+            OUTPUT inserted.OrderId, inserted.OrderTimestamp
+            VALUES {','.join(value_strings)}
+        """)
+
+        res_orders = conn.execute(batch_sql, params).fetchall()
+        inserted_orders += len(res_orders)
+
+        for row in res_orders:
+            db_id = row[0]
+            db_ts = row[1]
+            order_time_to_id_map[db_ts] = db_id
+
+    for i in range(0, len(all_generated_order_items), chunk_size):
+        chunk = all_generated_order_items[i:i + chunk_size]
+        value_strings = []
+        params = {}
+        valid_inserts = 0
+
+        for index, item_data in enumerate(chunk):
+            temp_corr = item_data["temp_corr"]
+            if temp_corr not in order_time_to_id_map:
+                continue
+
+            real_order_id = order_time_to_id_map[temp_corr]
+
+            value_strings.append(f"(:oid_{index}, :mid_{index}, :q_{index}, :up_{index}, :lt_{index})")
+            params[f"oid_{index}"] = real_order_id
+            params[f"mid_{index}"] = item_data["menu_item_id"]
+            params[f"q_{index}"] = item_data["qty"]
+            params[f"up_{index}"] = item_data["unit_price"]
+            params[f"lt_{index}"] = item_data["line_total"]
+            valid_inserts += 1
+
+        if value_strings:
+            batch_item_sql = text(f"""
+                INSERT INTO OrderItems (OrderId, MenuItemId, Quantity, UnitPrice, LineTotal)
+                VALUES {','.join(value_strings)}
+            """)
+            conn.execute(batch_item_sql, params)
+            inserted_order_items += valid_inserts
+
+    return {
+        "orders": inserted_orders,
+        "order_items": inserted_order_items,
+    }
+
+
 def seed_restaurant_data(restaurant_id: str) -> Dict[str, Any]:
     """
     Generates realistic historical data for a newly 'signed-up' restaurant.
     Inserts directly cleanly into MenuItems, Orders, and OrderItems.
     """
-    rng = random.Random(f"restaurant-seed::{restaurant_id}")
+    rng, profile = _get_seed_profile(restaurant_id)
 
     # 1. Profile the restaurant
-    profile = rng.choice(RESTAURANT_CATEGORIES)
     category_name = profile["category"]
     size_multiplier = profile["size_multiplier"]
     open_hour = profile["open_hour"]
@@ -571,287 +914,26 @@ def seed_restaurant_data(restaurant_id: str) -> Dict[str, Any]:
             inserted_menu_items += 1
 
         # --- B. Generate Daily Operational Data ---
-        current_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
-        all_generated_orders = []
-        all_generated_order_items = []
+        all_generated_orders, all_generated_order_items = _generate_pos_order_payloads(
+            menu_items_metadata=inserted_items_metadata,
+            menu_items_prices=menu_items_prices,
+            category_name=category_name,
+            size_multiplier=size_multiplier,
+            open_hour=open_hour,
+            close_hour=close_hour,
+            start_date=start_date,
+            end_date=end_date,
+            rng=rng,
+        )
 
-        item_profiles = [
-            _build_item_profile(
-                item_name=item["item_name"],
-                category_name=category_name,
-                item_id=item["item_id"],
-                price=item["price"],
-                rank=item["rank"],
-                rng=rng,
-            )
-            for item in inserted_items_metadata
-        ]
-        main_pool = [item for item in item_profiles if item["role"] == "main"]
-        side_pool = [item for item in item_profiles if item["role"] == "side"]
-        beverage_pool = [item for item in item_profiles if item["role"] == "beverage"]
-        dessert_pool = [item for item in item_profiles if item["role"] == "dessert"]
-        breakfast_food_pool = [
-            item for item in item_profiles
-            if item["role"] != "beverage" and item["is_breakfast"]
-        ]
-        lunch_main_pool = [
-            item for item in main_pool
-            if item["is_lunch"] or not item["is_breakfast"]
-        ]
-        
-        while current_date <= end_date:
-            # Realistic variables
-            weekday = current_date.weekday()
-            is_weekend = weekday in (4, 5)
-            prob_event = 0.16 if is_weekend else 0.05
-            is_event = 1 if rng.random() < prob_event else 0
-            daily_temp = _generate_daily_temperature(current_date, rng)
-
-            progress_ratio = (current_date - start_date).days / max((end_date - start_date).days, 1)
-            weekday_factor = _get_weekday_factor(category_name, weekday)
-            weather_factor = _get_weather_factor(category_name, daily_temp)
-            trend_factor = 0.96 + (0.10 * progress_ratio)
-            noise_factor = max(rng.gauss(1.0, 0.05), 0.88)
-            event_factor = rng.uniform(1.22, 1.45) if is_event else 1.0
-
-            mean_vol = 52 * size_multiplier
-            base_vol = mean_vol * weekday_factor * weather_factor * trend_factor * noise_factor * event_factor
-            daily_target_orders = max(int(round(base_vol)), 10)
-            hourly_orders = _allocate_hourly_orders(
-                daily_target_orders=daily_target_orders,
-                open_hour=open_hour,
-                close_hour=close_hour,
-                category_name=category_name,
-                is_weekend=is_weekend,
-                is_event=bool(is_event),
-            )
-
-            for order_hour, order_count in hourly_orders.items():
-                for _ in range(order_count):
-                    rand_min = rng.randint(0, 59)
-                    rand_sec = rng.randint(0, 59)
-                    rand_ms = rng.randint(0, 999)
-                    order_time = current_date.replace(
-                        hour=order_hour,
-                        minute=rand_min,
-                        second=rand_sec,
-                        microsecond=rand_ms * 1000,
-                    )
-
-                    if "Cafe" in category_name:
-                        primary_pool = main_pool + beverage_pool
-                    else:
-                        primary_pool = main_pool
-                    if not primary_pool:
-                        primary_pool = item_profiles
-
-                    used_item_ids = set()
-                    order_items_to_add = []
-                    total_value = 0.0
-                    total_qty = 0
-
-                    primary_item = _choose_weighted_item(
-                        primary_pool,
-                        order_hour,
-                        daily_temp,
-                        is_weekend,
-                        bool(is_event),
-                        rng,
-                        used_item_ids,
-                    )
-                    if primary_item is None:
-                        continue
-
-                    primary_qty = _sample_quantity(primary_item, rng)
-                    primary_price = menu_items_prices[primary_item["item_id"]]
-                    primary_line_total = float(primary_qty * primary_price)
-                    order_items_to_add.append({
-                        "temp_corr": order_time,
-                        "menu_item_id": primary_item["item_id"],
-                        "qty": primary_qty,
-                        "unit_price": primary_price,
-                        "line_total": primary_line_total,
-                    })
-                    used_item_ids.add(primary_item["item_id"])
-                    total_value += primary_line_total
-                    total_qty += primary_qty
-
-                    if "Cafe" in category_name:
-                        pastry_probability = 0.44 if primary_item["role"] == "beverage" else 0.18
-                        sandwich_probability = 0.14 if 11 <= order_hour <= 15 else 0.05
-                        beverage_probability = 0.78 if primary_item["role"] != "beverage" else 0.0
-
-                        companion_pools = [
-                            (breakfast_food_pool, pastry_probability),
-                            (lunch_main_pool, sandwich_probability),
-                            (beverage_pool, beverage_probability),
-                        ]
-                    else:
-                        side_probability = 0.34 + (0.10 if primary_item["is_shareable"] else 0.0)
-                        beverage_probability = 0.42 + (0.12 if daily_temp >= 30 else 0.0)
-                        dessert_probability = 0.08 + (0.08 if (is_weekend or is_event) else 0.0)
-
-                        if "Fine Dining" in category_name or "Seafood" in category_name:
-                            beverage_probability += 0.12
-                            dessert_probability += 0.10
-
-                        companion_pools = [
-                            (side_pool, min(side_probability, 0.75)),
-                            (beverage_pool, min(beverage_probability, 0.85)),
-                            (dessert_pool, min(dessert_probability, 0.50)),
-                        ]
-
-                    for pool, probability in companion_pools:
-                        if not pool or rng.random() >= probability:
-                            continue
-
-                        companion = _choose_weighted_item(
-                            pool,
-                            order_hour,
-                            daily_temp,
-                            is_weekend,
-                            bool(is_event),
-                            rng,
-                            used_item_ids,
-                        )
-                        if companion is None:
-                            continue
-
-                        companion_qty = _sample_quantity(companion, rng)
-                        companion_price = menu_items_prices[companion["item_id"]]
-                        companion_line_total = float(companion_qty * companion_price)
-                        order_items_to_add.append({
-                            "temp_corr": order_time,
-                            "menu_item_id": companion["item_id"],
-                            "qty": companion_qty,
-                            "unit_price": companion_price,
-                            "line_total": companion_line_total,
-                        })
-                        used_item_ids.add(companion["item_id"])
-                        total_value += companion_line_total
-                        total_qty += companion_qty
-
-                    if not order_items_to_add:
-                        continue
-
-                    # Small ticket uplift on event nights for group orders.
-                    if is_event and order_hour >= 18 and rng.random() < 0.08 and main_pool:
-                        extra_main = _choose_weighted_item(
-                            main_pool,
-                            order_hour,
-                            daily_temp,
-                            is_weekend,
-                            bool(is_event),
-                            rng,
-                            used_item_ids,
-                        )
-                        if extra_main is not None:
-                            extra_qty = 1
-                            extra_price = menu_items_prices[extra_main["item_id"]]
-                            extra_line_total = float(extra_qty * extra_price)
-                            order_items_to_add.append({
-                                "temp_corr": order_time,
-                                "menu_item_id": extra_main["item_id"],
-                                "qty": extra_qty,
-                                "unit_price": extra_price,
-                                "line_total": extra_line_total,
-                            })
-                            used_item_ids.add(extra_main["item_id"])
-                            total_value += extra_line_total
-                            total_qty += extra_qty
-
-                    total_value = round(total_value, 2)
-
-                    all_generated_orders.append({
-                        "ts": order_time,
-                        "temp": daily_temp,
-                        "event": is_event,
-                        "item_count": total_qty,
-                        "total_value": total_value,
-                    })
-                    all_generated_order_items.extend(order_items_to_add)
-
-            current_date += timedelta(days=1)
-
-
-        # --- C. Bulk Insert Orders and Read OrderIds ---
-        # Insert in chunks of 200 to prevent parameterized query limits (SQL Server max 2100 params)
-        CHUNK_SIZE = 200
-        order_time_to_id_map = {}
-        
-        sql_insert_order = text("""
-            INSERT INTO Orders (RestaurantId, OrderTimestamp, TemperatureCelsius, EventDay, ItemCount, TotalOrderValue)
-            OUTPUT inserted.OrderId, inserted.OrderTimestamp
-            VALUES (:rid, :ts, :temp, :event, :item_count, :total_val)
-        """)
-
-        # Fast execution via DBAPI executemany usually doesn't return OUTPUT correctly in pyodbc
-        # We will loop and execute per chunk or individually to get the IDs mapping
-        # Since we use OUTPUT, we can execute with parameters dictionary
-        for i in range(0, len(all_generated_orders), CHUNK_SIZE):
-            chunk = all_generated_orders[i:i+CHUNK_SIZE]
-            
-            # Values string construction for explicit batch output insertion
-            value_strings = []
-            params = {"rid": restaurant_id}
-            
-            for index, ord_data in enumerate(chunk):
-                value_strings.append(f"(:rid, :ts_{index}, :temp_{index}, :event_{index}, :ic_{index}, :tv_{index})")
-                params[f"ts_{index}"] = ord_data["ts"]
-                params[f"temp_{index}"] = ord_data["temp"]
-                params[f"event_{index}"] = ord_data["event"]
-                params[f"ic_{index}"] = ord_data["item_count"]
-                params[f"tv_{index}"] = ord_data["total_value"]
-
-            batch_sql = text(f"""
-                INSERT INTO Orders (RestaurantId, OrderTimestamp, TemperatureCelsius, EventDay, ItemCount, TotalOrderValue)
-                OUTPUT inserted.OrderId, inserted.OrderTimestamp
-                VALUES {','.join(value_strings)}
-            """)
-            
-            res_orders = conn.execute(batch_sql, params).fetchall()
-            inserted_orders += len(res_orders)
-            
-            for row in res_orders:
-                db_id = row[0]
-                db_ts = row[1] # datetime object
-                order_time_to_id_map[db_ts] = db_id
-
-        # --- D. Bulk Insert Order Items ---
-        sql_insert_item = text("""
-            INSERT INTO OrderItems (OrderId, MenuItemId, Quantity, UnitPrice, LineTotal)
-            VALUES {values}
-        """)
-        
-        for i in range(0, len(all_generated_order_items), CHUNK_SIZE):
-            chunk = all_generated_order_items[i:i+CHUNK_SIZE]
-            
-            value_strings = []
-            params = {}
-            valid_inserts = 0
-            
-            for index, item_data in enumerate(chunk):
-                temp_corr = item_data["temp_corr"]
-                if temp_corr not in order_time_to_id_map:
-                    continue # Should never happen unless precision was lost
-                
-                real_order_id = order_time_to_id_map[temp_corr]
-                
-                value_strings.append(f"(:oid_{index}, :mid_{index}, :q_{index}, :up_{index}, :lt_{index})")
-                params[f"oid_{index}"] = real_order_id
-                params[f"mid_{index}"] = item_data["menu_item_id"]
-                params[f"q_{index}"] = item_data["qty"]
-                params[f"up_{index}"] = item_data["unit_price"]
-                params[f"lt_{index}"] = item_data["line_total"]
-                valid_inserts += 1
-
-            if value_strings:
-                batch_item_sql = text(f"""
-                    INSERT INTO OrderItems (OrderId, MenuItemId, Quantity, UnitPrice, LineTotal)
-                    VALUES {','.join(value_strings)}
-                """)
-                conn.execute(batch_item_sql, params)
-                inserted_order_items += valid_inserts
+        inserted_counts = _insert_pos_order_payloads(
+            conn=conn,
+            restaurant_id=restaurant_id,
+            all_generated_orders=all_generated_orders,
+            all_generated_order_items=all_generated_order_items,
+        )
+        inserted_orders = inserted_counts["orders"]
+        inserted_order_items = inserted_counts["order_items"]
 
     return {
         "restaurant_id": restaurant_id,
@@ -867,6 +949,111 @@ def seed_restaurant_data(restaurant_id: str) -> Dict[str, Any]:
             "orders": inserted_orders,
             "order_items": inserted_order_items
         }
+    }
+
+
+def seed_restaurant_data_until_today(restaurant_id: str) -> Dict[str, Any]:
+    """
+    Adds realistic POS dummy data for an existing restaurant through today.
+    If the restaurant has no menu items yet, it falls back to the regular seed flow.
+    """
+    engine = get_engine()
+    now = datetime.now()
+    today = now.date()
+    profile_rng, profile = _get_seed_profile(restaurant_id)
+    category_name = profile["category"]
+    size_multiplier = profile["size_multiplier"]
+    open_hour = profile["open_hour"]
+    close_hour = profile["close_hour"]
+
+    with engine.connect() as conn:
+        has_menu_items = conn.execute(
+            text("SELECT TOP 1 1 FROM MenuItems WHERE RestaurantId = :rid"),
+            {"rid": restaurant_id}
+        ).fetchone()
+
+    if not has_menu_items:
+        seeded_info = seed_restaurant_data(restaurant_id)
+        seeded_info["mode"] = "seeded_new_restaurant"
+        seeded_info["message"] = "Restaurant had no menu items, so regular seed data was generated through today."
+        return seeded_info
+
+    with engine.begin() as conn:
+        menu_items_metadata, menu_items_prices = _load_existing_menu_metadata(conn, restaurant_id)
+        latest_order_raw = conn.execute(
+            text("SELECT MAX(OrderTimestamp) FROM Orders WHERE RestaurantId = :rid"),
+            {"rid": restaurant_id}
+        ).scalar()
+        latest_order = _coerce_datetime(latest_order_raw)
+
+        if latest_order and latest_order.date() >= today:
+            return {
+                "status": "up_to_date",
+                "message": f"Restaurant '{restaurant_id}' already has POS data through today.",
+                "restaurant_id": restaurant_id,
+                "profile_assigned": category_name,
+                "latest_existing_order": latest_order.strftime("%Y-%m-%d %H:%M:%S"),
+                "date_range": {
+                    "start": None,
+                    "end": now.strftime("%Y-%m-%d"),
+                },
+                "inserted_records": {
+                    "menu_items": 0,
+                    "orders": 0,
+                    "order_items": 0,
+                },
+            }
+
+        if latest_order:
+            start_date = (latest_order + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            mode = "appended_existing_restaurant"
+        else:
+            months_back = profile_rng.randint(8, 12)
+            start_date = (now - timedelta(days=months_back * 30)).replace(hour=0, minute=0, second=0, microsecond=0)
+            mode = "backfilled_existing_restaurant"
+
+        generation_rng = random.Random(
+            f"restaurant-seed-until-today::{restaurant_id}::{start_date:%Y-%m-%d}::{now:%Y-%m-%d}"
+        )
+        all_generated_orders, all_generated_order_items = _generate_pos_order_payloads(
+            menu_items_metadata=menu_items_metadata,
+            menu_items_prices=menu_items_prices,
+            category_name=category_name,
+            size_multiplier=size_multiplier,
+            open_hour=open_hour,
+            close_hour=close_hour,
+            start_date=start_date,
+            end_date=now,
+            rng=generation_rng,
+        )
+
+        inserted_counts = _insert_pos_order_payloads(
+            conn=conn,
+            restaurant_id=restaurant_id,
+            all_generated_orders=all_generated_orders,
+            all_generated_order_items=all_generated_order_items,
+        )
+
+    generated_days = (now.replace(hour=0, minute=0, second=0, microsecond=0) - start_date).days + 1
+
+    return {
+        "status": "success",
+        "message": f"Seeded POS data for restaurant '{restaurant_id}' through today.",
+        "mode": mode,
+        "restaurant_id": restaurant_id,
+        "profile_assigned": category_name,
+        "latest_existing_order": latest_order.strftime("%Y-%m-%d %H:%M:%S") if latest_order else None,
+        "days_generated": generated_days,
+        "date_range": {
+            "start": start_date.strftime("%Y-%m-%d"),
+            "end": now.strftime("%Y-%m-%d"),
+        },
+        "operating_hours": f"{open_hour:02d}:00 - {close_hour:02d}:00",
+        "inserted_records": {
+            "menu_items": 0,
+            "orders": inserted_counts["orders"],
+            "order_items": inserted_counts["order_items"],
+        },
     }
 
 

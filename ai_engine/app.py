@@ -31,6 +31,7 @@ Analytics  (pure SQL — no ML)
 
 Seed / Data Generation
   POST /seed/{restaurant_id}
+  POST /seed/untilToday/{restaurant_id}
   POST /seedAll
   GET  /seed/check/{restaurant_id}     ← check if a single restaurant has data
   GET  /seed/check/all                 ← list all restaurants with no data
@@ -88,6 +89,7 @@ from analytics.queries import (
 
 from database.seeder import (
     seed_restaurant_data, 
+    seed_restaurant_data_until_today,
     check_restaurant_has_data, 
     get_restaurants_without_data,
     seed_inventory_data,
@@ -383,6 +385,19 @@ def seed_dummy_data(restaurant_id: str):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to seed data: {str(e)}")
+
+
+@app.post("/seed/untilToday/{restaurant_id}", tags=["Seed"])
+def seed_dummy_data_until_today(restaurant_id: str):
+    """
+    Add realistic POS dummy data for a restaurant from its latest order date through today.
+    """
+    try:
+        return seed_restaurant_data_until_today(restaurant_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to seed data through today: {str(e)}")
 
 
 @app.post("/seedAll", tags=["Seed"])
