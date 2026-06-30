@@ -105,22 +105,9 @@ export default function PaymentGateway() {
     setSuccess(true)
     setLoading(false)
 
-    // Simulating login and redirect
-    setTimeout(async () => {
-      setSetupStatus("seeding")
-      try {
-        const stored = localStorage.getItem("register")
-        if (stored) {
-          const parsed = JSON.parse(stored)
-          const { email, password } = parsed
-          if (login && email && password) {
-            await login(email, password)
-          }
-        }
-      } catch (err) {
-        console.error("Login after payment failed", err)
-      }
-      navigate("/dashboard")
+    // Redirect to login page after 1.5 seconds
+    setTimeout(() => {
+      navigate("/login")
     }, 1500)
   }
 
@@ -128,7 +115,22 @@ export default function PaymentGateway() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-6 w-full animate-in fade-in duration-300">
         <div className="bg-card text-card-foreground border border-border/60 rounded-3xl shadow-2xl p-10 max-w-xl w-full text-center animate-in zoom-in-95 duration-500">
-          
+           {/* Header: Logo and ThemeToggle */}
+            <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
+                <Link to="/" className="inline-flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Leaf className="h-4.5 w-4.5 text-primary" />
+                    </div>
+                    <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        ZeroBite
+                    </span>
+                </Link>
+            </div>
+
+            <div className="absolute top-4 sm:top-6 right-4 rtl:right-auto rtl:left-4 z-10">
+                <ThemeToggle />
+            </div>
+
           {setupStatus === "confirming" ? (
             <div className="animate-in fade-in duration-300">
               <div className="mx-auto w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6">
@@ -142,7 +144,7 @@ export default function PaymentGateway() {
               </p>
               <div className="flex items-center justify-center text-sm text-muted-foreground gap-2">
                 <Loader2 className="animate-spin w-4 h-4" />
-                {t("Logging you in...")}
+                {t("Redirecting to login page...")}
               </div>
             </div>
           ) : (

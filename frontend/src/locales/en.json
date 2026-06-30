@@ -172,5 +172,15 @@
   "Setting Up Your Restaurant...": "Setting Up Your Restaurant...",
   "Creating default menus, staff schedule templates, and AI forecasting models. This may take up to a minute on your first launch. Please do not refresh or close this page.": "Creating default menus, staff schedule templates, and AI forecasting models. This may take up to a minute on your first launch. Please do not refresh or close this page.",
   "Initializing database structures...": "Initializing database structures...",
-  "Logging you in...": "Logging you in..."
+  "Logging you in...": "Logging you in...",
+  "Redirecting to login page...": "Redirecting to login page...",
+  "1 POS connection": "1 POS connection",
+  "Basic Inventory & Waste Tracking": "Basic Inventory & Waste Tracking",
+  "Up to 10 staff members": "Up to 10 staff members",
+  "Standard AI Forecasting": "Standard AI Forecasting",
+  "Email Support": "Email Support",
+  "For premium restaurants with advanced needs.": "For premium restaurants with advanced needs.",
+  "Real-time AI Insights & Optimization": "Real-time AI Insights & Optimization",
+  "No Staff Scheduling": "No Staff Scheduling",
+  "Smart Staff Scheduling": "Smart Staff Scheduling"
 }

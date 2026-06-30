@@ -64,7 +64,7 @@ export default function PosAuthorizePage() {
   }
 
   return (
-    <div className="min-h-screen p-4 flex items-center justify-center bg-background text-foreground animate-fade-in">
+    <div className="min-h-screen w-full p-4 flex items-center justify-center bg-background text-foreground animate-fade-in">
       <div className="w-full max-w-2xl text-center">
         <div className="mb-6">
           <div className="w-14 h-14 mx-auto p-4 rounded-lg bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center shadow-sm">

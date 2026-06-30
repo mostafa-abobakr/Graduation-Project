@@ -66,12 +66,12 @@ export default function PosAuthorizePage() {
   }
 
   return (
-    <div className="min-h-screen p-4 flex items-center justify-center bg-background text-foreground animate-fade-in">
+    <div className="min-h-screen w-full max-w-lg p-4 flex items-center justify-center bg-background text-foreground animate-fade-in">
       <div className="w-full max-w-2xl text-center">
         {/* Header */}
         <div className="mb-6">
-          <div className="w-14 h-14 mx-auto p-3.5 rounded-lg bg-orange-600 flex items-center justify-center shadow-sm">
-            <img src={toastIcon} alt="Toast" className="w-7 h-7 object-contain" />
+          <div className="w-14 h-14 mx-auto p-3.5 rounded-lg  flex items-center justify-center shadow-sm">
+            <img src={toastIcon} alt="Toast" className="w-7 h-7 " />
           </div>
           <h1 className="text-2xl font-bold mt-3 text-foreground">Toast</h1>
         </div>

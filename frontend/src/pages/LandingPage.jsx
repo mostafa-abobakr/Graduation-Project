@@ -35,12 +35,6 @@ const testimonials = [
   { name: "James Wright", role: "Operations Manager, BurgerCo", quote: "The ROI was immediate. We saved $2,400 in the first month alone across our 3 locations.", rating: 5 },
 ];
 
-const pricing = [
-  { name: "Starter", price: 49, description: "For single-location restaurants", features: ["1 restaurant", "Basic demand forecasting", "Waste tracking", "7-day predictions", "Email support"] },
-  { name: "Professional", price: 129, description: "For growing restaurants", features: ["Up to 5 locations", "Advanced AI predictions", "Menu analytics", "Revenue optimization", "Priority support", "API access"], popular: true },
-  { name: "Enterprise", price: 299, description: "For restaurant chains", features: ["Unlimited locations", "Custom ML models", "White-label dashboard", "Dedicated account manager", "SLA guarantee", "Custom integrations"] },
-];
-
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
@@ -59,6 +53,35 @@ const fadeUpVariant = {
 export default function LandingPage() {
   const { t, language, toggleLanguage } = useLanguage();
 
+  const pricing = [
+    {
+      name: "Professional",
+      price: 49,
+      description: t("Ideal for growing restaurants."),
+      features: [
+        t("1 POS connection"),
+        t("Basic Inventory & Waste Tracking"),
+        t("No Staff Scheduling"),
+        t("Standard AI Forecasting")
+      ],
+      popular: true,
+      badge: t("Most Popular")
+    },
+    {
+      name: "Enterprise",
+      price: 199,
+      description: t("For premium restaurants with advanced needs."),
+      features: [
+        t("Unlimited POS connections"),
+        t("Advanced Inventory & Forecasting"),
+        t("Smart Staff Scheduling"),
+        t("Real-time AI Insights & Optimization"),
+        t("24/7 Dedicated Support")
+      ],
+      popular: false
+    }
+  ]
+
   return (
     <PageTransition className="min-h-screen bg-background">
       <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
@@ -74,7 +97,7 @@ export default function LandingPage() {
             </button>
             <ThemeToggle />
             <Link to={ROUTES.LOGIN}><Button variant="ghost" size="sm">{t("Log In")}</Button></Link>
-            <Link to={ROUTES.SIGNUP}><Button size="sm">{t("Start Free Trial")}</Button></Link>
+            <Link to={ROUTES.SIGNUP}><Button size="sm">{t("Start Now")}</Button></Link>
           </div>
         </div>
       </nav>
@@ -84,8 +107,8 @@ export default function LandingPage() {
           <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="text-5xl md:text-7xl font-bold text-foreground leading-[1.1] mb-6" style={{ fontFamily: "'DM Sans', sans-serif" }}>{t("Reduce Food Waste")}<br /><span className="gradient-text">{t("Using AI Predictions")}</span></motion.h1>
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="text-lg text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">{t("Landing_Description")}</motion.p>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link to="/signup"><Button size="lg" className="text-sm px-8 h-11 rounded-lg">{t("Start Free Trial")} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" /></Button></Link>
-            <Link to="/dashboard"><Button variant="outline" size="lg" className="text-sm px-8 h-11 rounded-lg">{t("View Demo Dashboard")}</Button></Link>
+            <Link to="/register"><Button size="lg" className="text-sm px-8 h-11 rounded-lg">{t("StartNow")} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" /></Button></Link>
+            <Link to="/login"><Button variant="outline" size="lg" className="text-sm px-16 h-11 rounded-lg">{t("Login")}</Button></Link>
           </motion.div>
         </div>
       </section>
@@ -127,8 +150,8 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-3 text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>{t("Simple, Transparent Pricing")}</h2>
             <p className="text-muted-foreground text-center mb-14">{t("Start free. Scale when you're ready.")}</p>
           </motion.div>
-          <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid md:grid-cols-3 gap-4">
-            {pricing.map((p) => (<motion.div key={p.name} variants={fadeUpVariant}><Card className={`h-full p-7 bg-card border-border/60 relative premium-shadow ${p.popular ? "border-primary glow-green" : ""}`}>{p.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">Most Popular</div>}<h3 className="text-lg font-semibold text-foreground mb-1">{p.name}</h3><p className="text-xs text-muted-foreground mb-5">{p.description}</p><div className="mb-5"><span className="stat-number text-foreground">${p.price}</span><span className="text-muted-foreground text-sm">/mo</span></div><ul className="space-y-2.5 mb-7">{p.features.map((f) => (<li key={f} className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="h-4 w-4 text-primary shrink-0" />{f}</li>))}</ul><Link to="/register"><Button className="w-full" variant={p.popular ? "default" : "outline"}>Get Started</Button></Link></Card></motion.div>))}
+          <motion.div variants={staggerContainer} initial="hidden" whileInView="visible" viewport={{ once: true }} className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {pricing.map((p) => (<motion.div key={p.name} variants={fadeUpVariant}><Card className={`h-full p-7 bg-card border-border/60 relative premium-shadow ${p.popular ? "border-primary glow-green" : ""}`}>{p.popular && <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">{p.badge}</div>}<h3 className="text-lg font-semibold text-foreground mb-1">{p.name}</h3><p className="text-xs text-muted-foreground mb-5">{p.description}</p><div className="mb-5"><span className="stat-number text-foreground">${p.price}</span><span className="text-muted-foreground text-sm">/{t("mo")}</span></div><ul className="space-y-2.5 mb-7">{p.features.map((f) => (<li key={f} className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="h-4 w-4 text-primary shrink-0" />{f}</li>))}</ul><Link to="/register"><Button className="w-full" variant={p.popular ? "default" : "outline"}>Get Started</Button></Link></Card></motion.div>))}
           </motion.div>
         </div>
       </section>
@@ -136,7 +159,7 @@ export default function LandingPage() {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUpVariant} className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4" style={{ fontFamily: "'DM Sans', sans-serif" }}>{t("Ready to Reduce Waste?")}</h2>
           <p className="text-muted-foreground mb-8">{t("Join 2,400+ restaurants already saving money and the planet with AI predictions.")}</p>
-          <Link to="/register"><Button size="lg" className="text-sm px-8 h-11 rounded-lg">{t("Start Free Trial")} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" /></Button></Link>
+          <Link to="/register"><Button size="lg" className="text-sm px-8 h-11 rounded-lg">{t("Start Now")} <ArrowRight className="ms-2 h-4 w-4 rtl:rotate-180" /></Button></Link>
         </motion.div>
       </section>
       <footer className="border-t border-border/50 py-10 px-6">

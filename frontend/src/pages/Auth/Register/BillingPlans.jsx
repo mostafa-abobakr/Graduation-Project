@@ -1,8 +1,9 @@
-import { Check, ArrowRight } from "lucide-react"
+import { Check, ArrowRight, Leaf } from "lucide-react"
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useLanguage } from "@/contexts/LanguageContext"
-
+import { Link } from "react-router-dom"
+import { ThemeToggle } from "@/components/shared/ThemeToggle"
 export default function BillingPlans() {
   const navigate = useNavigate()
   const { t } = useLanguage()
@@ -14,22 +15,22 @@ export default function BillingPlans() {
       price: "49",
       description: t("Ideal for growing restaurants."),
       features: [
-        t("Up to 3 POS connections"),
-        t("Advanced Inventory & Forecasting"),
-        t("Unlimited staff"),
-        t("Priority Support"),
-        t("AI Insights")
+        t("1 POS connection"),
+        t("Basic Inventory & Waste Tracking"),
+        t("No Staff Scheduling"),
+        t("Standard AI Forecasting")
       ],
       badge: t("Most Popular")
     },
     {
       name: "Enterprise",
       price: "199",
-      description: t("For large chains and franchises."),
+      description: t("For premium restaurants with advanced needs."),
       features: [
         t("Unlimited POS connections"),
-        t("Multi-location management"),
-        t("Custom integrations"),
+        t("Advanced Inventory & Forecasting"),
+        t("Smart Staff Scheduling"),
+        t("Real-time AI Insights & Optimization"),
         t("24/7 Dedicated Support")
       ]
     }
@@ -41,6 +42,22 @@ export default function BillingPlans() {
 
   return (
     <div className="min-h-0 bg-transparent flex flex-col items-center py-6 px-4 sm:px-6 lg:px-8 w-full">
+       {/* Header: Logo and ThemeToggle */}
+            <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
+                <Link to="/" className="inline-flex items-center gap-2.5">
+                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Leaf className="h-4.5 w-4.5 text-primary" />
+                    </div>
+                    <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+                        ZeroBite
+                    </span>
+                </Link>
+            </div>
+
+            <div className="absolute top-4 sm:top-6 right-4 rtl:right-auto rtl:left-4 z-10">
+                <ThemeToggle />
+            </div>
+
       <div className="text-center max-w-3xl mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <h1 className="text-3xl font-extrabold text-foreground mb-3 tracking-tight">
           {t("Choose the right plan for your restaurant")}

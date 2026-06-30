@@ -24,17 +24,17 @@ export default function AuthorizationSuccess({
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background text-foreground p-6 animate-fade-in">
+    <div className="min-h-screen flex w-full flex-col items-center justify-center bg-background text-foreground  p-6 animate-fade-in">
       {/* Logo + Title */}
       <div className="flex flex-col items-center mb-6">
-        <div className={cn("w-14 h-14 flex items-center justify-center rounded-xl text-white shadow-sm", bgColor)}>
+        <div className={cn("w-14 h-14 flex items-center justify-center rounded-xl text-white shadow-sm")}>
           {icon}
         </div>
         <h2 className="text-xl font-bold mt-3 text-foreground">{title}</h2>
       </div>
 
       {/* Card */}
-      <div className="bg-card text-card-foreground border border-border/60 rounded-2xl shadow-xl p-8 w-full max-w-2xl text-center">
+      <div className="bg-card text-card-foreground border border-border/60 rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
         {/* Success Icon */}
         <div className="flex justify-center mb-4">
           <div className="bg-green-500/10 p-3 rounded-full">

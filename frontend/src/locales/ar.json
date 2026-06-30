@@ -172,5 +172,15 @@
   "Setting Up Your Restaurant...": "جاري إعداد وتجهيز مطعمك...",
   "Creating default menus, staff schedule templates, and AI forecasting models. This may take up to a minute on your first launch. Please do not refresh or close this page.": "جاري إنشاء القوائم الافتراضية، وقوالب جداول عمل الموظفين، ونماذج التنبؤ بالذكاء الاصطناعي. قد يستغرق هذا ما يصل إلى دقيقة في المرة الأولى. يرجى عدم تحديث أو إغلاق هذه الصفحة.",
   "Initializing database structures...": "جاري تهيئة تراكيب قاعدة البيانات...",
-  "Logging you in...": "جاري تسجيل دخولك..."
+  "Logging you in...": "جاري تسجيل دخولك...",
+  "Redirecting to login page...": "جاري توجيهك إلى صفحة تسجيل الدخول...",
+  "1 POS connection": "اتصال واحد بنقاط البيع (1 POS)",
+  "Basic Inventory & Waste Tracking": "إدارة المخزون الأساسية وتتبع الهدر",
+  "Up to 10 staff members": "ما يصل إلى 10 موظفين",
+  "Standard AI Forecasting": "توقعات الذكاء الاصطناعي القياسية",
+  "Email Support": "دعم عبر البريد الإلكتروني",
+  "For premium restaurants with advanced needs.": "للمطاعم المتميزة ذات الاحتياجات المتقدمة.",
+  "Real-time AI Insights & Optimization": "رؤى وتحسينات الذكاء الاصطناعي الفورية",
+  "No Staff Scheduling": "بدون جدولة الموظفين",
+  "Smart Staff Scheduling": "جدولة الموظفين الذكية"
 }
