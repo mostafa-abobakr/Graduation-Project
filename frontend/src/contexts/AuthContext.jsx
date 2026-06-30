@@ -1,9 +1,12 @@
-import { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
-import axios from "axios";
-import { jwtDecode } from "jwt-decode";
-import { queryClient } from "@/lib/queryClient";
+import { createContext, useContext, useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { toast } from "@/hooks/use-toast"
+import axios from "axios"
+import { jwtDecode } from "jwt-decode"
+import { queryClient } from "@/lib/queryClient"
+import { useTheme } from "@/components/shared/ThemeProvider"
+import { useLanguage } from "@/contexts/LanguageContext"
+import api from "@/api/axios"
 
 const API_BASE = "/api/Auth";
 
@@ -17,8 +20,10 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
+  const { setTheme } = useTheme()
+  const { changeLanguage } = useLanguage()
   const [user, setUser] = useState(() => {
-    const stored = localStorage.getItem("user");
+    const stored = localStorage.getItem("user")
     if (stored) {
       const parsedUser = JSON.parse(stored);
       const token = localStorage.getItem("authToken") || parsedUser.token;
@@ -38,16 +43,18 @@ export function AuthProvider({ children }) {
   });
   const [isLoading, setIsLoading] = useState(false)
   const [isSeeding, setIsSeeding] = useState(false)
+  const [hasSyncedPrefs, setHasSyncedPrefs] = useState(false)
 
   // You can adjust isAdmin logic based on backend response, e.g. user.role
-  const isAdmin = user?.role?.toLowerCase() === "admin";
+  const isAdmin = user?.role?.toLowerCase() === "admin"
 
   const logout = () => {
     setUser(null)
+    setHasSyncedPrefs(false)
     localStorage.removeItem("user")
     localStorage.removeItem("authToken")
     queryClient.clear()
-  };
+  }
 
   useEffect(() => {
     let timeoutId;
@@ -155,12 +162,31 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      toast({ title: "Session expired", description: "Please log in again.", variant: "destructive" });
-      logout();
-    };
-    window.addEventListener("auth-unauthorized", handleUnauthorized);
-    return () => window.removeEventListener("auth-unauthorized", handleUnauthorized);
-  }, []);
+      toast({ title: "Session expired", description: "Please log in again.", variant: "destructive" })
+      logout()
+    }
+    window.addEventListener("auth-unauthorized", handleUnauthorized)
+    return () => window.removeEventListener("auth-unauthorized", handleUnauthorized)
+  }, [])
+
+  useEffect(() => {
+    const syncPreferences = async () => {
+      if (user && user.restId && !hasSyncedPrefs) {
+        setHasSyncedPrefs(true)
+        try {
+          const response = await api.get(`/Settings/all/${user.restId}`)
+          const prefs = response.data?.preferences
+          if (prefs) {
+            if (prefs.theme) setTheme(prefs.theme)
+            if (prefs.language) changeLanguage(prefs.language)
+          }
+        } catch (e) {
+          console.error("Failed to sync preferences from backend:", e)
+        }
+      }
+    }
+    syncPreferences()
+  }, [user, hasSyncedPrefs, setTheme, changeLanguage])
 
   return (
     <AuthContext.Provider value={{ user, isAdmin, isLoading, isSeeding, login, register, logout }}>

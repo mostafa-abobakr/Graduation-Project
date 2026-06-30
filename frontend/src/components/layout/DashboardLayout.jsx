@@ -82,12 +82,12 @@ const managerManagementItems = [
 
 
 const managerInventoryItems = [
-  { title: "Inventory ", url: "/inventory", icon: Package },
+  { title: "Inventory", url: "/inventory", icon: Package },
   // { title: "Receive Stock", url: "/inventory/add-stock", icon: PlusCircle },
   { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
   { title: "Inventory Forecast", url: "/inventory/forecast", icon: AlertTriangle },
   // {title: "Draft", url: "/inventory/draft", icon: ChefHat }
-];
+]
 
 const managerOtherItems = [
   { title: "Reports", url: "/dashboard/reports", icon: FileText },
@@ -259,13 +259,13 @@ export default function DashboardLayout() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
+                  {/* <DropdownMenuItem
                     onClick={() => navigate("/dashboard/profile")}
                     className="cursor-pointer"
                   >
                     <User className="me-2 h-4 w-4" />
                     {t("Profile")}
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   {!isAdmin && (
                     <DropdownMenuItem
                       onClick={() => navigate("/dashboard/settings")}

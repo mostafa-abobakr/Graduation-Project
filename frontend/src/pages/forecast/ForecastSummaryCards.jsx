@@ -1,9 +1,11 @@
-import React from "react";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, TrendingUp, ShoppingBag } from "lucide-react";
-import { SummaryCard } from "@/components/shared/SummaryCard";
+import React from "react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { DollarSign, TrendingUp, ShoppingBag } from "lucide-react"
+import { SummaryCard } from "@/components/shared/SummaryCard"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function ForecastSummaryCards({ data, alignment, isLoading }) {
+  const { t } = useLanguage()
   const statistics = [
     {
       name: "Total Revenue",
@@ -23,7 +25,7 @@ export default function ForecastSummaryCards({ data, alignment, isLoading }) {
       change: data?.orders_change_pct || "+0%",
       icon: ShoppingBag,
     },
-  ];
+  ]
 
   if (isLoading) {
     return (
@@ -32,7 +34,7 @@ export default function ForecastSummaryCards({ data, alignment, isLoading }) {
           <Skeleton key={i} className="h-[120px] w-full rounded-xl" />
         ))}
       </div>
-    );
+    )
   }
 
   return (
@@ -43,12 +45,12 @@ export default function ForecastSummaryCards({ data, alignment, isLoading }) {
             ? `$${(stat.value / 1000).toFixed(1)}K`
             : stat.name !== "Orders"
               ? `$${stat.value}`
-              : stat.value;
+              : stat.value
 
         return (
           <SummaryCard
             key={stat.name}
-            title={stat.name}
+            title={t(stat.name)}
             value={displayValue}
             icon={stat.icon}
             iconColorClass="text-primary"
@@ -56,12 +58,12 @@ export default function ForecastSummaryCards({ data, alignment, isLoading }) {
             trend={stat.change}
             sub={
               <span className="text-muted-foreground">
-                {alignment === "day" ? "vs yesterday" : "vs last week"}
+                {alignment === "day" ? t("vs yesterday") : t("vs last week")}
               </span>
             }
           />
-        );
+        )
       })}
     </div>
-  );
+  )
 }

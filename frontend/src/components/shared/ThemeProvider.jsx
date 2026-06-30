@@ -1,27 +1,34 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const ThemeContext = createContext({ theme: "dark", toggleTheme: () => {} });
+const ThemeContext = createContext({ theme: "dark", toggleTheme: () => {}, setTheme: () => {} })
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    const stored = localStorage.getItem("zerobite-theme");
-    return stored || "dark";
-  });
+    const stored = localStorage.getItem("zerobite-theme")
+    return stored || "dark"
+  })
 
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("zerobite-theme", theme);
-  }, [theme]);
+    const root = document.documentElement
+    root.classList.remove("light", "dark")
 
-  const toggleTheme = () => setTheme(t => (t === "dark" ? "light" : "dark"));
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+      root.classList.add(systemTheme)
+    } else {
+      root.classList.add(theme)
+    }
+
+    localStorage.setItem("zerobite-theme", theme)
+  }, [theme])
+
+  const toggleTheme = () => setTheme(t => (t === "dark" ? "light" : "dark"))
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
-  );
+  )
 }
 
 export const useTheme = () => useContext(ThemeContext);

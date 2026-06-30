@@ -5,9 +5,12 @@ import SalesProfitChart from "./SalesProfitChart";
 import Alerts from "./Alerts";
 import PeakTimes from "./PeakTimes";
 import CostReduction from "./CostReduction";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { Skeleton } from "@/components/ui/skeleton"
+import { useQuery } from "@tanstack/react-query"
 import { useAuth } from "@/contexts/AuthContext"
+import { useLanguage } from "@/contexts/LanguageContext"
+import { Button } from "@/components/ui/button"
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react"
 import { motion } from "framer-motion"
 
 const staggerContainer = {
@@ -24,10 +27,9 @@ const fadeUpVariant = {
 };
 
 const ManagerDashboard = () => {
-
-
-  const [viewMode, setViewMode] = useState("today");
-  const { user } = useAuth();
+  const [viewMode, setViewMode] = useState("today")
+  const { user } = useAuth()
+  const { t } = useLanguage()
   // console.log(user);
 
 
@@ -47,23 +49,23 @@ const ManagerDashboard = () => {
   //   },
   // });
 
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboardData"],
     queryFn: async () => {
       const res = await fetch(
         `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restId}`
-      );
+      )
 
-      if (!res.ok) throw new Error("Not ready yet");
+      if (!res.ok) throw new Error("Not ready yet")
 
-      return res.json();
+      return res.json()
     },
-    refetchInterval: (query) => {
-      return query.state.data ? false : 3000;
-    },
+    // refetchInterval: (query) => {
+    //   return query.state.data ? false : 3000
+    // },
 
     retry: false,
-  });
+  })
 
   if (isLoading)
     return (
@@ -89,29 +91,34 @@ const ManagerDashboard = () => {
           </div>
         </div>
       </div>
-    );
+    )
 
-  if (error)
+  if (error) {
+    const isInitializing = error.message === "Not ready yet"
+
     return (
-      <div className="p-8 text-center text-destructive">
-        Error: {error.message}
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-6 w-full animate-in fade-in duration-300">
+        <div className="bg-card text-card-foreground border border-border/60 rounded-3xl shadow-xl p-10 max-w-lg w-full text-center">
+        
+            <div className="animate-in fade-in duration-300">
+              <div className="mx-auto w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mb-6">
+                <AlertCircle className="text-destructive w-12 h-12" />
+              </div>
+              <h2 className="text-2xl font-extrabold text-foreground mb-3">
+                {t("Failed to Load Dashboard")}
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+                {t("We encountered an error while fetching your analytics data. Please try again.")}
+              </p>
+              <Button onClick={() => refetch()} className="w-full py-6 rounded-xl font-semibold gap-2">
+                <RefreshCw className="w-4 h-4" />
+                {t("Retry Connection")}
+              </Button>
+            </div>
+          
+        </div>
       </div>
-    );
-
-  if (error && !data) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
-
-        <p className="text-lg font-medium">
-          Preparing your restaurant data...
-        </p>
-
-        <p className="text-sm text-muted-foreground">
-          This may take a few seconds
-        </p>
-      </div>
-    );
+    )
   }
 
   // The API returns nested data: { data: { day: {...}, week: {...}, month: {...}, all: {...} } }
@@ -132,7 +139,7 @@ const ManagerDashboard = () => {
 
 
   return (
-    <div className="flex flex-col py-5">
+    <div className="flex flex-col py-5 " dir="ltr">
       {/* Header */}
       <Header viewMode={viewMode} setViewMode={setViewMode} />
 

@@ -31,10 +31,12 @@ import {
   ChartContainer,
   ChartTooltip,
 } from "@/components/ui/chart";
-import { Search, ChevronDown, ChevronUp, Clock } from "lucide-react";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { Search, ChevronDown, ChevronUp, Clock } from "lucide-react"
+import { EmptyState } from "@/components/shared/EmptyState"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function ForecastTable({ items, alignment, isLoading }) {
+  const { t, language } = useLanguage()
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const rowsPerPage = 5;
@@ -65,7 +67,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
         <div className="relative max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search items..."
+            placeholder={t("Search items...")}
             value={searchTerm}
             onChange={handleSearchChange}
             className="pl-9"
@@ -75,7 +77,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
           variant="secondary"
           className="bg-primary/10 text-primary hover:bg-primary/20 pointer-events-none rounded-md px-1.5 py-0 min-w-[1.5rem] flex items-center justify-center"
         >
-          {filteredItems.length} items found
+          {filteredItems.length} {t("items found")}
         </Badge>
       </div>
 
@@ -84,11 +86,11 @@ export default function ForecastTable({ items, alignment, isLoading }) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-12">#</TableHead>
-              <TableHead className="text-center">Item</TableHead>
-              <TableHead className="text-center">Expected</TableHead>
-              <TableHead className="text-center">Revenue</TableHead>
-              <TableHead className="text-center">Profit</TableHead>
-              <TableHead className="text-center">Accuracy</TableHead>
+              <TableHead className="text-center">{t("Item")}</TableHead>
+              <TableHead className="text-center">{t("Expected")}</TableHead>
+              <TableHead className="text-center">{t("Revenue")}</TableHead>
+              <TableHead className="text-center">{t("Profit")}</TableHead>
+              <TableHead className="text-center">{t("Accuracy")}</TableHead>
               <TableHead className="w-10 text-center" />
             </TableRow>
           </TableHeader>
@@ -177,18 +179,18 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                           <div className="p-5 bg-muted/20 border-t border-border/30">
                             <div className="flex items-center justify-between mb-3">
                               <p className="text-sm font-semibold text-foreground">
-                                ⏱️ Hourly Sales — 🥗 {item.item_name}
+                                {alignment === "week" ? t("⏱️ Daily Sales — 🥗 ") : t("⏱️ Hourly Sales — 🥗 ")}{item.item_name}
                               </p>
                               <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground mr-2">
                                 <div className="w-3 h-3 rounded bg-primary shadow-sm shadow-emerald-500/20" />
-                                <span>Orders</span>
+                                <span>{t("Orders")}</span>
                               </div>
                             </div>
                             <div className="h-[220px]">
                               <ChartContainer
                                 config={{
                                   orders: {
-                                    label: "Orders",
+                                    label: t("Orders"),
                                     color: "#10b981",
                                   },
                                 }}
@@ -252,16 +254,16 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                     }
                                     tickFormatter={(val) => {
                                       if (alignment === "week") {
-                                        const d = new Date(val);
-                                        return d.toLocaleDateString("en-US", {
+                                        const d = new Date(val)
+                                        return d.toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
                                           month: "short",
                                           day: "numeric",
-                                        });
+                                        })
                                       }
-                                      const [h] = val.split(":").map(Number);
-                                      const ampm = h >= 12 ? "PM" : "AM";
-                                      const h12 = h % 12 || 12;
-                                      return `${h12} ${ampm}`;
+                                      const [h] = val.split(":").map(Number)
+                                      const ampm = h >= 12 ? (language === "ar" ? "م" : "PM") : (language === "ar" ? "ص" : "AM")
+                                      const h12 = h % 12 || 12
+                                      return `${h12} ${ampm}`
                                     }}
                                   />
                                   <YAxis
@@ -282,27 +284,27 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                     }}
                                     content={({ active, payload, label }) => {
                                       if (!active || !payload?.length)
-                                        return null;
-                                      let displayLabel = label;
+                                        return null
+                                      let displayLabel = label
                                       if (label) {
                                         if (alignment === "week") {
-                                          const dateObj = new Date(label);
+                                          const dateObj = new Date(label)
                                           displayLabel = dateObj.toLocaleDateString(
-                                            "en-US",
+                                            language === "ar" ? "ar-EG" : "en-US",
                                             {
                                               month: "short",
                                               day: "numeric",
-                                            },
-                                          );
+                                            }
+                                          )
                                         } else {
-                                          const raw = String(label);
-                                          const [h] = raw.split(":").map(Number);
-                                          const ampm = h >= 12 ? "PM" : "AM";
-                                          const h12 = h % 12 || 12;
-                                          displayLabel = `${h12} ${ampm}`;
+                                          const raw = String(label)
+                                          const [h] = raw.split(":").map(Number)
+                                          const ampm = h >= 12 ? (language === "ar" ? "م" : "PM") : (language === "ar" ? "ص" : "AM")
+                                          const h12 = h % 12 || 12
+                                          displayLabel = `${h12} ${ampm}`
                                         }
                                       }
-                                      const d = payload[0].payload;
+                                      const d = payload[0].payload
                                       return (
                                         <div className="bg-popover/95 backdrop-blur-md px-4 py-3 rounded-xl shadow-xl border border-border/50 animate-in fade-in zoom-in duration-200 min-w-[170px]">
                                           <p className="text-xs font-semibold text-muted-foreground mb-2">
@@ -312,7 +314,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                             <div className="flex justify-between gap-6 items-center">
                                               <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                                                 <span className="h-2 w-2 rounded-full bg-orange-500 inline-block" />
-                                                Orders
+                                                {t("Orders")}
                                               </span>
                                               <span className="text-xs font-bold text-foreground">
                                                 {d.orders}
@@ -321,7 +323,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                             <div className="flex justify-between gap-6 items-center">
                                               <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                                                 <span className="h-2 w-2 rounded-full bg-blue-500 inline-block" />
-                                                Revenue
+                                                {t("Revenue")}
                                               </span>
                                               <span className="text-xs font-bold text-foreground">
                                                 ${d.revenue?.toLocaleString("en-US")}
@@ -330,7 +332,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                             <div className="flex justify-between gap-6 items-center">
                                               <span className="text-xs text-muted-foreground flex items-center gap-1.5">
                                                 <span className="h-2 w-2 rounded-full bg-primary inline-block" />
-                                                Profit
+                                                {t("Profit")}
                                               </span>
                                               <span className="text-xs font-bold text-primary">
                                                 ${d.profit?.toFixed(2)}
@@ -338,7 +340,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                             </div>
                                           </div>
                                         </div>
-                                      );
+                                      )
                                     }}
                                   />
                                   <Area
@@ -353,41 +355,41 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                   />
                                 </AreaChart>
                               </ChartContainer>
-                            </div>
-                            <div className="flex gap-5 mt-3 text-xs text-muted-foreground">
-                              <span>
-                                🔥 Peak:{" "}
-                                {alignment === "week"
-                                  ? (() => {
-                                      if (!item.peak_day?.date) return "N/A";
-                                      const d = new Date(item.peak_day.date);
-                                      return d.toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                      });
-                                    })()
-                                  : (() => {
-                                      const raw = String(
-                                        item.peak_hour?.hour ||
-                                          item.peak_hour ||
-                                          "",
-                                      );
-                                      if (!raw) return "N/A";
-                                      const [h] = raw.split(":").map(Number);
-                                      const ampm = h >= 12 ? "PM" : "AM";
-                                      const h12 = h % 12 || 12;
-                                      return `${h12} ${ampm}`;
-                                    })()}{" "}
-                                —{" "}
-                                {alignment === "week"
-                                  ? item.peak_day?.orders
-                                  : item.peak_hour?.orders}{" "}
-                                orders
-                              </span>
-                              <span>
-                                📦 Total {alignment === "week" ? "this week" : "today"}:{" "}
-                                {item.expected_orders} orders
-                              </span>
+                             <div className="flex gap-5 mt-3 text-xs text-muted-foreground">
+                               <span>
+                                 {t("🔥 Peak:")}{" "}
+                                 {alignment === "week"
+                                   ? (() => {
+                                       if (!item.peak_day?.date) return "N/A"
+                                       const d = new Date(item.peak_day.date)
+                                       return d.toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", {
+                                         month: "short",
+                                         day: "numeric",
+                                       })
+                                     })()
+                                   : (() => {
+                                       const raw = String(
+                                         item.peak_hour?.hour ||
+                                           item.peak_hour ||
+                                           ""
+                                       )
+                                       if (!raw) return "N/A"
+                                       const [h] = raw.split(":").map(Number)
+                                       const ampm = h >= 12 ? (language === "ar" ? "م" : "PM") : (language === "ar" ? "ص" : "AM")
+                                       const h12 = h % 12 || 12
+                                       return `${h12} ${ampm}`
+                                     })()}{" "}
+                                 —{" "}
+                                 {alignment === "week"
+                                   ? item.peak_day?.orders
+                                   : item.peak_hour?.orders}{" "}
+                                 {t("orders")}
+                               </span>
+                               <span>
+                                 {t("📦 Total")} {alignment === "week" ? t("this week") : t("today")}:{" "}
+                                 {item.expected_orders} {t("orders")}
+                               </span>
+                             </div>
                             </div>
                           </div>
                         </TableCell>
