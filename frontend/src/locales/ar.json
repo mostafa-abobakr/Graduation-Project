@@ -168,5 +168,9 @@
   "Total": "الإجمالي",
   "per month": "شهرياً",
   "Guaranteed Satisfaction": "ضمان الرضا الكامل",
-  "Change your plan or cancel at any time. We'll prorate your billing automatically.": "يمكنك تغيير خطتك أو إلغاؤها في أي وقت. سنقوم بتعديل فاتورتك تلقائيًا وبشكل متناسب."
+  "Change your plan or cancel at any time. We'll prorate your billing automatically.": "يمكنك تغيير خطتك أو إلغاؤها في أي وقت. سنقوم بتعديل فاتورتك تلقائيًا وبشكل متناسب.",
+  "Setting Up Your Restaurant...": "جاري إعداد وتجهيز مطعمك...",
+  "Creating default menus, staff schedule templates, and AI forecasting models. This may take up to a minute on your first launch. Please do not refresh or close this page.": "جاري إنشاء القوائم الافتراضية، وقوالب جداول عمل الموظفين، ونماذج التنبؤ بالذكاء الاصطناعي. قد يستغرق هذا ما يصل إلى دقيقة في المرة الأولى. يرجى عدم تحديث أو إغلاق هذه الصفحة.",
+  "Initializing database structures...": "جاري تهيئة تراكيب قاعدة البيانات...",
+  "Logging you in...": "جاري تسجيل دخولك..."
 }

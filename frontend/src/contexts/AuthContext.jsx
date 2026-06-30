@@ -36,7 +36,8 @@ export function AuthProvider({ children }) {
     }
     return null;
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSeeding, setIsSeeding] = useState(false)
 
   // You can adjust isAdmin logic based on backend response, e.g. user.role
   const isAdmin = user?.role?.toLowerCase() === "admin";
@@ -100,6 +101,24 @@ export function AuthProvider({ children }) {
         setUser(userData);
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("authToken", response.data.token);
+
+        if (userData.restId) {
+          setIsSeeding(true)
+          try {
+            await axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${userData.restId}`)
+            console.log("Database seeded successfully during login")
+          } catch (seedErr) {
+            const errorDetail = seedErr.response?.data?.detail || seedErr.response?.data?.message || ""
+            if (errorDetail.includes("already has menu items") || errorDetail.includes("Cannot re-seed")) {
+              console.log("Database already seeded. Proceeding silently.")
+            } else {
+              console.error("Seeding failed on login:", seedErr)
+            }
+          } finally {
+            setIsSeeding(false)
+          }
+        }
+
         toast({ title: "Welcome back!", description: `Logged in successfully` });
         return true;
       }
@@ -144,7 +163,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, isLoading, isSeeding, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

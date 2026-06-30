@@ -168,5 +168,9 @@
   "Total": "Total",
   "per month": "per month",
   "Guaranteed Satisfaction": "Guaranteed Satisfaction",
-  "Change your plan or cancel at any time. We'll prorate your billing automatically.": "Change your plan or cancel at any time. We'll prorate your billing automatically."
+  "Change your plan or cancel at any time. We'll prorate your billing automatically.": "Change your plan or cancel at any time. We'll prorate your billing automatically.",
+  "Setting Up Your Restaurant...": "Setting Up Your Restaurant...",
+  "Creating default menus, staff schedule templates, and AI forecasting models. This may take up to a minute on your first launch. Please do not refresh or close this page.": "Creating default menus, staff schedule templates, and AI forecasting models. This may take up to a minute on your first launch. Please do not refresh or close this page.",
+  "Initializing database structures...": "Initializing database structures...",
+  "Logging you in...": "Logging you in..."
 }

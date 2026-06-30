@@ -85,7 +85,7 @@ const RestaurantLocation = () => {
         updateFromData(values); // 1. Save data to local storage
         const completeData = { ...formData, ...values };
         await register(completeData); // 2. Register
-        await login(completeData.email, completeData.password);
+        // await login(completeData.email, completeData.password);
         navigate("/register/connect-pos"); // 3. Navigate
         localStorage.removeItem("register");
       } catch (error) {

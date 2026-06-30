@@ -9,7 +9,7 @@ const STEPS = [
   { id: 2, label: "Restaurant Details", paths: ["/register/restaurant-details"] },
   { id: 3, label: "Restaurant Location", paths: ["/register/restaurant-location"] },
   { id: 4, label: "Connect POS", paths: ["/register/connect-pos"] },
-  { id: 5, label: "Billing Plan", paths: ["/register/plans", "/register/stripe", "/register/payment"] }
+  { id: 5, label: "Billing Plan", paths: ["/register/plans", "/register/payment"] }
 ]
 
 const Register = () => {

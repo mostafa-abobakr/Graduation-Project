@@ -7,9 +7,8 @@ import PeakTimes from "./PeakTimes";
 import CostReduction from "./CostReduction";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
-import { useAuth } from "@/contexts/AuthContext";
-import { usePayment } from "@/hooks/usePayment";
-import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext"
+import { motion } from "framer-motion"
 
 const staggerContainer = {
   hidden: { opacity: 0 },

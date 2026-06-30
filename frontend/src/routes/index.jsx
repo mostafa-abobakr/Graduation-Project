@@ -25,7 +25,6 @@ const RestaurantLocation = Loadable(lazy(() => import("@/pages/Auth/Register/Res
 const PosOptions = Loadable(lazy(() => import("@/pages/pos/ConnectPosPage")));
 const BillingPlans = Loadable(lazy(() => import("@/pages/Auth/Register/BillingPlans")));
 const PaymentGateway = Loadable(lazy(() => import("@/pages/Auth/Register/PaymentGateway")));
-const PaymentStripe = Loadable(lazy(() => import("@/pages/Auth/Register/PaymentStripe")));
 
 const DashboardIndex = Loadable(lazy(() => import("../pages/DashboardIndex")));
 const ForecastPage = Loadable(lazy(() => import("../pages/forecast")));
@@ -93,11 +92,7 @@ const Routes = [
       {
         path: "payment",
         element: <PaymentGateway />,
-      },
-      {
-        path: "stripe",
-        element: <PaymentStripe />,
-      },
+      }
     ],
   },
   // {

@@ -19,8 +19,8 @@ function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const { login } = useAuth();
-  
+  const { login, isSeeding } = useAuth();
+
   const trainMutation = useMutation({
     mutationFn: async (restId) => {
       const response = await fetch(`https://youseef-awaad-zerobite-ai-engine.hf.space/train/${restId}`, {
@@ -63,6 +63,30 @@ function Login() {
       }
     },
   });
+
+  if (isSeeding) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 w-full bg-background animate-in fade-in duration-300">
+        <div className="bg-card text-card-foreground border border-border/60 rounded-3xl shadow-2xl p-10 max-w-xl w-full text-center animate-in zoom-in-95 duration-500">
+          <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+            <Loader2 className="animate-spin text-primary w-12 h-12" />
+          </div>
+          <h2 className="text-3xl font-extrabold text-foreground mb-2">
+            {t("Setting Up Your Restaurant...")}
+          </h2>
+          <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+            {t("Creating default menus, staff schedule templates, and AI forecasting models. This may take up to a minute on your first launch. Please do not refresh or close this page.")}
+          </p>
+          <div className="flex items-center justify-center text-sm text-primary font-semibold gap-2">
+            <span className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" />
+            <span className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+            <span className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+            {t("Initializing database structures...")}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <AuthContainer

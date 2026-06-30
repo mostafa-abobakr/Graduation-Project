@@ -59,6 +59,7 @@ export default function PaymentGateway() {
 
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [setupStatus, setSetupStatus] = useState("confirming") // "confirming" | "seeding"
   const [formData, setFormData] = useState({
     name: "",
     cardNumber: "",
@@ -106,22 +107,14 @@ export default function PaymentGateway() {
 
     // Simulating login and redirect
     setTimeout(async () => {
+      setSetupStatus("seeding")
       try {
         const stored = localStorage.getItem("register")
         if (stored) {
           const parsed = JSON.parse(stored)
           const { email, password } = parsed
           if (login && email && password) {
-            const res = await login(email, password)
-            const resId = res?.user?.restId || res?.restId || parsed?.restId
-            if (resId) {
-              try {
-                await axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${resId}`)
-                console.log("Seeding complete")
-              } catch (seedErr) {
-                console.error("Seeding error:", seedErr)
-              }
-            }
+            await login(email, password)
           }
         }
       } catch (err) {
@@ -131,38 +124,51 @@ export default function PaymentGateway() {
     }, 1500)
   }
 
-    if (success) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center p-6 relative w-full">
-                <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
-                    <Link to="/" className="inline-flex items-center gap-2.5">
-                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Leaf className="h-4.5 w-4.5 text-primary" />
-                        </div>
-                        <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                            ZeroBite
-                        </span>
-                    </Link>
-                </div>
-
-                <div className="absolute top-4 right-4 rtl:right-auto rtl:left-4 z-10">
-                    <ThemeToggle />
-                </div>
-
-                <Card className="p-10 max-w-md w-full text-center animate-in zoom-in-95 duration-500 fade-in bg-card border-border/60 premium-shadow-md">
-                    <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-                        <CheckCircle className="text-primary w-12 h-12" />
-                    </div>
-                    <h2 className="text-3xl font-extrabold text-foreground mb-2">Payment Successful!</h2>
-                    <p className="text-muted-foreground mb-6">Your subscription to the {plan} plan is confirmed. Welcome aboard!</p>
-                    <div className="flex items-center justify-center text-sm text-muted-foreground gap-2">
-                        <Loader2 className="animate-spin w-4 h-4" />
-                        Redirecting to dashboard...
-                    </div>
-                </Card>
+  if (success) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-6 w-full animate-in fade-in duration-300">
+        <div className="bg-card text-card-foreground border border-border/60 rounded-3xl shadow-2xl p-10 max-w-xl w-full text-center animate-in zoom-in-95 duration-500">
+          
+          {setupStatus === "confirming" ? (
+            <div className="animate-in fade-in duration-300">
+              <div className="mx-auto w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6">
+                <CheckCircle className="text-emerald-500 w-12 h-12" />
+              </div>
+              <h2 className="text-3xl font-extrabold text-foreground mb-2">
+                {t("Payment Successful!")}
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                {t("Your subscription to the {{plan}} plan is confirmed. Welcome aboard!", { plan })}
+              </p>
+              <div className="flex items-center justify-center text-sm text-muted-foreground gap-2">
+                <Loader2 className="animate-spin w-4 h-4" />
+                {t("Logging you in...")}
+              </div>
             </div>
-        );
-    }
+          ) : (
+            <div className="animate-in fade-in duration-300">
+              <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                <Loader2 className="animate-spin text-primary w-12 h-12" />
+              </div>
+              <h2 className="text-3xl font-extrabold text-foreground mb-2">
+                {t("Setting Up Your Restaurant...")}
+              </h2>
+              <p className="text-muted-foreground mb-6 text-sm leading-relaxed">
+                {t("Creating default menus, staff schedule templates, and AI forecasting models. This may take up to a minute on your first launch. Please do not refresh or close this page.")}
+              </p>
+              <div className="flex items-center justify-center text-sm text-primary font-semibold gap-2">
+                <span className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce" />
+                <span className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:0.2s]" />
+                <span className="w-2.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:0.4s]" />
+                {t("Initializing database structures...")}
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+    )
+  }
 
     return (
         <div className="w-full bg-background flex items-center justify-center pb-12 px-4 sm:px-6 lg:px-8">
@@ -194,13 +200,20 @@ export default function PaymentGateway() {
                         <p className="text-muted-foreground mt-1">Enter your card details securely.</p>
                     </div>
 
-                    <form onSubmit={handlePayment} className="space-y-6">
+                    <form onSubmit={handlePayment} className="space-y-6" autoComplete="off">
+            {/* Decoy inputs to intercept browser/password-manager autofill */}
+            <input type="text" name="username" className="hidden" aria-hidden="true" tabIndex="-1" autoComplete="username" />
+            <input type="password" name="password" className="hidden" aria-hidden="true" tabIndex="-1" autoComplete="new-password" />
+
                         <div>
                             <Label className="text-foreground text-sm mb-1.5 block">Name on Card</Label>
                             <Input
                                 required={price > 0}
                                 type="text"
-                                placeholder="John Doe"
+                                id="cc-name"
+                name="cc-name"
+                placeholder="Name "
+                autoComplete="cc-name"
                                 className="bg-muted/30 border-border/60"
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -214,8 +227,12 @@ export default function PaymentGateway() {
                                 <Input
                                     required={price > 0}
                                     type="text"
+                  id="cc-number"
+                  name="cc-number"
                                     placeholder="0000 0000 0000 0000"
                                     maxLength="19"
+                  autoComplete="cc-number"
+                  inputMode="numeric"
                                     className="pl-10 rtl:pr-10 rtl:pl-3 bg-muted/30 border-border/60"
                                     value={formData.cardNumber}
                                     onChange={e => {
@@ -235,8 +252,12 @@ export default function PaymentGateway() {
                                 <Input
                                     required={price > 0}
                                     type="text"
+                  id="cc-exp"
+                  name="cc-exp"
                                     placeholder="MM/YY"
                                     maxLength="5"
+                  autoComplete="cc-exp"
+                  inputMode="numeric"
                                     className="bg-muted/30 border-border/60"
                                     value={formData.expiry}
                                     onChange={e => {
@@ -251,9 +272,13 @@ export default function PaymentGateway() {
                                 <Label className="text-foreground text-sm mb-1.5 block">CVV</Label>
                                 <Input
                                     required={price > 0}
-                                    type="password"
+                                    type="text"
+                  id="cc-csc"
+                  name="cc-csc"
                                     placeholder="123"
                                     maxLength="4"
+                  autoComplete="cc-csc"
+                  inputMode="numeric"
                                     className="bg-muted/30 border-border/60"
                                     value={formData.cvv}
                                     onChange={e => setFormData({ ...formData, cvv: e.target.value.replace(/\D/g, '') })}
