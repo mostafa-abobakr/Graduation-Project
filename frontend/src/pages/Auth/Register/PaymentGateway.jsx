@@ -297,7 +297,7 @@ export default function PaymentGateway() {
                             {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                                 <>
                                     <Lock className="w-5 h-5 me-2" />
-                                    {price === 0 ? "Start Free Plan" : `Pay $${price}`}
+                                    {price === 0 ? "Start Free Plan" : `Start 14-Day Free Trial`}
                                 </>
                             )}
                         </Button>
@@ -324,15 +324,20 @@ export default function PaymentGateway() {
                         </div>
 
                         <div className="flex justify-between items-center mb-8">
-                            <span className="text-lg font-medium text-foreground">Total</span>
+                            <span className="text-lg font-medium text-foreground">Total Due Today</span>
                             <div className="text-right">
-                                <span className="text-3xl font-bold text-primary">${price}.00</span>
-                                <p className="text-sm text-muted-foreground">per month</p>
+                                <span className="text-3xl font-bold text-primary">$0.00</span>
+                                <p className="text-sm text-muted-foreground">then ${price}.00/mo</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-muted/50 rounded-xl p-4 text-sm text-muted-foreground border border-border/50 mt-auto">
+                    <div className="bg-primary/10 rounded-xl p-4 text-sm text-primary border border-primary/20 mt-auto mb-4">
+                        <strong className="block mb-1">14-Day Free Trial Included</strong>
+                        You won't be charged until your trial ends. You can cancel anytime.
+                    </div>
+
+                    <div className="bg-muted/50 rounded-xl p-4 text-sm text-muted-foreground border border-border/50">
                         <strong className="text-foreground block mb-1">Guaranteed Satisfaction</strong>
                         Change your plan or cancel at any time. We'll prorate your billing automatically.
                     </div>
