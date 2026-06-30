@@ -70,7 +70,7 @@ function Login() {
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2.5 mb-6">
             <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center"><Leaf className="h-4.5 w-4.5 text-primary" /></div>
-            <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>ZeroWaste</span>
+            <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>ZeroBite</span>
           </Link>
           <h1 className="text-2xl font-bold text-foreground">{t("Welcome back")}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t("Log in to your dashboard")}</p>

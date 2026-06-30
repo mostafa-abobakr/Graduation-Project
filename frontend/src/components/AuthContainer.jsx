@@ -31,7 +31,7 @@ function AuthContainer({
               className="text-lg font-bold text-foreground"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             >
-              ZeroWaste
+              ZeroBite
             </span>
           </Link>
 

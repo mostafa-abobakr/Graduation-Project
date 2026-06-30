@@ -184,7 +184,7 @@ function AppSidebar() {
                 className="text-base font-bold text-foreground tracking-tight"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
               >
-                zeroBite
+                ZeroBite
               </span>
             )}
           </Link>

@@ -17,9 +17,9 @@ export default function ForecastHeader({ alignment, setAlignment, setModalOpen }
         </div>
       </div>
       <div className="flex items-center gap-3">
-        <Button variant="outline" size="sm" onClick={() => setModalOpen(true)}>
+        {/* <Button variant="outline" size="sm" onClick={() => setModalOpen(true)}>
           <Settings className="h-4 w-4 mr-1.5" /> Settings
-        </Button>
+        </Button> */}
         <div className="relative flex bg-muted/60 p-1.5 rounded-xl shadow-inner border border-border/40">
           <div
             className="absolute top-1.5 bottom-1.5 w-[calc(50%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"

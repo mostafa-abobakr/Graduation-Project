@@ -141,10 +141,10 @@ export const feedbackSummary = {
 };
 
 export const restaurants = [
-  { id: 1, name: "ZeroWaste Downtown", city: "Cairo", manager: "Ahmed Hassan", status: "active" },
-  { id: 2, name: "ZeroWaste Marina", city: "Alexandria", manager: "Fatima Ali", status: "active" },
-  { id: 3, name: "ZeroWaste Mall", city: "Giza", manager: "Omar Khalil", status: "active" },
-  { id: 4, name: "ZeroWaste Airport", city: "Cairo", manager: "Sara Mohamed", status: "inactive" },
+  { id: 1, name: "ZeroBite Downtown", city: "Cairo", manager: "Ahmed Hassan", status: "active" },
+  { id: 2, name: "ZeroBite Marina", city: "Alexandria", manager: "Fatima Ali", status: "active" },
+  { id: 3, name: "ZeroBite Mall", city: "Giza", manager: "Omar Khalil", status: "active" },
+  { id: 4, name: "ZeroBite Airport", city: "Cairo", manager: "Sara Mohamed", status: "inactive" },
 ];
 
 export const restaurantStats = restaurants.map(r => ({
