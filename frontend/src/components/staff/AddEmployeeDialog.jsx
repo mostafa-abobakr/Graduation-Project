@@ -48,9 +48,11 @@ export function AddEmployeeDialog({ isOpen, onOpenChange }) {
   })
 
   const handleAddEmployee = (data) => {
+    const finalRole = (data.role === "cashier" || data.role === "casher" || data.role === "waiter") ? "employee" : data.role
     addEmployeeMutation.mutate({
       restID: user?.restId || 0,
       ...data,
+      role: finalRole,
       password: data.phone,
       status: "Active",
     }, {
@@ -90,10 +92,9 @@ export function AddEmployeeDialog({ isOpen, onOpenChange }) {
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="employee">Casher</SelectItem>
+                        <SelectItem value="cashier">Casher</SelectItem>
                         <SelectItem value="chef">Cook</SelectItem>
-                        <SelectItem value="employee">Waiter</SelectItem>
-
+                        <SelectItem value="waiter">Waiter</SelectItem>
                       </SelectContent>
                     </Select>
                   )}

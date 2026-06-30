@@ -31,6 +31,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { ViewToggler } from "@/components/shared/ViewToggler";
 import { SummaryCard } from "@/components/shared/SummaryCard";
 import { LoadingSkeleton } from "@/components/shared/Skeletons";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "#3b82f6" },
@@ -61,14 +62,14 @@ function formatCompact(val) {
   }).format(val ?? 0);
 }
 
-function formatLabel(timestamp, viewMode) {
+function formatLabel(timestamp, viewMode, language = "en") {
   if (!timestamp) return "";
   try {
     const d = new Date(timestamp.replace(" ", "T"));
     if (viewMode === "day") {
-      return d.toLocaleTimeString("en-US", { hour: "numeric", hour12: true });
+      return d.toLocaleTimeString(language === "ar" ? "ar-EG" : "en-US", { hour: "numeric", hour12: true });
     }
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return d.toLocaleDateString(language === "ar" ? "ar-EG" : "en-US", { month: "short", day: "numeric" });
   } catch {
     return timestamp;
   }
@@ -115,6 +116,7 @@ function MarginBadge({ value }) {
 
 export default function RevenuePage() {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [viewMode, setViewMode] = useState("day");
 
   const { data, isLoading, isError, error } = useQuery({
@@ -137,34 +139,34 @@ export default function RevenuePage() {
         <Card className="p-6 bg-card border-border/60 max-w-md text-center space-y-4">
           <AlertCircle className="h-10 w-10 text-destructive mx-auto" />
           <p className="text-foreground font-medium">
-            Failed to load revenue data
+            {t("Failed to load revenue data")}
           </p>
           <p className="text-muted-foreground text-sm">
-            {error?.message || "Something went wrong"}
+            {error?.message || t("Something went wrong")}
           </p>
         </Card>
       </div>
-    );
+    )
   }
 
-  const currentData = data?.data?.[viewMode];
+  const currentData = data?.data?.[viewMode]
   const metrics = currentData?.metrics ?? {
     period_revenue: 0,
     daily_average: 0,
     avg_profit_margin: 0,
     revenue_change_pct: "N/A",
-  };
+  }
 
   const totalOrders = (currentData?.revenue_trend ?? []).reduce(
     (s, r) => s + (r.order_count ?? 0),
-    0,
-  );
+    0
+  )
 
   const trendData = (currentData?.revenue_trend ?? []).map((r) => ({
-    label: formatLabel(r.timestamp, viewMode),
+    label: formatLabel(r.timestamp, viewMode, language),
     revenue: r.revenue ?? 0,
     orders: r.order_count ?? 0,
-  }));
+  }))
 
   const itemPerformance = (currentData?.item_performance ?? []).map((item) => ({
     name: item.item_name,
@@ -172,23 +174,23 @@ export default function RevenuePage() {
     profit: item.profit ?? 0,
     margin: item.margin_percentage ?? 0,
     orders: item.orders ?? 0,
-  }));
+  }))
 
-  const viewIdx = VIEWS.findIndex((v) => v.id === viewMode);
+  const viewIdx = VIEWS.findIndex((v) => v.id === viewMode)
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
       {/* ── Header + Toggle ─────────────────────────────────────── */}
       <PageHeader
         icon={DollarSign}
-        title="Revenue Analytics"
-        description="Revenue trends and profit analysis"
+        title={t("Revenue Analytics")}
+        description={t("Revenue trends and profit analysis")}
         actions={
           <ViewToggler
             viewMode={viewMode}
             setViewMode={setViewMode}
             modes={VIEWS.map((v) => v.id)}
-            labels={VIEWS.map((v) => v.label)}
+            labels={VIEWS.map((v) => t(v.label))}
           />
         }
       />
@@ -196,7 +198,7 @@ export default function RevenuePage() {
       {/* ── KPI Cards ──────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
-          title={`${VIEWS.find((v) => v.id === viewMode)?.label} Revenue`}
+          title={`${t(VIEWS.find((v) => v.id === viewMode)?.label)} ${t("Revenue")}`}
           value={formatCompact(metrics.period_revenue)}
           icon={DollarSign}
           iconColorClass="text-primary"
@@ -208,14 +210,14 @@ export default function RevenuePage() {
           }
         />
         <SummaryCard
-          title="Daily Average"
+          title={t("Daily Average")}
           value={formatCompact(metrics.daily_average)}
           icon={BarChart3}
           iconColorClass="text-primary"
           iconWrapper
         />
         <SummaryCard
-          title="Avg. Profit Margin"
+          title={t("Avg. Profit Margin")}
           value={`${(metrics.avg_profit_margin ?? 0).toFixed(1)}%`}
           icon={PieChart}
           iconColorClass="text-primary"
@@ -223,7 +225,7 @@ export default function RevenuePage() {
           valueColorClass="text-primary"
         />
         <SummaryCard
-          title="Total Orders"
+          title={t("Total Orders")}
           value={Intl.NumberFormat("en-US", {
             notation: "compact",
             maximumFractionDigits: 1,
@@ -239,7 +241,7 @@ export default function RevenuePage() {
         <CardHeader className="p-6 pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base md:text-lg font-bold text-foreground">
-              Revenue Trend — {VIEWS.find((v) => v.id === viewMode)?.label}
+              {t("Revenue Trend")} — {t(VIEWS.find((v) => v.id === viewMode)?.label)}
             </CardTitle>
             <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
               <BarChart3 className="w-4 h-4" />
@@ -249,7 +251,7 @@ export default function RevenuePage() {
         <CardContent className="p-6 pt-0">
           {trendData.length === 0 ? (
             <div className="flex h-[280px] items-center justify-center text-muted-foreground text-sm">
-              No trend data available for this period.
+              {t("No trend data available for this period.")}
             </div>
           ) : (
             <ChartContainer
@@ -354,13 +356,13 @@ export default function RevenuePage() {
         <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
           <CardHeader className="p-6 pb-2">
             <CardTitle className="text-base font-semibold text-foreground">
-              Revenue by Item
+              {t("Revenue by Item")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 pt-2">
             {itemPerformance.length === 0 ? (
               <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
-                No data available for this period.
+                {t("No data available for this period.")}
               </div>
             ) : (
               <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -406,7 +408,7 @@ export default function RevenuePage() {
                             <div className="h-2 w-2 shrink-0 rounded-full bg-blue-500" />
                             <div className="flex flex-1 justify-between gap-4 items-center">
                               <span className="text-sm font-medium text-foreground">
-                                Revenue
+                                {t("Revenue")}
                               </span>
                               <span className="text-sm font-bold text-foreground">
                                 {formatCurrency(value)}
@@ -436,13 +438,13 @@ export default function RevenuePage() {
         <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
           <CardHeader className="p-6 pb-2">
             <CardTitle className="text-base font-semibold text-foreground">
-              Profit Margin by Item
+              {t("Profit Margin by Item")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 pt-2">
             {itemPerformance.length === 0 ? (
               <div className="flex h-[300px] items-center justify-center text-muted-foreground text-sm">
-                No data available for this period.
+                {t("No data available for this period.")}
               </div>
             ) : (
               <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -489,7 +491,7 @@ export default function RevenuePage() {
                             <div className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />
                             <div className="flex flex-1 justify-between gap-4 items-center">
                               <span className="text-sm font-medium text-foreground">
-                                Margin
+                                {t("Margin")}
                               </span>
                               <span className="text-sm font-bold text-foreground">
                                 {Number(value).toFixed(1)}%

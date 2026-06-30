@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUp, ArrowDown, Search, UtensilsCrossed } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { PageHeader } from "@/components/shared/PageHeader";
-import { EmptyState } from "@/components/shared/EmptyState";
+import { useAuth } from "@/contexts/AuthContext"
+import { PageHeader } from "@/components/shared/PageHeader"
+import { EmptyState } from "@/components/shared/EmptyState"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function MenuAnalyticsPage() {
+  const { t } = useLanguage()
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("orders");
   const [sortAsc, setSortAsc] = useState(false);
@@ -59,10 +61,10 @@ export default function MenuAnalyticsPage() {
   if (error) {
     return (
       <div className="p-8 text-center text-destructive bg-destructive/10 rounded-xl border border-destructive/20">
-        <h3 className="font-bold text-lg mb-2">Error Loading Analytics</h3>
+        <h3 className="font-bold text-lg mb-2">{t("Error Loading Analytics")}</h3>
         <p>{error.message}</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -70,8 +72,8 @@ export default function MenuAnalyticsPage() {
       {/* Header */}
       <PageHeader
         icon={UtensilsCrossed}
-        title="Menu Item Performance"
-        description="Detailed real-time analytics for every item on your menu."
+        title={t("Menu Item Performance")}
+        description={t("Detailed real-time analytics for every item on your menu.")}
       />
 
       {/* Controls Row */}
@@ -80,7 +82,7 @@ export default function MenuAnalyticsPage() {
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search menu items..."
+            placeholder={t("Search menu items...")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 bg-card border-border/60 premium-shadow"
@@ -98,10 +100,10 @@ export default function MenuAnalyticsPage() {
             }}
           />
           {[
-            { id: "day", label: "Today" },
-            { id: "week", label: "Week" },
-            { id: "month", label: "Month" },
-            { id: "all", label: "All Time" },
+            { id: "day", label: t("Today") },
+            { id: "week", label: t("Week") },
+            { id: "month", label: t("Month") },
+            { id: "all", label: t("All Time") },
           ].map((mode) => (
             <button
               key={mode.id}
@@ -126,11 +128,11 @@ export default function MenuAnalyticsPage() {
             <thead className="sticky top-0 z-10 bg-card">
               <tr className="border-b border-border/60 bg-muted/40 shadow-sm">
                 {[
-                  { key: "item_name", label: "Menu Items", align: "left" },
-                  { key: "orders", label: "Total Orders", align: "center" },
-                  { key: "revenue", label: "Generated Revenue", align: "center" },
-                  { key: "profit", label: "Net Profit", align: "center" },
-                  { key: "margin_percentage", label: "Profit Margin", align: "center" },
+                  { key: "item_name", label: t("Menu Items"), align: "left" },
+                  { key: "orders", label: t("Total Orders"), align: "center" },
+                  { key: "revenue", label: t("Generated Revenue"), align: "center" },
+                  { key: "profit", label: t("Net Profit"), align: "center" },
+                  { key: "margin_percentage", label: t("Profit Margin"), align: "center" },
                 ].map(({ key, label, align }) => (
                   <th
                     key={key}
@@ -170,7 +172,7 @@ export default function MenuAnalyticsPage() {
                   <td colSpan={5} className="p-0">
                     <EmptyState
                       searchQuery={search}
-                      searchItemName="menu items"
+                      searchItemName={t("menu items")}
                       onAction={() => setSearch("")}
                     />
                   </td>

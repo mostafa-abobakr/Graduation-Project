@@ -54,7 +54,8 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SummaryCard } from "@/components/shared/SummaryCard";
 import { SkeletonRows } from "@/components/shared/Skeletons";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const MENU_ITEM_EMOJIS = {
   "Drinks": ["☕", "🫖", "🧋", "🥤", "🧃"],
@@ -62,10 +63,11 @@ const MENU_ITEM_EMOJIS = {
   "Starters & Sides": ["🥗", "🥣", "🫓", "🥖", "🍞", "🧀"],
   "Breakfast & Bakery": ["🥐", "🥯", "🥞", "🧇", "🍳", "🥓"],
   "Desserts": ["🍰", "🧁", "🍩", "🍪", "🥧", "🍦", "🍨"],
-};
+}
 
 export default function MenuManagementPage() {
-  const { user } = useAuth();
+  const { t, language } = useLanguage()
+  const { user } = useAuth()
   const restId = user?.restId;
   const { data: inventory = [] } = useInventoryItems(restId);
   const { data: menuItems = [], isLoading: isMenuLoading } = useMenuQuery();
@@ -103,18 +105,18 @@ export default function MenuManagementPage() {
 
   const processFile = async (file) => {
     if (!file.type.startsWith("image/")) {
-      toast.error("Please upload a valid image file");
-      return;
+      toast.error(t("Please upload a valid image file"))
+      return
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image size must be less than 2MB");
-      return;
+      toast.error(t("Image size must be less than 2MB"))
+      return
     }
 
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("upload_preset", "menu_items_preset");
+    setIsUploading(true)
+    const formData = new FormData()
+    formData.append("file", file)
+    formData.append("upload_preset", "menu_items_preset")
 
     try {
       const response = await fetch(
@@ -122,21 +124,21 @@ export default function MenuManagementPage() {
         {
           method: "POST",
           body: formData,
-        },
-      );
-      const data = await response.json();
+        }
+      )
+      const data = await response.json()
       if (response.ok) {
-        setEditForm((prev) => ({ ...prev, image: data.secure_url }));
-        toast.success("Image uploaded successfully");
+        setEditForm((prev) => ({ ...prev, image: data.secure_url }))
+        toast.success(t("Image uploaded successfully"))
       } else {
-        toast.error(data.error?.message || "Failed to upload image");
+        toast.error(data.error?.message || t("Failed to upload image"))
       }
     } catch (error) {
-      toast.error("An error occurred during upload");
+      toast.error(t("An error occurred during upload"))
     } finally {
-      setIsUploading(false);
+      setIsUploading(false)
     }
-  };
+  }
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -181,44 +183,44 @@ export default function MenuManagementPage() {
     }
     const regex = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\uFE0F]+$/u;
     if (!regex.test(val)) {
-      setCustomEmojiError("Please enter a valid emoji");
+      setCustomEmojiError(t("Please enter a valid emoji"))
     } else {
-      setCustomEmojiError("");
-      setEditForm({ ...editForm, image: val });
+      setCustomEmojiError("")
+      setEditForm({ ...editForm, image: val })
     }
-  };
+  }
 
   const toggleRow = (id) => {
-    setExpandedRows((prev) => (prev[id] ? {} : { [id]: true }));
-  };
+    setExpandedRows((prev) => (prev[id] ? {} : { [id]: true }))
+  }
 
   const filteredItems = useMemo(() => {
     return menuItems.filter((item) => {
       const matchesSearch = item.name
         .toLowerCase()
-        .includes(search.toLowerCase());
+        .includes(search.toLowerCase())
       const matchesCategory =
-        categoryFilter === "all" || item.category === categoryFilter;
-      return matchesSearch && matchesCategory;
-    });
-  }, [menuItems, search, categoryFilter]);
+        categoryFilter === "all" || item.category === categoryFilter
+      return matchesSearch && matchesCategory
+    })
+  }, [menuItems, search, categoryFilter])
 
   const uniqueCategories = useMemo(() => {
     const categories = new Set(
-      menuItems.map((i) => i.category).filter(Boolean),
-    );
-    return Array.from(categories).sort();
-  }, [menuItems]);
+      menuItems.map((i) => i.category).filter(Boolean)
+    )
+    return Array.from(categories).sort()
+  }, [menuItems])
 
-  const totalCategories = uniqueCategories.length;
+  const totalCategories = uniqueCategories.length
   const avgMargin = useMemo(() => {
-    if (!menuItems.length) return 0;
+    if (!menuItems.length) return 0
     const sum = menuItems.reduce((acc, item) => {
-      if (item.price === 0) return acc;
-      return acc + (item.price - item.cost) / item.price;
-    }, 0);
-    return Math.round((sum / menuItems.length) * 100);
-  }, [menuItems]);
+      if (item.price === 0) return acc
+      return acc + (item.price - item.cost) / item.price
+    }, 0)
+    return Math.round((sum / menuItems.length) * 100)
+  }, [menuItems])
 
   const openEdit = (item) => {
     setEditForm({
@@ -230,30 +232,30 @@ export default function MenuManagementPage() {
       price: String(item.price),
       category: item.category,
       image: item.image || "",
-    });
+    })
     setIngredientsEdit(
-      item.ingredients ? item.ingredients.map((r) => ({ ...r })) : [],
-    );
-    setCustomEmoji("");
-    setCustomEmojiError("");
-    setDialogOpen(true);
-  };
+      item.ingredients ? item.ingredients.map((r) => ({ ...r })) : []
+    )
+    setCustomEmoji("")
+    setCustomEmojiError("")
+    setDialogOpen(true)
+  }
 
   const addIngredientRow = () => {
     setIngredientsEdit([
       ...ingredientsEdit,
       { inventoryId: "", quantityUsed: "" },
-    ]);
-  };
+    ])
+  }
 
   const removeIngredientRow = (index) => {
-    setIngredientsEdit(ingredientsEdit.filter((_, i) => i !== index));
-  };
+    setIngredientsEdit(ingredientsEdit.filter((_, i) => i !== index))
+  }
 
   const saveEdit = () => {
     if (ingredientsEdit.some((r) => !r.inventoryId || !r.quantityUsed)) {
-      toast.error("Please fill out all ingredient details.");
-      return;
+      toast.error(t("Please fill out all ingredient details."))
+      return
     }
 
     const payload = {
@@ -269,11 +271,11 @@ export default function MenuManagementPage() {
         inventoryID: parseInt(ing.inventoryId, 10),
         quantityUsed: parseFloat(ing.quantityUsed) || 0,
       })),
-    };
+    }
 
-    updateMenuItem(payload);
-    setDialogOpen(false);
-  };
+    updateMenuItem(payload)
+    setDialogOpen(false)
+  }
 
   /* ── Search empty state ─────────────────────────────── */
   const SearchEmptyState = () => (
@@ -281,25 +283,25 @@ export default function MenuManagementPage() {
       <TableCell colSpan={7} className="p-0">
         <EmptyState
           searchQuery={search}
-          searchItemName="menu items"
+          searchItemName={t("menu items")}
           onAction={() => setSearch("")}
         />
       </TableCell>
     </TableRow>
-  );
+  )
 
   return (
     <div className="space-y-6 animate-fade-in py-5 w-full">
       <PageHeader
         icon={Utensils}
-        title="Menu Management"
-        description="Manage your restaurant menu items and ingredients"
+        title={t("Menu Management")}
+        description={t("Manage your restaurant menu items and ingredients")}
       />
 
       {/* ── KPI Cards ────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <SummaryCard
-          title="Total Items"
+          title={t("Total Items")}
           value={
             isMenuLoading ? <Skeleton className="h-9 w-12" /> : menuItems.length
           }
@@ -307,7 +309,7 @@ export default function MenuManagementPage() {
           iconWrapper
         />
         <SummaryCard
-          title="Categories"
+          title={t("Categories")}
           value={
             isMenuLoading ? <Skeleton className="h-9 w-12" /> : totalCategories
           }
@@ -315,7 +317,7 @@ export default function MenuManagementPage() {
           iconWrapper
         />
         <SummaryCard
-          title="Avg Margin"
+          title={t("Avg Margin")}
           value={
             isMenuLoading ? <Skeleton className="h-9 w-16" /> : `${avgMargin}%`
           }
@@ -333,16 +335,16 @@ export default function MenuManagementPage() {
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search menu items..."
+              placeholder={t("Search menu items...")}
               className="pl-9 bg-background/50 border-border/40"
             />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
             <SelectTrigger className="w-[180px] bg-background/50 border-border/40">
-              <SelectValue placeholder="Category" />
+              <SelectValue placeholder={t("Category")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="all">{t("All Categories")}</SelectItem>
               {uniqueCategories.map((cat) => (
                 <SelectItem key={cat} value={cat}>
                   {cat}
@@ -356,12 +358,12 @@ export default function MenuManagementPage() {
           <TableHeader>
             <TableRow className="border-border/40 hover:bg-transparent">
               <TableHead className="w-12 text-center"></TableHead>
-              <TableHead>Item</TableHead>
-              <TableHead className="text-center">Category</TableHead>
-              <TableHead className="text-center">Cost</TableHead>
-              <TableHead className="text-center">Price</TableHead>
-              <TableHead className="text-center">Margin</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead>{t("Item")}</TableHead>
+              <TableHead className="text-center">{t("Category")}</TableHead>
+              <TableHead className="text-center">{t("Cost")}</TableHead>
+              <TableHead className="text-center">{t("Price")}</TableHead>
+              <TableHead className="text-center">{t("Margin")}</TableHead>
+              <TableHead className="text-center">{t("Actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -371,23 +373,23 @@ export default function MenuManagementPage() {
               <SearchEmptyState />
             ) : (
               filteredItems.map((item) => {
-                const isExpanded = expandedRows[item.id];
+                const isExpanded = expandedRows[item.id]
                 const margin =
                   item.price > 0
                     ? Math.round(((item.price - item.cost) / item.price) * 100)
-                    : 0;
+                    : 0
 
                 let marginBadgeClass =
-                  "bg-primary/20 text-primary hover:bg-primary/20";
+                  "bg-primary/20 text-primary hover:bg-primary/20"
                 if (margin >= 65) {
                   marginBadgeClass =
-                    "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/15";
+                    "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/15"
                 } else if (margin >= 40) {
                   marginBadgeClass =
-                    "bg-amber-500/15 text-amber-500 hover:bg-amber-500/15";
+                    "bg-amber-500/15 text-amber-500 hover:bg-amber-500/15"
                 } else {
                   marginBadgeClass =
-                    "bg-destructive/15 text-destructive hover:bg-destructive/15";
+                    "bg-destructive/15 text-destructive hover:bg-destructive/15"
                 }
 
                 return (
@@ -426,8 +428,8 @@ export default function MenuManagementPage() {
                       <TableCell className="text-center">
                         {item.category ? (
                           <Badge
-                            variant="outline"
-                            className="bg-background/50 font-normal text-muted-foreground border-border/50"
+                              variant="outline"
+                              className="bg-background/50 font-normal text-muted-foreground border-border/50"
                           >
                             {item.category}
                           </Badge>
@@ -436,7 +438,7 @@ export default function MenuManagementPage() {
                             variant="outline"
                             className="bg-muted/50 font-normal text-muted-foreground/70 border-border/30"
                           >
-                            Uncategorized
+                            {t("Uncategorized")}
                           </Badge>
                         )}
                       </TableCell>
@@ -471,9 +473,9 @@ export default function MenuManagementPage() {
                           <div className="px-14 py-4 space-y-4">
                             <div className="flex items-center gap-2 text-sm font-medium">
                               <Box className="h-4 w-4 text-primary" />{" "}
-                              Ingredients{" "}
+                              {t("Ingredients")}{" "}
                               <span className="text-muted-foreground text-xs font-normal">
-                                ({item.ingredients?.length || 0} items)
+                                ({item.ingredients?.length || 0} {t("items")})
                               </span>
                             </div>
 
@@ -482,8 +484,8 @@ export default function MenuManagementPage() {
                                 {item.ingredients.map((r, idx) => {
                                   const inv = inventory.find(
                                     (i) =>
-                                      String(i.id) === String(r.inventoryId),
-                                  );
+                                      String(i.id) === String(r.inventoryId)
+                                  )
                                   return (
                                     <div
                                       key={idx}
@@ -491,19 +493,19 @@ export default function MenuManagementPage() {
                                     >
                                       <span className="text-foreground text-xs flex items-center gap-1.5">
                                         <span>{inv?.imageUrl || "📦"}</span>
-                                        <span>{inv?.name || "Unknown"}</span>
+                                        <span>{inv?.name || t("Unknown")}</span>
                                       </span>
                                       <span className="text-primary font-mono text-[10px]">
                                         {r.quantityUsed}&nbsp;
                                         {inv?.unit || ""}
                                       </span>
                                     </div>
-                                  );
+                                  )
                                 })}
                               </div>
                             ) : (
                               <div className="text-sm text-muted-foreground italic pl-3 border-l-2 border-primary/50">
-                                No ingredients defined. Edit to add composition.
+                                {t("No ingredients defined. Edit to add composition.")}
                               </div>
                             )}
                           </div>
@@ -522,7 +524,7 @@ export default function MenuManagementPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl bg-card border-border/60">
           <DialogHeader>
-            <DialogTitle className="text-xl">Edit Menu Item</DialogTitle>
+            <DialogTitle className="text-xl">{t("Edit Menu Item")}</DialogTitle>
             <DialogDescription className="sr-only">
               Edit menu item details
             </DialogDescription>
@@ -535,7 +537,7 @@ export default function MenuManagementPage() {
               <div className="col-span-1 md:col-span-7 space-y-4">
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    Item Name
+                    {t("Item Name")}
                   </Label>
                   <Input
                     value={editForm.name}
@@ -545,7 +547,7 @@ export default function MenuManagementPage() {
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    Category
+                    {t("Category")}
                   </Label>
                   <Input
                     value={editForm.category}
@@ -562,14 +564,14 @@ export default function MenuManagementPage() {
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">
-                    Description
+                    {t("Description")}
                   </Label>
                   <Input
                     value={editForm.description}
                     onChange={(e) =>
                       setEditForm({ ...editForm, description: e.target.value })
                     }
-                    placeholder="Brief description of the item..."
+                    placeholder={t("Brief description of the item...")}
                   />
                 </div>
               </div>
@@ -578,7 +580,7 @@ export default function MenuManagementPage() {
               <div className="col-span-1 md:col-span-5 flex flex-col">
                 <div className="flex items-center justify-between mb-1">
                   <Label className="text-xs text-muted-foreground block">
-                    Icon / Image
+                    {t("Icon / Image")}
                   </Label>
                   <Popover modal={true}>
                     <PopoverTrigger asChild>
@@ -587,7 +589,7 @@ export default function MenuManagementPage() {
                         size="sm"
                         className="h-5 text-[10px] px-2 text-muted-foreground hover:text-foreground"
                       >
-                        Use Emoji
+                        {t("Use Emoji")}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-[280px] p-3" align="start">
@@ -595,7 +597,7 @@ export default function MenuManagementPage() {
                         <div className="max-h-[220px] overflow-y-auto pr-2 space-y-3 scrollbar-thin">
                           {Object.entries(MENU_ITEM_EMOJIS).map(([group, emojis]) => (
                             <div key={group}>
-                              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{group}</div>
+                              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{t(group)}</div>
                               <div className="grid grid-cols-6 gap-1">
                                 {emojis.map(e => (
                                   <Button
@@ -606,9 +608,9 @@ export default function MenuManagementPage() {
                                       editForm.image === e && "bg-muted/80 ring-1 ring-border"
                                     )}
                                     onClick={() => {
-                                      setEditForm({ ...editForm, image: e });
-                                      setCustomEmoji("");
-                                      setCustomEmojiError("");
+                                      setEditForm({ ...editForm, image: e })
+                                      setCustomEmoji("")
+                                      setCustomEmojiError("")
                                     }}
                                   >
                                     {e}
@@ -619,11 +621,11 @@ export default function MenuManagementPage() {
                           ))}
                         </div>
                         <div className="pt-3 border-t border-border/40">
-                          <Label className="text-xs text-muted-foreground mb-1.5 block">Custom Emoji</Label>
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">{t("Custom Emoji")}</Label>
                           <Input
                             value={customEmoji}
                             onChange={handleCustomEmojiChange}
-                            placeholder="Paste one emoji..."
+                            placeholder={t("Paste one emoji...")}
                             className={cn(
                               "bg-background/50 h-8 text-sm",
                               customEmojiError && "border-destructive focus-visible:ring-destructive"
@@ -660,7 +662,7 @@ export default function MenuManagementPage() {
                   {isUploading ? (
                     <div className="flex flex-col items-center text-muted-foreground">
                       <Loader2 className="h-8 w-8 animate-spin mb-2 text-primary" />
-                      <span className="text-xs">Uploading...</span>
+                      <span className="text-xs">{t("Uploading...")}</span>
                     </div>
                   ) : editForm.image?.startsWith("http") ? (
                     <div className="relative w-full h-full group">
@@ -671,7 +673,7 @@ export default function MenuManagementPage() {
                       />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="text-white text-sm font-medium">
-                          Click to change
+                          {t("Click to change")}
                         </span>
                       </div>
                     </div>
@@ -681,10 +683,10 @@ export default function MenuManagementPage() {
                     <div className="flex flex-col items-center text-muted-foreground p-4 text-center">
                       <UploadCloud className="h-8 w-8 mb-2 opacity-70" />
                       <span className="text-xs font-medium">
-                        Click or drag image
+                        {t("Click or drag image")}
                       </span>
                       <span className="text-[10px] opacity-70 mt-1">
-                        max 2MB
+                        {t("max 2MB")}
                       </span>
                     </div>
                   )}
@@ -696,7 +698,7 @@ export default function MenuManagementPage() {
             <div className="grid grid-cols-2 gap-6 p-4 bg-muted/30 rounded-lg border border-border/40">
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">
-                  Cost ($)
+                  {t("Cost ($)")}
                 </Label>
                 <Input
                   type="number"
@@ -707,7 +709,7 @@ export default function MenuManagementPage() {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">
-                  Price ($)
+                  {t("Price ($)")}
                 </Label>
                 <Input
                   type="number"
@@ -721,14 +723,14 @@ export default function MenuManagementPage() {
             {/* ── BOTTOM SECTION: Ingredients ──────────────────── */}
             <div>
               <div className="flex justify-between items-center mb-3">
-                <Label>Recipe Ingredients</Label>
+                <Label>{t("Recipe Ingredients")}</Label>
                 <Button
                   variant="ghost"
                   size="sm"
                   className="text-primary hover:text-primary hover:bg-primary/10 gap-1 h-8"
                   onClick={addIngredientRow}
                 >
-                  <Plus className="h-3 w-3" /> Add Item
+                  <Plus className="h-3 w-3" /> {t("Add Item")}
                 </Button>
               </div>
 
@@ -738,13 +740,13 @@ export default function MenuManagementPage() {
                     <Select
                       value={r.inventoryId ? String(r.inventoryId) : undefined}
                       onValueChange={(v) => {
-                        const newR = [...ingredientsEdit];
-                        newR[idx].inventoryId = v;
-                        setIngredientsEdit(newR);
+                        const newR = [...ingredientsEdit]
+                        newR[idx].inventoryId = v
+                        setIngredientsEdit(newR)
                       }}
                     >
                       <SelectTrigger className="flex-1 bg-background/50 border-border/40">
-                        <SelectValue placeholder="Select ingredient..." />
+                        <SelectValue placeholder={t("Select ingredient...")} />
                       </SelectTrigger>
                       <SelectContent>
                         {inventory.map((inv) => (
@@ -766,16 +768,16 @@ export default function MenuManagementPage() {
                         type="number"
                         value={r.quantityUsed}
                         onChange={(e) => {
-                          const newR = [...ingredientsEdit];
-                          newR[idx].quantityUsed = e.target.value;
-                          setIngredientsEdit(newR);
+                          const newR = [...ingredientsEdit]
+                          newR[idx].quantityUsed = e.target.value
+                          setIngredientsEdit(newR)
                         }}
                         className="bg-background/50 border-border/40 pr-10"
-                        placeholder="Qty"
+                        placeholder={t("Qty")}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-primary font-medium">
                         {inventory.find(
-                          (i) => String(i.id) === String(r.inventoryId),
+                          (i) => String(i.id) === String(r.inventoryId)
                         )?.unit || ""}
                       </span>
                     </div>
@@ -793,7 +795,7 @@ export default function MenuManagementPage() {
 
                 {ingredientsEdit.length === 0 && (
                   <div className="text-sm text-muted-foreground italic text-center py-6 border-2 border-dashed border-border/40 rounded-md">
-                    No ingredients added to this recipe.
+                    {t("No ingredients added to this recipe.")}
                   </div>
                 )}
               </div>
@@ -803,12 +805,12 @@ export default function MenuManagementPage() {
           {/* Footer Actions */}
           <div className="flex justify-end gap-2 pt-4 border-t border-border/40 mt-2">
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {t("Cancel")}
             </Button>
-            <Button onClick={saveEdit}>Save Changes</Button>
+            <Button onClick={saveEdit}>{t("Save Changes")}</Button>
           </div>
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

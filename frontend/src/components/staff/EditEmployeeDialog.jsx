@@ -24,7 +24,6 @@ const STATUS_OPTIONS = ["Active", "Inactive (Off Duty)", "On Leave"]
 
 const updateEmployeeSchema = z.object({
   fullName: z.string().min(1, "Name is required"),
-  role: z.string().min(1, "Role is required"),
   salary: z.coerce.number().min(0, "Salary must be positive"),
   phone: z.string().min(1, "Phone is required"),
   shift: z.string().min(1, "Shift is required"),
@@ -84,7 +83,13 @@ export function EditEmployeeDialog({ isOpen, onOpenChange, employee }) {
       empId,
       data: {
         restID: user?.restId || 0,
-        ...data,
+        fullName: data.fullName,
+        salary: data.salary,
+        phone: data.phone,
+        status: data.status,
+        shift: data.shift,
+        workingHoursPerDay: data.workingHoursPerDay,
+        workingDaysPerWeek: data.workingDaysPerWeek,
       }
     }, {
       onSuccess: () => {
@@ -122,10 +127,10 @@ export function EditEmployeeDialog({ isOpen, onOpenChange, employee }) {
                   <Label htmlFor="role">Role</Label>
                   <Input
                     id="role"
-                    placeholder="e.g. Waiter"
+                    disabled
+                    className="bg-muted/50"
                     {...register("role")}
                   />
-                  {errors.role && <span className="text-xs text-destructive">{errors.role.message}</span>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
