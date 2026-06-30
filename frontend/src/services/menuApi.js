@@ -1,20 +1,10 @@
+import api from "@/api/axios";
+
 export const fetchMenuItems = async () => {
-    const token = localStorage.getItem("authToken");
-
-    const response = await fetch(
-        "/api/MenuItems",
-        {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Failed to fetch menu items");
+    try {
+        const response = await api.get("/MenuItems");
+        return response.data;
+    } catch (error) {
+        throw new Error(error.response?.data?.message || "Failed to fetch menu items");
     }
-
-    return response.json();
 };

@@ -552,7 +552,13 @@ export default function MenuManagementPage() {
                     onChange={(e) =>
                       setEditForm({ ...editForm, category: e.target.value })
                     }
+                    list="categories-list"
                   />
+                  <datalist id="categories-list">
+                    {uniqueCategories.map((cat) => (
+                      <option key={cat} value={cat} />
+                    ))}
+                  </datalist>
                 </div>
                 <div>
                   <Label className="text-xs text-muted-foreground mb-1 block">

@@ -30,21 +30,28 @@ export default function InventoryPage() {
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["inventoryItems", user?.restId],
     queryFn: async () => {
-      const response = await api.get(`/Inventory/restaurant/${user.restId}`);
-      return response.data.map((item) => ({
-        id: item.inventoryID,
-        name: item.itemName,
-        category: item.category || "Other",
-        quantity: item.stock,
-        unit: item.unit,
-        reorderLevel: item.reorderLevel,
-        cost: item.costPerUnit || 0,
-        shelfLife: item.shelfLife ?? null,
-        batchesCount: item.batchesCount ?? 0,
-        supplier: item.supplier || "Unknown",
-        apiStatus: item.status,
-        imageUrl: item.imageUrl,
-      }));
+      try {
+        const response = await api.get(`/Inventory/restaurant/${user.restId}`);
+        return response.data.map((item) => ({
+          id: item.inventoryID,
+          name: item.itemName,
+          category: item.category || "Other",
+          quantity: item.stock,
+          unit: item.unit,
+          reorderLevel: item.reorderLevel,
+          cost: item.costPerUnit || 0,
+          shelfLife: item.shelfLife ?? null,
+          batchesCount: item.batchesCount ?? 0,
+          supplier: item.supplier || "Unknown",
+          apiStatus: item.status,
+          imageUrl: item.imageUrl,
+        }));
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          return [];
+        }
+        throw err;
+      }
     },
     enabled: !!user?.restId,
   });
@@ -357,6 +364,7 @@ export default function InventoryPage() {
           openDeduct={openDeduct}
           openEdit={openEdit}
           deleteItem={(id) => deleteMutation.mutate(id)}
+          totalItems={enriched.length}
         />
       </Card>
 

@@ -45,6 +45,7 @@ export function InventoryTable({
   openDeduct,
   openEdit,
   deleteItem,
+  totalItems,
 }) {
   return (
     <div className="overflow-x-auto">
@@ -114,7 +115,11 @@ export function InventoryTable({
                   onAction={() => setSearch("")}
                   icon={PackageSearch}
                   title="No items found"
-                  description="No items match your filters."
+                  description={
+                    totalItems === 0
+                      ? "No inventory items found for this restaurant."
+                      : "No items match your filters."
+                  }
                 />
               </td>
             </tr>

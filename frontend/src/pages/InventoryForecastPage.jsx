@@ -28,8 +28,15 @@ export default function InventoryForecastPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["inventoryForecast", user?.restId],
     queryFn: async () => {
-      const res = await api.get(`/InventoryForecast/restaurant/${user.restId}`);
-      return res.data;
+      try {
+        const res = await api.get(`/InventoryForecast/restaurant/${user.restId}`);
+        return res.data;
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          return { items: [], itemsShort: 0, sufficient: 0, totalShortage: 0 };
+        }
+        throw err;
+      }
     },
     enabled: !!user?.restId,
   });
@@ -202,7 +209,11 @@ export default function InventoryForecastPage() {
                       onAction={() => setSearch("")}
                       icon={PackageSearch}
                       title="No items found"
-                      description="No items match your filters."
+                      description={
+                        enriched.length === 0
+                          ? "No inventory items found for this restaurant."
+                          : "No items match your filters."
+                      }
                     />
                   </td>
                 </tr>
