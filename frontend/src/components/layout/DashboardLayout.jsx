@@ -1,4 +1,6 @@
 import React, { Suspense } from "react";
+import MainLogo from "@/assets/logos/MainLogo";
+import TextLogo from "@/assets/logos/TextLogo";
 import { NavLink } from "@/components/shared/NavLink";
 import { Link, Outlet, useNavigate } from "react-router-dom";
 import {
@@ -69,7 +71,11 @@ import { motion } from "framer-motion";
 const managerAnalyticsItems = [
   { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
   { title: "Forecast", url: "/dashboard/forecast", icon: Brain },
-  { title: "Menu Analytics", url: "/dashboard/menu-analytics", icon: UtensilsCrossed },
+  {
+    title: "Menu Analytics",
+    url: "/dashboard/menu-analytics",
+    icon: UtensilsCrossed,
+  },
   { title: "Revenue", url: "/dashboard/revenue", icon: DollarSign },
   { title: "AI Insights", url: "/dashboard/insights", icon: Lightbulb },
 ];
@@ -77,17 +83,20 @@ const managerAnalyticsItems = [
 const managerManagementItems = [
   { title: "Menu Management", url: "/dashboard/menu", icon: ChefHat },
   { title: "Staff", url: "/dashboard/staff", icon: Users },
-  { title: "Schedule", url: "/dashboard/schedule", icon: CalendarDays  },
+  { title: "Schedule", url: "/dashboard/schedule", icon: CalendarDays },
 ];
-
 
 const managerInventoryItems = [
   { title: "Inventory", url: "/inventory", icon: Package },
   // { title: "Receive Stock", url: "/inventory/add-stock", icon: PlusCircle },
   { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
-  { title: "Inventory Forecast", url: "/inventory/forecast", icon: AlertTriangle },
+  {
+    title: "Inventory Forecast",
+    url: "/inventory/forecast",
+    icon: AlertTriangle,
+  },
   // {title: "Draft", url: "/inventory/draft", icon: ChefHat }
-]
+];
 
 const managerOtherItems = [
   { title: "Reports", url: "/dashboard/reports", icon: FileText },
@@ -114,7 +123,12 @@ function AppSidebar() {
           {items.map((item) => {
             if (item.subItems) {
               return (
-                <Collapsible key={item.title} asChild defaultOpen className="group/collapsible">
+                <Collapsible
+                  key={item.title}
+                  asChild
+                  defaultOpen
+                  className="group/collapsible"
+                >
                   <SidebarMenuItem>
                     <CollapsibleTrigger asChild>
                       <SidebarMenuButton tooltip={t(item.title)}>
@@ -168,32 +182,27 @@ function AppSidebar() {
   );
 
   return (
-    <Sidebar 
-      side={language === 'ar' ? 'right' : 'left'} 
-      collapsible="icon" 
-      className={language === 'ar' ? "border-l border-border/60" : "border-r border-border/60"}
+    <Sidebar
+      side={language === "ar" ? "right" : "left"}
+      collapsible="icon"
+      className={
+        language === "ar"
+          ? "border-l border-border/60"
+          : "border-r border-border/60"
+      }
     >
       <SidebarContent>
         <div className={`pt-4 ${collapsed ? "px-2" : "px-4"}`}>
-          <Link to="/" className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-              <Leaf className="h-4 w-4 text-primary" />
+          <Link to="/" className="flex items-center gap-2">
+            <div className="h-8 w-8 flex items-center justify-center shrink-0">
+              <MainLogo className="h-full w-full text-primary" />
             </div>
-            {!collapsed && (
-              <span
-                className="text-base font-bold text-foreground tracking-tight"
-                style={{ fontFamily: "'DM Sans', sans-serif" }}
-              >
-                ZeroBite
-              </span>
-            )}
+            {!collapsed && <TextLogo className="h-5 w-auto text-foreground" />}
           </Link>
         </div>
         <Separator className="mx-3 w-auto" />
         {isAdmin ? (
-          <>
-            {renderGroup("Platform", adminItems)}
-          </>
+          <>{renderGroup("Platform", adminItems)}</>
         ) : (
           <>
             {renderGroup("Analytics", managerAnalyticsItems)}
@@ -233,11 +242,11 @@ export default function DashboardLayout() {
             )}
             <div className="flex-1" />
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 onClick={toggleLanguage}
                 className="h-8 w-8 rounded-full bg-secondary/80 flex items-center justify-center text-xs font-semibold cursor-pointer transition-colors hover:bg-secondary"
               >
-                {language === 'en' ? 'AR' : 'EN'}
+                {language === "en" ? "AR" : "EN"}
               </button>
               <NotificationsDropdown />
               <ThemeToggle />
@@ -298,7 +307,7 @@ export default function DashboardLayout() {
               </DropdownMenu>
             </div>
           </header>
-          <motion.main 
+          <motion.main
             id="main-scroll-container"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

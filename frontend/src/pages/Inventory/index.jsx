@@ -266,7 +266,7 @@ export default function InventoryPage() {
       return;
     }
 
-    const restId = user?.restId || 2;
+    const restId = user?.restId;
 
     try {
       if (mode === "deduct") {

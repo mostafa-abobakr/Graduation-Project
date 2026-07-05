@@ -27,7 +27,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Plus } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, getValidEmoji } from "@/lib/utils";
 import { CATEGORIES, UNITS, emptyForm } from "./InventoryUtils";
 import { toast } from "sonner";
 
@@ -50,6 +50,7 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
   });
   const [customEmoji, setCustomEmoji] = useState("");
   const [customEmojiError, setCustomEmojiError] = useState("");
+  const [emojiOpen, setEmojiOpen] = useState(false);
 
   const handleCustomEmojiChange = (e) => {
     const val = e.target.value;
@@ -107,7 +108,7 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
       isNonPerishable: form.isNonPerishable,
       cost: parseFloat(form.cost) || 0,
       supplier: form.supplier.trim() || "Unknown",
-      imageUrl: form.imageUrl || "📦",
+      imageUrl: getValidEmoji(form.imageUrl),
     };
 
     // Only include quantity and productionDate when adding a new item
@@ -160,10 +161,10 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
             </div>
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">Icon</Label>
-              <Popover modal={true}>
+              <Popover modal={true} open={emojiOpen} onOpenChange={setEmojiOpen}>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-12 h-10 px-0 text-xl bg-background/50 border-border/40 hover:bg-muted/50">
-                    {form.imageUrl || "📦"}
+                    {getValidEmoji(form.imageUrl)}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[280px] p-3" align="end">
@@ -185,6 +186,7 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
                                   setForm({ ...form, imageUrl: e });
                                   setCustomEmoji("");
                                   setCustomEmojiError("");
+                                  setEmojiOpen(false);
                                 }}
                               >
                                 {e}
@@ -199,6 +201,12 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
                       <Input
                         value={customEmoji}
                         onChange={handleCustomEmojiChange}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && customEmoji && !customEmojiError) {
+                            e.preventDefault();
+                            setEmojiOpen(false);
+                          }
+                        }}
                         placeholder="Paste one emoji..."
                         className={cn(
                           "bg-background/50 h-8 text-sm",

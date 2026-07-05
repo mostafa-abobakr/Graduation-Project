@@ -212,7 +212,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in py-5 max-w-4xl mx-auto">
+    <div className="space-y-5 py-5 animate-fade-in">
       <PageHeader
         icon={Settings}
         title="Profile & Settings"

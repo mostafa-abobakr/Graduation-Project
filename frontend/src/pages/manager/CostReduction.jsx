@@ -1,16 +1,16 @@
-import React from "react"
-import { Card } from "@/components/ui/card"
-import { Wallet, Crosshair } from "lucide-react"
-import { useLanguage } from "@/contexts/LanguageContext"
+import React from "react";
+import { Card } from "@/components/ui/card";
+import { Wallet, Crosshair } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function CostReduction({ data }) {
-  const { t } = useLanguage()
+  const { t } = useLanguage();
 
-  if (!data) return null
+  if (!data) return null;
 
-  const { costPercentage, vsLastWeek, target } = data
+  const { costPercentage, vsLastWeek, target } = data;
 
-  const diffFromTarget = costPercentage - target
+  const diffFromTarget = costPercentage - target;
 
   return (
     <Card className="bg-card border-border/60 premium-shadow overflow-hidden transition-all flex flex-col justify-center p-4 relative duration-300 hover:bg-muted/30 h-full">
@@ -28,9 +28,11 @@ export default function CostReduction({ data }) {
       </div>
 
       <div className="flex justify-between items-center text-xs p-2 sm:p-2.5 bg-muted/70 rounded-lg border border-border/40">
-        <div className="flex items-center gap-1.5 text-foreground font-medium">
+        <div className="flex items-center gap-2 text-foreground font-medium">
           <Crosshair className="w-3 h-3 text-primary" />
-          <span>{t("Target")}: {target}%</span>
+          <span>
+            {t("Target")}: {target}%
+          </span>
         </div>
 
         <span
@@ -44,5 +46,5 @@ export default function CostReduction({ data }) {
         </span>
       </div>
     </Card>
-  )
+  );
 }

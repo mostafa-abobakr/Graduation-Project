@@ -82,7 +82,7 @@ export function EditEmployeeDialog({ isOpen, onOpenChange, employee }) {
     updateEmployeeMutation.mutate({
       empId,
       data: {
-        restID: user?.restId || 0,
+        restID: user?.restId,
         fullName: data.fullName,
         salary: data.salary,
         phone: data.phone,
