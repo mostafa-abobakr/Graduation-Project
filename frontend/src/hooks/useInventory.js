@@ -77,6 +77,7 @@ export const useAddInventoryItem = () => {
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 };
@@ -93,6 +94,7 @@ export const useUpdateInventoryItem = () => {
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 };
@@ -108,6 +110,7 @@ export const useDeleteInventoryItem = () => {
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 };
@@ -124,6 +127,7 @@ export const useRestockInventoryItem = () => {
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 };
@@ -140,6 +144,7 @@ export const useWithdrawInventoryItem = () => {
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 };
@@ -155,6 +160,7 @@ export const useDeleteBatch = () => {
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 };
@@ -173,6 +179,7 @@ export const useUpdateBatch = () => {
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
   });
 };

@@ -242,6 +242,7 @@ export default function SchedulePage() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
+      queryClient.invalidateQueries({ queryKey: ["notifications"] })
       toast.success("AI Schedule Generated!", {
         description: data.message || "Schedule generated successfully for the week."
       })

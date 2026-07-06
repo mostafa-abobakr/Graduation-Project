@@ -353,5 +353,19 @@
   "Dark": "Dark",
   "Arabic (العربية)": "Arabic (العربية)",
   "EGP": "EGP",
-  "k": "K"
+  "k": "K",
+  "Cost (EGP)": "Cost (EGP)",
+  "Price (EGP)": "Price (EGP)",
+  "Category": "Category",
+  "Low Stock": "Low Stock",
+  "Expired": "Expired",
+  "Expiring Soon": "Expiring Soon",
+  "All": "All",
+  "Optimal": "Optimal",
+  "Overstock": "Overstock",
+  "high_margin_low_volume_alert": "'{{itemName}}' Has A High Margin ({{margin}}%) But Lower Than Average Sales Volume ({{orders}} Orders). Consider Featuring This Item To Boost Profit.",
+  "'Foul Sandwich' Has A High Margin (97.0%) But Lower Than Average Sales Volume (31 Orders). Consider Featuring This Item To Boost Profit.": "'Foul Sandwich' Has A High Margin (97.0%) But Lower Than Average Sales Volume (31 Orders). Consider Featuring This Item To Boost Profit.",
+  "'Koshary Medium' Has A High Margin (81.7%) But Lower Than Average Sales Volume (27 Orders). Consider Featuring This Item To Boost Profit.": "'Koshary Medium' Has A High Margin (81.7%) But Lower Than Average Sales Volume (27 Orders). Consider Featuring This Item To Boost Profit.",
+  "Foul Sandwich": "Foul Sandwich",
+  "Koshary Medium": "Koshary Medium"
 }

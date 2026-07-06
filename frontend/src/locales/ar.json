@@ -378,5 +378,17 @@
   "Unit Cost (EGP)": "تكلفة الوحدة (ج.م.)",
   "Cost per Unit (EGP)": "التكلفة لكل وحدة (ج.م.)",
   "Unit Price (EGP)": "سعر الوحدة (ج.م.)",
-  "Salary (EGP)": "الراتب (ج.م.)"
+  "Salary (EGP)": "الراتب (ج.م.)",
+  "Category": "الفئة",
+  "Low Stock": "مخزون منخفض",
+  "Expired": "منتهي الصلاحية",
+  "Expiring Soon": "تنتهي قريباً",
+  "All": "الكل",
+  "Optimal": "مخزون مثالي",
+  "Overstock": "فائض في المخزون",
+  "high_margin_low_volume_alert": "الصنف '{{itemName}}' يحقق هامش ربح عالي ({{margin}}%) ولكن حجم مبيعاته أقل من المتوسط ({{orders}} طلبات). ينصح بإبراز هذا الصنف لزيادة الأرباح.",
+  "'Foul Sandwich' Has A High Margin (97.0%) But Lower Than Average Sales Volume (31 Orders). Consider Featuring This Item To Boost Profit.": "الصنف 'ساندوتش فول' يحقق هامش ربح عالي (97.0%) ولكن حجم مبيعاته أقل من المتوسط (31 طلبات). ينصح بإبراز هذا الصنف لزيادة الأرباح.",
+  "'Koshary Medium' Has A High Margin (81.7%) But Lower Than Average Sales Volume (27 Orders). Consider Featuring This Item To Boost Profit.": "الصنف 'كشري وسط' يحقق هامش ربح عالي (81.7%) ولكن حجم مبيعاته أقل من المتوسط (27 طلبات). ينصح بإبراز هذا الصنف لزيادة الأرباح.",
+  "Foul Sandwich": "ساندوتش فول",
+  "Koshary Medium": "كشري وسط"
 }

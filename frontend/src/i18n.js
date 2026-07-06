@@ -18,20 +18,9 @@ i18n
     },
     saveMissing: true,
     missingKeyHandler: (lngs, ns, key, fallbackValue) => {
-      if (import.meta.env?.DEV) {
-        console.warn(`[i18next] Missing key: "${key}" in namespace "${ns}" and language "${lngs.join(', ')}"`);
-      }
+      // Intentionally left empty to suppress i18next console logs for missing keys
     },
     parseMissingKeyHandler: (key) => {
-      const commonTokens = {
-        'Optimal': 'مخزون مثالي',
-        'Low Stock': 'مخزون منخفض',
-        'Overstock': 'فائض في المخزون',
-      };
-
-      if (commonTokens[key]) {
-        return commonTokens[key];
-      }
 
       if (typeof key === 'string') {
         const cleaned = key.replace(/_/g, ' ').toLowerCase();

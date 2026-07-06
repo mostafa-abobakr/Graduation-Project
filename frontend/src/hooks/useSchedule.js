@@ -83,6 +83,7 @@ export const useAddShift = () => {
     onSuccess: () => {
       toast.success("Shift added successfully!");
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: () => {
       toast.error("Failed to add shift.");
@@ -101,6 +102,7 @@ export const useUpdateShift = () => {
     onSuccess: () => {
       toast.success("Shift updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: () => {
       toast.error("Failed to update shift.");
@@ -119,6 +121,7 @@ export const useDeleteShift = () => {
     onSuccess: () => {
       toast.success("Shift deleted successfully!");
       queryClient.invalidateQueries({ queryKey: ["shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: () => {
       toast.error("Failed to delete shift.");
@@ -141,6 +144,7 @@ export const useDeleteScheduleRange = () => {
         description: "All shifts for the selected week have been removed.",
       })
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
+      queryClient.invalidateQueries({ queryKey: ["notifications"] })
     },
     onError: () => {
       toast.error("Failed to clear schedule.", {
@@ -189,6 +193,7 @@ export const useCopyLastWeekSchedule = () => {
         description: data?.message || "All shifts have been copied to the current week.",
       })
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
+      queryClient.invalidateQueries({ queryKey: ["notifications"] })
     },
     onError: (error) => {
       const errMsg = error.response?.data?.message || 

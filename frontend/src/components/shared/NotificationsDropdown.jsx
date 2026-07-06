@@ -58,7 +58,7 @@ export function NotificationsDropdown() {
     queryKey: ["notifications", restId],
     queryFn: async () => {
       try {
-        const res = await api.get(`https://resturantai.runasp.net/api/Notifications/${restId}`);
+        const res = await api.get(`/Notifications/${restId}`);
         const data = res.data;
       
       const combined = [

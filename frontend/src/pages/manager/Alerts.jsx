@@ -57,16 +57,19 @@ const AlertIcon = ({ type, severity }) => {
 const renderAlertMessage = (message, t, language) => {
   const isArabic = language === "ar";
 
-  if (isArabic) {
-    const regex = /'(.*?)' Has A High Margin \((.*?)\%\) But Lower Than Average Sales Volume \((.*?) Orders\)\. Consider Featuring This Item To Boost Profit\./i;
-    const match = message.match(regex);
-    if (match) {
-      const [, itemName, margin, orders] = match;
-      const localizedMargin = formatNumber(margin, isArabic);
-      const localizedOrders = formatNumber(orders, isArabic);
-      return `الصنف '${t(itemName)}' يحقق هامش ربح عالي (${localizedMargin}%) ولكن حجم مبيعاته أقل من المتوسط (${localizedOrders} طلبات). ينصح بإبراز هذا الصنف لزيادة الأرباح.`;
-    }
+  const highMarginRegex = /'(.*?)' Has A High Margin \((.*?)\%\) But Lower Than Average Sales Volume \((.*?) Orders\)\. Consider Featuring This Item To Boost Profit\./i;
+  const match = message.match(highMarginRegex);
 
+  if (match) {
+    const [, itemName, margin, orders] = match;
+    return t("high_margin_low_volume_alert", {
+      itemName: t(itemName),
+      margin: formatNumber(margin, isArabic),
+      orders: formatNumber(orders, isArabic)
+    });
+  }
+
+  if (isArabic) {
     return (
       <div dir="ltr" className="text-left inline-block">
         {t(message)}

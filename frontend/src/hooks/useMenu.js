@@ -46,6 +46,7 @@ export const useUpdateMenuItem = () => {
     onSuccess: () => {
       toast.success("Menu item updated successfully.");
       queryClient.invalidateQueries({ queryKey: ["menuItems", restId] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
       console.error("Error updating menu item:", error);

@@ -280,13 +280,12 @@ export default function MenuManagementPage() {
     }
 
     const payload = {
-      menuItemId: editForm.id,
-      restaurantId: editForm.restId,
+      menuItemId: parseInt(editForm.id, 10),
+      restaurantId: parseInt(editForm.restId, 10),
       itemName: editForm.name,
       description: editForm.description || "",
       price: parseFloat(editForm.price) || 0,
-      cost: parseFloat(editForm.cost) || 0,
-      category: editForm.category,
+      category: editForm.category || "",
       imageURL: editForm.image || "",
       ingredients: ingredientsEdit.map((ing) => ({
         inventoryID: parseInt(ing.inventoryId, 10),
@@ -779,7 +778,7 @@ export default function MenuManagementPage() {
                 {ingredientsEdit.map((r, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <Select
-                      value={r.inventoryId ? String(r.inventoryId) : undefined}
+                      value={r.inventoryId ? String(r.inventoryId) : ""}
                       onValueChange={(v) => {
                         const newR = [...ingredientsEdit];
                         newR[idx].inventoryId = v;
