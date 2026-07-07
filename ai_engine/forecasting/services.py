@@ -21,18 +21,27 @@ def save_forecasts_to_db(restaurant_id: str, item_name: str, forecast_df: pd.Dat
         with Session(engine) as session:
             forecast_records = []
             
-            # Print loop and object generation
             for _, row in forecast_df.iterrows():
                 record_date = row['timestamp']
                 expected_orders = row['predicted_demand']
                 
-                print(f"Generated Forecast -> RecordDate: {record_date}, ExpectedOrders: {expected_orders}")
+                # Check for optional new columns in dataframe
+                accuracy = row.get('accuracy_percentage', None) if 'accuracy_percentage' in forecast_df.columns else None
+                is_peak = row.get('is_peak_hour', False) if 'is_peak_hour' in forecast_df.columns else False
+                peak_label = row.get('peak_label', None) if 'peak_label' in forecast_df.columns else None
+                weather_id = row.get('weather_data_id', None) if 'weather_data_id' in forecast_df.columns else None
+                event_id = row.get('event_date_id', None) if 'event_date_id' in forecast_df.columns else None
                 
                 forecast_record = Forecast(
                     RestaurantId=restaurant_id,
                     ItemName=item_name,
                     RecordDate=record_date,
-                    ExpectedOrders=expected_orders
+                    ExpectedOrders=expected_orders,
+                    AccuracyPercentage=accuracy,
+                    IsPeakHour=is_peak,
+                    PeakLabel=peak_label,
+                    WeatherDataId=weather_id,
+                    EventDateId=event_id
                 )
                 forecast_records.append(forecast_record)
             

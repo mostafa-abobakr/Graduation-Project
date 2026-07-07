@@ -16,6 +16,7 @@ from sqlalchemy import (
     Float,
     String,
     DateTime,
+    Boolean,
     ForeignKey,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -163,8 +164,13 @@ class Forecast(Base):
     """
     __tablename__ = "Forecasts"
 
-    ForecastId      = Column(Integer, primary_key=True, autoincrement=True)
-    RestaurantId    = Column(String(50), nullable=False, index=True)
-    ItemName        = Column(String(200), nullable=False, index=True)
-    RecordDate      = Column(DateTime, nullable=False, index=True)
-    ExpectedOrders  = Column(Float, nullable=False)
+    ForecastId          = Column(Integer, primary_key=True, autoincrement=True)
+    RestaurantId        = Column(String(50), nullable=False, index=True)
+    ItemName            = Column(String(200), nullable=False, index=True)
+    WeatherDataId       = Column(Integer, nullable=True)
+    RecordDate          = Column(DateTime, nullable=False, index=True)
+    ExpectedOrders      = Column(Float, nullable=False)
+    AccuracyPercentage  = Column(Float, nullable=True)
+    EventDateId         = Column(Integer, nullable=True)
+    IsPeakHour          = Column(Boolean, nullable=True, default=False)
+    PeakLabel           = Column(String(50), nullable=True)
