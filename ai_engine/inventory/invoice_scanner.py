@@ -393,10 +393,8 @@ def scan_invoice(restaurant_id: str, image_bytes: bytes, mode: str = "auto") -> 
     mode: "local" (Tesseract OCR), "cloud" (Gemini/OpenRouter), "auto" (try local first, fallback to cloud)
     """
     inventory = _get_inventory_list(restaurant_id)
-    if not inventory:
-        raise ValueError(f"Restaurant {restaurant_id} has no inventory items. Seed inventory first.")
 
-    # Build a quick lookup for enrichment
+    # Build a quick lookup for enrichment (empty if no inventory yet)
     inv_lookup = {inv["id"]: inv for inv in inventory}
 
     matched_items = []
