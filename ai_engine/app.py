@@ -1705,3 +1705,7 @@ app.include_router(
     prefix="/scheduling",
     tags=["Scheduling"]
 )
+
+
+#
+print("test")   
