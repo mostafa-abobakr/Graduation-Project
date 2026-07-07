@@ -812,17 +812,6 @@ def forecast_dashboard_day(
             revenue = orders * price
             profit = orders * (price - cost)
 
-            # DB Annotations
-            hourly['accuracy_percentage'] = item_accuracy_map.get(item_name, 0.0)
-            max_idx = hourly['predicted_demand'].idxmax()
-            hourly['is_peak_hour'] = False
-            hourly['peak_label'] = None
-            if pd.notna(max_idx):
-                hourly.loc[max_idx, 'is_peak_hour'] = True
-                hourly.loc[max_idx, 'peak_label'] = 'Peak'
-                
-            save_forecasts_to_db(restaurant_id, item_name, hourly)
-
             total_orders += int(round(orders))
             total_revenue += revenue
             total_profit += profit
@@ -947,15 +936,6 @@ def forecast_dashboard_week(
             price = p_data["price"]
             cost = p_data["cost"]
             
-            # DB Annotations
-            hourly['accuracy_percentage'] = item_accuracy_map.get(item_name, 0.0)
-            max_idx = hourly['predicted_demand'].idxmax()
-            hourly['is_peak_hour'] = False
-            hourly['peak_label'] = None
-            if pd.notna(max_idx):
-                hourly.loc[max_idx, 'is_peak_hour'] = True
-                hourly.loc[max_idx, 'peak_label'] = 'Peak'
-                
             save_forecasts_to_db(restaurant_id, item_name, hourly)
             hourly["date"] = hourly["timestamp"].dt.date
             daily = hourly.groupby("date", as_index=False)["predicted_demand"].sum()
