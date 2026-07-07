@@ -1,6 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import api from "@/api/axios";
+import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,47 +19,27 @@ import { ItemFormDialog } from "./ItemFormDialog";
 import { ScannerDialog } from "./ScannerDialog";
 import { RestockDialog } from "./RestockDialog";
 import { CATEGORIES } from "./InventoryUtils";
+import {
+  useInventoryItems,
+  useAddInventoryItem,
+  useUpdateInventoryItem,
+  useDeleteInventoryItem,
+  useRestockInventoryItem,
+  useWithdrawInventoryItem
+} from "@/hooks/useInventory";
 
 export default function InventoryPage() {
   const { user } = useAuth();
+  const restId = user?.restId;
   const { settings, addItemsBulk } = useInventoryStore();
-  const queryClient = useQueryClient();
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["inventoryItems", user?.restId],
-    queryFn: async () => {
-      try {
-        const response = await api.get(`/Inventory/restaurant/${user.restId}`);
-        return response.data.map((item) => ({
-          id: item.inventoryID,
-          name: item.itemName,
-          category: item.category || "Other",
-          quantity: item.stock,
-          unit: item.unit,
-          reorderLevel: item.reorderLevel,
-          cost: item.costPerUnit || 0,
-          shelfLife: item.shelfLife ?? null,
-          batchesCount: item.batchesCount ?? 0,
-          supplier: item.supplier || "Unknown",
-          apiStatus: item.status,
-          imageUrl: item.imageUrl,
-        }));
-      } catch (err) {
-        if (err.response && err.response.status === 404) {
-          return [];
-        }
-        throw err;
-      }
-    },
-    enabled: !!user?.restId,
-  });
-
-  useEffect(() => {
-    if (isError) {
-      console.error(error);
-      toast.error(error.message || "Failed to load items from API");
-    }
-  }, [isError, error]);
+  const { data, isPending: isLoading, refetch } = useInventoryItems(restId);
+  
+  const addMutation = useAddInventoryItem();
+  const updateMutation = useUpdateInventoryItem();
+  const deleteMutation = useDeleteInventoryItem();
+  const restockMutation = useRestockInventoryItem();
+  const withdrawMutation = useWithdrawInventoryItem();
 
   const [filter, setFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -143,10 +121,30 @@ export default function InventoryPage() {
     toast.success("PDF exported");
   };
 
-  const addMutation = useMutation({
-    mutationFn: async (formData) => {
+  const handleSaveItem = (formData, isEditing) => {
+    if (isEditing) {
       const payload = {
-        restID: parseInt(user.restId),
+        itemName: formData.name || formData.itemName || "",
+        category: formData.category || "General",
+        reorderLevel: formData.reorderLevel || 0,
+        supplier: formData.supplier || "Unknown",
+        unit: formData.unit || "Kg",
+        imageUrl: formData.imageUrl || "string",
+        description: formData.description || "string",
+        shelfLife: formData.isNonPerishable
+          ? 0
+          : parseInt(formData.shelfLifeDays, 10) || formData.shelfLife || 0,
+        costPerUnit: formData.cost ?? formData.costPerUnit ?? 0,
+      };
+      updateMutation.mutate({ restId, id: editingItem.id, payload }, {
+        onSuccess: () => {
+          setFormOpen(false);
+          setEditingItem(null);
+        }
+      });
+    } else {
+      const payload = {
+        restID: parseInt(restId),
         itemName: formData.name,
         category: formData.category || "General",
         stock: formData.quantity || 0,
@@ -164,77 +162,13 @@ export default function InventoryPage() {
           ? new Date(formData.productionDate).toISOString()
           : new Date().toISOString(),
       };
-      const response = await api.post("/Inventory", payload);
-      return response.data;
-    },
-    onSuccess: (responseData) => {
-      const message = responseData?.message || "Item added";
-      toast.success(message);
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
-      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to add item");
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, formData }) => {
-      const payload = {
-        itemName: formData.name || formData.itemName || "",
-        category: formData.category || "General",
-        reorderLevel: formData.reorderLevel || 0,
-        supplier: formData.supplier || "Unknown",
-        unit: formData.unit || "Kg",
-        imageUrl: formData.imageUrl || "string",
-        description: formData.description || "string",
-        shelfLife: formData.isNonPerishable
-          ? 0
-          : parseInt(formData.shelfLifeDays, 10) || formData.shelfLife || 0,
-        costPerUnit: formData.cost ?? formData.costPerUnit ?? 0,
-      };
-      const response = await api.put(
-        `/Inventory/restaurant/${user.restId}/${id}`,
-        payload,
-      );
-      return response.data;
-    },
-    onSuccess: (responseData) => {
-      const message = responseData?.message || "Item updated";
-      toast.success(message);
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
-      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to update item");
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id) => {
-      await api.delete(`/Inventory/restaurant/${user.restId}/${id}`);
-    },
-    onSuccess: () => {
-      toast.success("Item deleted");
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
-      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
-    },
-    onError: (err) => {
-      toast.error(err.message || "Failed to delete item");
-    },
-  });
-
-  const handleSaveItem = (formData, isEditing) => {
-    if (isEditing) {
-      updateMutation.mutate({ id: editingItem.id, formData });
-    } else {
-      addMutation.mutate(formData);
+      addMutation.mutate(payload, {
+        onSuccess: () => {
+          setFormOpen(false);
+          setEditingItem(null);
+        }
+      });
     }
-    setFormOpen(false);
-    setEditingItem(null);
   };
 
   const openEdit = (item) => {
@@ -254,7 +188,7 @@ export default function InventoryPage() {
     setRestockOpen(true);
   };
 
-  const handleRestock = async (
+  const handleRestock = (
     qtyStr,
     productionDate = null,
     mode = "restock",
@@ -266,43 +200,38 @@ export default function InventoryPage() {
       return;
     }
 
-    const restId = user?.restId;
-
-    try {
-      if (mode === "deduct") {
-        if (qty > (restockItem.quantity || 0)) {
-          toast.error("Cannot deduct more than current stock");
-          return;
-        }
-        await api.post(
-          `/InventoryBatch/restaurant/${restId}/item/${restockItem.id}/withdraw?quantity=${qty}`,
-          ""
-        );
-        toast.success("Stock deducted successfully");
-      } else {
-        const payload = {
-          inventoryID: restockItem.id,
-          quantity: qty,
-          unitCost: parseFloat(unitPriceStr) || restockItem.cost || 0,
-          productionDate: productionDate
-            ? new Date(productionDate).toISOString()
-            : new Date().toISOString(),
-        };
-        await api.post(
-          `/InventoryBatch/restaurant/${restId}/restock`,
-          payload
-        );
-        toast.success("Stock restocked successfully");
+    if (mode === "deduct") {
+      if (qty > (restockItem.quantity || 0)) {
+        toast.error("Cannot deduct more than current stock");
+        return;
       }
-      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
-      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
-      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
-    } catch (err) {
-      console.error(err);
-      toast.error(err?.response?.data?.message || "Operation failed");
-    } finally {
-      setRestockOpen(false);
-      setRestockItem(null);
+      withdrawMutation.mutate(
+        { restId, itemId: restockItem.id, quantity: qty },
+        {
+          onSettled: () => {
+            setRestockOpen(false);
+            setRestockItem(null);
+          }
+        }
+      );
+    } else {
+      const payload = {
+        inventoryID: restockItem.id,
+        quantity: qty,
+        unitCost: parseFloat(unitPriceStr) || restockItem.cost || 0,
+        productionDate: productionDate
+          ? new Date(productionDate).toISOString()
+          : new Date().toISOString(),
+      };
+      restockMutation.mutate(
+        { restId, payload },
+        {
+          onSettled: () => {
+            setRestockOpen(false);
+            setRestockItem(null);
+          }
+        }
+      );
     }
   };
 
@@ -363,7 +292,7 @@ export default function InventoryPage() {
           openRestock={openRestock}
           openDeduct={openDeduct}
           openEdit={openEdit}
-          deleteItem={(id) => deleteMutation.mutate(id)}
+          deleteItem={(id) => deleteMutation.mutate({ restId, id })}
           totalItems={enriched.length}
         />
       </Card>

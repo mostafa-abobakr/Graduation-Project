@@ -84,16 +84,11 @@ export default function ReportsPage() {
     if (exportingId) return
     setExportingId("generating")
 
-    try {
-      await queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
-      addReportToHistory("Daily Report")
-      toast.success("Reports generated successfully")
-    } catch (err) {
-      console.error("Failed to generate reports:", err)
-      toast.error("Failed to generate reports")
-    } finally {
-      setExportingId(null)
-    }
+    await queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
+    addReportToHistory("Daily Report")
+    toast.success("Reports generated successfully")
+    
+    setExportingId(null)
   }, [user, exportingId, queryClient])
 
   const isAnyExporting = exportingId !== null

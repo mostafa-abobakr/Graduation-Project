@@ -7,34 +7,41 @@ import { toast } from "sonner";
 export const useInventoryItems = (restId) => {
   return useQuery({
     queryKey: ["inventoryItems", restId],
-    queryFn: async () => {
-      const response = await api.get(`/Inventory/restaurant/${restId}`);
-      return response.data.map((item) => ({
-        id: item.inventoryID,
-        name: item.itemName,
-        category: item.category || "Other",
-        quantity: item.stock,
-        unit: item.unit,
-        reorderLevel: item.reorderLevel,
-        cost: item.costPerUnit || 0,
-        shelfLife: item.shelfLife ?? null,
-        batchesCount: item.batchesCount ?? 0,
-        supplier: item.supplier || "Unknown",
-        apiStatus: item.status,
-        imageUrl: item.imageUrl,
-      }));
+    queryFn: async ({ signal }) => {
+      try {
+        const response = await api.get(`/Inventory/restaurant/${restId}`, { signal });
+        return response.data.map((item) => ({
+          id: item.inventoryID,
+          name: item.itemName,
+          category: item.category || "Other",
+          quantity: item.stock,
+          unit: item.unit,
+          reorderLevel: item.reorderLevel,
+          cost: item.costPerUnit || 0,
+          shelfLife: item.shelfLife ?? null,
+          batchesCount: item.batchesCount ?? 0,
+          supplier: item.supplier || "Unknown",
+          apiStatus: item.status,
+          imageUrl: item.imageUrl,
+        }));
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          return [];
+        }
+        throw err;
+      }
     },
     enabled: !!restId,
-    // Removed staleTime: 0 and refetchOnWindowFocus: true
   });
 };
 
 export const useBatchDetails = (restId, itemId) => {
   return useQuery({
     queryKey: ["batchDetails", restId, itemId],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await api.get(
         `/InventoryBatch/restaurant/${restId}/item/${itemId}`,
+        { signal }
       );
       return res.data;
     },
@@ -45,9 +52,10 @@ export const useBatchDetails = (restId, itemId) => {
 export const useItemTransactions = (restId, itemId) => {
   return useQuery({
     queryKey: ["itemTransactions", restId, itemId],
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const res = await api.get(
         `/InventoryTransactions/restaurant/${restId}/item/${itemId}`,
+        { signal }
       );
       return res.data;
     },
@@ -57,6 +65,85 @@ export const useItemTransactions = (restId, itemId) => {
 
 // --- Mutations ---
 
+export const useAddInventoryItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (payload) => {
+      const response = await api.post("/Inventory", payload);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || "Item added");
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+    },
+  });
+};
+
+export const useUpdateInventoryItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ restId, id, payload }) => {
+      const response = await api.put(`/Inventory/restaurant/${restId}/${id}`, payload);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(data?.message || "Item updated");
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+    },
+  });
+};
+
+export const useDeleteInventoryItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ restId, id }) => {
+      await api.delete(`/Inventory/restaurant/${restId}/${id}`);
+    },
+    onSuccess: () => {
+      toast.success("Item deleted");
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+    },
+  });
+};
+
+export const useRestockInventoryItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ restId, payload }) => {
+      const response = await api.post(`/InventoryBatch/restaurant/${restId}/restock`, payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Stock restocked successfully");
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+    },
+  });
+};
+
+export const useWithdrawInventoryItem = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ restId, itemId, quantity }) => {
+      const response = await api.post(`/InventoryBatch/restaurant/${restId}/item/${itemId}/withdraw?quantity=${quantity}`, "");
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success("Stock deducted successfully");
+      queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
+      queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
+      queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
+    },
+  });
+};
+
 export const useDeleteBatch = () => {
   const queryClient = useQueryClient();
   return useMutation({
@@ -65,13 +152,9 @@ export const useDeleteBatch = () => {
     },
     onSuccess: (_, variables) => {
       toast.success(`Batch #${variables.batchId} deleted`);
-      // Invalidate both batchDetails and inventoryItems to keep UI in sync
       queryClient.invalidateQueries({ queryKey: ["batchDetails"] });
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
-    },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to delete batch");
     },
   });
 };
@@ -91,8 +174,36 @@ export const useUpdateBatch = () => {
       queryClient.invalidateQueries({ queryKey: ["inventoryItems"] });
       queryClient.invalidateQueries({ queryKey: ["itemTransactions"] });
     },
-    onError: (err) => {
-      toast.error(err?.response?.data?.message || "Failed to update batch");
-    },
   });
 };
+
+// ─── Alerts & Forecast ───────────────────────────────────────────────────────
+
+export function useInventoryAlerts(restId) {
+  return useQuery({
+    queryKey: ["inventoryAlerts", restId],
+    queryFn: async ({ signal }) => {
+      const res = await api.get(`/Inventory/restaurant/${restId}/alerts`, { signal });
+      return res.data;
+    },
+    enabled: !!restId,
+  });
+}
+
+export function useInventoryForecast(restId) {
+  return useQuery({
+    queryKey: ["inventoryForecast", restId],
+    queryFn: async ({ signal }) => {
+      try {
+        const res = await api.get(`/InventoryForecast/restaurant/${restId}`, { signal });
+        return res.data;
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          return { items: [], itemsShort: 0, sufficient: 0, totalShortage: 0 };
+        }
+        throw err;
+      }
+    },
+    enabled: !!restId,
+  });
+}

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import api from "@/api/axios";
+import { useInventoryForecast } from "@/hooks/useInventory";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -25,21 +24,7 @@ export default function InventoryForecastPage() {
   const [filter, setFilter] = useState("all");
   const { user } = useAuth();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["inventoryForecast", user?.restId],
-    queryFn: async () => {
-      try {
-        const res = await api.get(`/InventoryForecast/restaurant/${user.restId}`);
-        return res.data;
-      } catch (err) {
-        if (err.response && err.response.status === 404) {
-          return { items: [], itemsShort: 0, sufficient: 0, totalShortage: 0 };
-        }
-        throw err;
-      }
-    },
-    enabled: !!user?.restId,
-  });
+  const { data, isPending: isLoading, error } = useInventoryForecast(user?.restId);
 
   const enriched = useMemo(() => {
     if (!data?.items) return [];

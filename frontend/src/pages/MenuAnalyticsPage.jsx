@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,9 @@ import { ArrowUp, ArrowDown, Search, UtensilsCrossed } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { LoadingSkeleton } from "@/components/shared/Skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useMenuPerformance } from "@/hooks/useMenuAnalytics";
 
 export default function MenuAnalyticsPage() {
   const { t } = useLanguage();
@@ -18,22 +19,8 @@ export default function MenuAnalyticsPage() {
   const [sortAsc, setSortAsc] = useState(false);
   const [timeframe, setTimeframe] = useState("day");
   const { user } = useAuth();
-  // Fetch the data from the ZeroBite AI Engine
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["menuPerformance", user?.restId],
-    queryFn: async () => {
-      const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/menu/performance/${user.restId}`,
-        {
-          headers: { accept: "application/json" },
-        },
-      );
-      if (!res.ok) throw new Error("Failed to fetch menu analytics");
-      const json = await res.json();
-      return json.data;
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  
+  const { data, isPending, error } = useMenuPerformance(user?.restId);
 
   // Extract the specific array based on the timeframe (day, week, month, all)
   const currentData = data ? data[timeframe] || [] : [];
@@ -76,6 +63,8 @@ export default function MenuAnalyticsPage() {
       </div>
     );
   }
+
+  if (isPending) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
@@ -184,28 +173,7 @@ export default function MenuAnalyticsPage() {
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
-                // Loading Skeleton Rows
-                Array.from({ length: 6 }).map((_, idx) => (
-                  <tr key={idx} className="border-b border-border/30">
-                    <td className="py-4 px-5">
-                      <Skeleton className="h-4 w-32" />
-                    </td>
-                    <td className="py-4 px-5">
-                      <Skeleton className="h-4 w-16 mx-auto" />
-                    </td>
-                    <td className="py-4 px-5">
-                      <Skeleton className="h-4 w-20 mx-auto" />
-                    </td>
-                    <td className="py-4 px-5">
-                      <Skeleton className="h-4 w-20 mx-auto" />
-                    </td>
-                    <td className="py-4 px-5">
-                      <Skeleton className="h-6 w-16 rounded-full mx-auto" />
-                    </td>
-                  </tr>
-                ))
-              ) : filtered.length === 0 ? (
+              {filtered.length === 0 ? (
                 // Empty State
                 <tr>
                   <td colSpan={5} className="p-0">

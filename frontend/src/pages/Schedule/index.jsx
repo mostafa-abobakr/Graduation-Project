@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { useAuth } from "@/contexts/AuthContext"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQueryClient, useMutation } from "@tanstack/react-query"
 import {
   useEmployees,
   useShifts,
@@ -35,7 +35,6 @@ export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState("")
   const [isEditMode, setIsEditMode] = useState(false)
   const [editingShiftId, setEditingShiftId] = useState(null)
-  const [isGenerating, setIsGenerating] = useState(false)
   const [customRange, setCustomRange] = useState(null)
   const [isRangePickerOpen, setIsRangePickerOpen] = useState(false)
   const [dateRange, setDateRange] = useState({ from: undefined, to: undefined })
@@ -223,18 +222,16 @@ export default function SchedulePage() {
     });
   };
 
-  const handleGenerateAISchedule = async () => {
-    setIsGenerating(true)
-    const targetDateStr = new Date(
-      baseDate.getTime() - baseDate.getTimezoneOffset() * 60000,
-    )
-      .toISOString()
-      .split("T")[0]
+  const generateScheduleMutation = useMutation({
+    mutationFn: async () => {
+      const targetDateStr = new Date(
+        baseDate.getTime() - baseDate.getTimezoneOffset() * 60000,
+      )
+        .toISOString()
+        .split("T")[0]
 
-    const restId = user?.restId
-    console.log(targetDateStr);
+      const restId = user?.restId
 
-    try {
       const response = await fetch(
         `https://youseef-awaad-zerobite-ai-engine.hf.space/scheduling/generate/${restId}?target_date=${targetDateStr}`,
         {
@@ -249,21 +246,18 @@ export default function SchedulePage() {
         throw new Error("Failed to generate schedule")
       }
 
-      const data = await response.json()
-
+      return response.json()
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
-
       toast.success("AI Schedule Generated!", {
         description: data.message || "Schedule generated successfully for the week."
       })
-    } catch (error) {
-      console.error(error)
-      toast.error("Error generating schedule", {
-        description: error.message || "Something went wrong."
-      })
-    } finally {
-      setIsGenerating(false)
     }
+  })
+
+  const handleGenerateAISchedule = () => {
+    generateScheduleMutation.mutate()
   }
 
   const handleCopyLastWeek = () => {
@@ -427,14 +421,14 @@ export default function SchedulePage() {
                 <Button
                   variant="default"
                   className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shadow-indigo-500/20 transition-all duration-300"
-                  disabled={isGenerating}
+                  disabled={generateScheduleMutation.isPending}
                 >
-                  {isGenerating ? (
+                  {generateScheduleMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Sparkles className="h-4 w-4" />
                   )}
-                  {isGenerating ? "Processing..." : "Schedule Actions"}
+                  {generateScheduleMutation.isPending ? "Processing..." : "Schedule Actions"}
                   <ChevronDown className="h-4 w-4 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>

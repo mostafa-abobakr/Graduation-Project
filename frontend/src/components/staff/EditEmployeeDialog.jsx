@@ -15,8 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useQuery } from "@tanstack/react-query"
-import api from "@/api/axios"
-import { useUpdateEmployee } from "@/hooks/useStaff"
+import { useUpdateEmployee, useEmployeeDetails } from "@/hooks/useStaff"
 import { useAuth } from "@/contexts/AuthContext"
 
 const SHIFT_OPTIONS = ["Morning", "Night"]
@@ -37,14 +36,7 @@ export function EditEmployeeDialog({ isOpen, onOpenChange, employee }) {
   const updateEmployeeMutation = useUpdateEmployee()
   const empId = employee?.id || employee?.empID || employee?.empId
 
-  const { data: detailedEmployee, isLoading } = useQuery({
-    queryKey: ["employee", empId],
-    queryFn: async () => {
-      const response = await api.get(`/Employees/single/${empId}`)
-      return response.data
-    },
-    enabled: isOpen && !!empId,
-  })
+  const { data: detailedEmployee, isPending: isLoading } = useEmployeeDetails(empId, isOpen)
   
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm({
     resolver: zodResolver(updateEmployeeSchema),

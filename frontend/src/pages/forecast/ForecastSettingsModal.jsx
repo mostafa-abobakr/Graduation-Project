@@ -11,8 +11,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Search, MapPin, Loader2, CloudSun } from "lucide-react"
-import axios from "axios"
 import { toast } from "sonner"
+import { useGeocodeCity, useFetchCityWeather } from "../../hooks/useForecast"
 
 export default function ForecastSettingsModal({
   open,
@@ -34,38 +34,32 @@ export default function ForecastSettingsModal({
       setSearchQuery(user.address)
     }
   }, [open, user?.address])
-  const [isSearching, setIsSearching] = useState(false)
-  const [isFetchingWeather, setIsFetchingWeather] = useState(false)
+  const [activeSearchCity, setActiveSearchCity] = useState("")
+  const [selectedCoords, setSelectedCoords] = useState({ lat: null, lon: null, city: null })
 
-  const handleSearchClick = async () => {
-    if (!searchQuery.trim()) return
-    setIsSearching(true)
-    try {
-      const response = await axios.get(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`
-      )
-      setSuggestions(response.data)
-      if (response.data.length === 0) {
+  const { data: suggestionsData, isFetching: isSearching, error: searchError } = useGeocodeCity(activeSearchCity)
+  const { data: weatherData, isFetching: isFetchingWeather, error: weatherError } = useFetchCityWeather(selectedCoords.lat, selectedCoords.lon)
+
+  useEffect(() => {
+    if (suggestionsData) {
+      setSuggestions(suggestionsData)
+      if (suggestionsData.length === 0 && activeSearchCity) {
         toast.error("No cities found. Try another search.")
       }
-    } catch (error) {
-      console.error("Geocoding failed:", error)
-      toast.error("Failed to fetch city details. Please try again.")
-    } finally {
-      setIsSearching(false)
     }
-  }
+  }, [suggestionsData, activeSearchCity])
 
-  const handleCitySelect = async (city) => {
-    setIsFetchingWeather(true)
-    const lat = parseFloat(city.lat)
-    const lon = parseFloat(city.lon)
-    try {
-      const response = await axios.get(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max&timezone=auto`
-      )
-      const maxTemps = response.data.daily.temperature_2m_max
-      const times = response.data.daily.time
+  useEffect(() => {
+    if (searchError) {
+      console.error("Geocoding failed:", searchError)
+      toast.error("Failed to fetch city details. Please try again.")
+    }
+  }, [searchError])
+
+  useEffect(() => {
+    if (weatherData && selectedCoords.city) {
+      const maxTemps = weatherData.daily?.temperature_2m_max
+      const times = weatherData.daily?.time
       if (maxTemps && maxTemps.length >= 7 && times) {
         const alignedTemps = [0, 0, 0, 0, 0, 0, 0]
         times.slice(0, 7).forEach((timeStr, idx) => {
@@ -77,18 +71,33 @@ export default function ForecastSettingsModal({
         })
         setWeeklyTemperatures(alignedTemps)
         setDailyData([Math.round(maxTemps[0]), dailyData[1]])
-        toast.success(`Loaded weather forecast for ${city.display_name.split(",")[0]}`)
+        toast.success(`Loaded weather forecast for ${selectedCoords.city.display_name.split(",")[0]}`)
         setSuggestions([])
         setSearchQuery("")
+        setActiveSearchCity("")
+        setSelectedCoords({ lat: null, lon: null, city: null })
       } else {
         toast.error("Failed to retrieve 7-day forecast from weather service.")
+        setSelectedCoords({ lat: null, lon: null, city: null })
       }
-    } catch (error) {
-      console.error("Weather fetch failed:", error)
-      toast.error("Failed to load weather data.")
-    } finally {
-      setIsFetchingWeather(false)
     }
+  }, [weatherData, selectedCoords.city, dailyData, setWeeklyTemperatures, setDailyData])
+
+  useEffect(() => {
+    if (weatherError) {
+      console.error("Weather fetch failed:", weatherError)
+      toast.error("Failed to load weather data.")
+      setSelectedCoords({ lat: null, lon: null, city: null })
+    }
+  }, [weatherError])
+
+  const handleSearchClick = () => {
+    if (!searchQuery.trim()) return
+    setActiveSearchCity(searchQuery)
+  }
+
+  const handleCitySelect = (city) => {
+    setSelectedCoords({ lat: parseFloat(city.lat), lon: parseFloat(city.lon), city })
   }
 
   const handleTemperatureChange = (index, value) => {

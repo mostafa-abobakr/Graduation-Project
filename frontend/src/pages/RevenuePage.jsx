@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-import api from "@/api/axios";
+import { useRevenueData } from "@/hooks/useRevenue";
 import {
   AreaChart,
   Area,
@@ -119,19 +118,9 @@ export default function RevenuePage() {
   const { t, language } = useLanguage();
   const [viewMode, setViewMode] = useState("day");
 
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["revenueData", user?.restId],
-    queryFn: async () => {
-      if (!user?.restId) return null;
-      const res = await api.get(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/revenue/${user.restId}`
-      );
-      return res.data;
-    },
-    enabled: !!user?.restId,
-  });
+  const { data, isPending, isError, error } = useRevenueData(user?.restId);
 
-  if (isLoading) return <LoadingSkeleton />;
+  if (isPending) return <LoadingSkeleton />;
 
   if (isError) {
     return (

@@ -67,7 +67,6 @@ import {
   useDeleteBatch, 
   useUpdateBatch 
 } from "@/hooks/useInventory";
-import api from "@/api/axios";
 import { toast } from "sonner";
 
 import { BatchEditDialog } from "./BatchEditDialog";

@@ -25,10 +25,6 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response) => {
-    const method = response.config?.method?.toLowerCase();
-    if (method && ["post", "put", "delete", "patch"].includes(method)) {
-      window.dispatchEvent(new Event("data-mutated"));
-    }
     return response;
   },
   (error) => {
