@@ -16,8 +16,8 @@ from database.connection import get_engine
 # ---------------------------------------------------------------------------
 _ITEM_DEMAND_SQL = text("""
     SELECT
-        o.OrderTimestamp   AS order_timestamp,
-        oi.Quantity        AS quantity,
+        o.OrderTimestamp   AS ds,
+        oi.Quantity        AS y,
         o.TemperatureCelsius AS temperature_celsius,
         o.EventDay         AS event_day,
         mi.ItemName        AS item_name
@@ -35,8 +35,8 @@ def load_item_demand(restaurant_id: str) -> pd.DataFrame:
     a flat DataFrame ready for clean_data() → aggregate_hourly().
 
     Output columns (contract — do not change):
-        order_timestamp  : datetime
-        quantity         : int
+        ds               : datetime
+        y                : int
         temperature_celsius : float
         event_day        : int (0 or 1)
         item_name        : str
@@ -54,15 +54,15 @@ def load_item_demand(restaurant_id: str) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame(
             columns=[
-                "order_timestamp",
-                "quantity",
+                "ds",
+                "y",
                 "temperature_celsius",
                 "event_day",
                 "item_name",
             ]
         )
 
-    df["order_timestamp"] = pd.to_datetime(df["order_timestamp"])
+    df["ds"] = pd.to_datetime(df["ds"])
     df["event_day"] = df["event_day"].fillna(0).astype(int)
     return df
 
