@@ -16,8 +16,9 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react"
-import { useReports } from "@/hooks/useReports"
+import { useReports, addReportToHistory } from "@/hooks/useReports"
 import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { exportDailyReportPdf } from "./exportDailyReportPdf"
@@ -91,23 +92,14 @@ export default function ReportsPage() {
         await exportDailyReportPdf(user, (v) => !v && setExportingId(null), report.name)
       }
 
+      await queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
+      addReportToHistory(report.name || "Daily Report")
+      toast.success("Reports generated successfully")
+
       setExportingId(null)
-      // Refetch to update "Reports Generated" + "Last Export" cards
-      queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
     },
     [user, exportingId, queryClient]
   )
-
-
-<<<<<<< HEAD
-=======
-    await queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
-    addReportToHistory("Daily Report")
-    toast.success("Reports generated successfully")
-    
-    setExportingId(null)
-  }, [user, exportingId, queryClient])
->>>>>>> eb7fdca724df89e68d88c6daf1855595cfb7e295
 
   const isAnyExporting = exportingId !== null
 
