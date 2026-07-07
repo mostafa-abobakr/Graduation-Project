@@ -88,17 +88,13 @@ const fetchReportsData = async (restId) => {
 
   const lastEntry = history[0]
   const lastExportName = lastEntry?.name || "N/A"
-  let lastExport = "-"
-  if (lastEntry) {
-    const diff = Math.floor((Date.now() - new Date(lastEntry.exportedAt)) / 60000)
-    lastExport = diff < 60 ? `${diff}m ago` : `${Math.floor(diff / 60)}h ago`
-  }
+  const lastExportAt = lastEntry?.exportedAt || null
 
   return {
     stats: {
       generatedThisMonth,
       scheduled: 2,
-      lastExport,
+      lastExportAt,
       lastExportName,
     },
     meta: {

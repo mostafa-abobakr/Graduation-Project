@@ -220,8 +220,10 @@ export default function SchedulePage() {
 
   const handleGenerateAISchedule = async () => {
     setIsGenerating(true)
+    const saturday = new Date(baseDate)
+    saturday.setDate(saturday.getDate() - ((saturday.getDay() + 1) % 7))
     const targetDateStr = new Date(
-      baseDate.getTime() - baseDate.getTimezoneOffset() * 60000,
+      saturday.getTime() - saturday.getTimezoneOffset() * 60000,
     )
       .toISOString()
       .split("T")[0]

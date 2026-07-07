@@ -2,6 +2,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "sonner";
 import api from "@/api/axios";
+import { addReportToHistory } from "@/hooks/useReports";
 
 const ANALYTICS_BASE = "https://youseef-awaad-zerobite-ai-engine.hf.space";
 
@@ -357,6 +358,7 @@ export const exportDailyReportPdf = async (user, setIsExporting, reportName = "D
 
     const fileSafeName = reportName.toLowerCase().replace(/\s+/g, "-");
     doc.save(`${fileSafeName || "daily-report"}-${businessDate}.pdf`);
+    addReportToHistory(reportName);
     toast.success("PDF exported successfully");
   } catch (error) {
     console.error("Failed to export report PDF:", error);

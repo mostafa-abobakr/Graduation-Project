@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { SummaryCard } from "@/components/shared/SummaryCard"
 import { Button } from "@/components/ui/button"
@@ -16,9 +16,8 @@ import {
   AlertCircle,
   RefreshCw,
 } from "lucide-react"
-import { useReports, addReportToHistory } from "@/hooks/useReports"
+import { useReports } from "@/hooks/useReports"
 import { useQueryClient } from "@tanstack/react-query"
-import { toast } from "sonner"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { exportDailyReportPdf } from "./exportDailyReportPdf"
@@ -44,8 +43,8 @@ const EXPORT_FN_MAP = {
   "Weekly Revenue Report": exportWeeklyRevenueReport,
   "Menu Analytics Summary": exportMenuAnalyticsReport,
   "Inventory Stock Level": exportInventoryReport,
-  // "Staff Hours Summary": exportStaffHoursReport,
-  // "Weekly Schedule": exportWeeklyScheduleReport,
+  "Staff Hours Summary": exportStaffHoursReport,
+  "Weekly Schedule": exportWeeklyScheduleReport,
 }
 
 // Reports hidden from the UI (not ready yet)
@@ -56,6 +55,25 @@ export default function ReportsPage() {
   const queryClient = useQueryClient()
   const { data: reportsData, isLoading, isError } = useReports(user?.restId)
   const [exportingId, setExportingId] = useState(null)
+  const [, setTick] = useState(0)
+
+  const lastExportAt = reportsData?.stats?.lastExportAt
+
+  // Re-render every 30s so the relative time stays fresh
+  useEffect(() => {
+    if (!lastExportAt) return
+    const timer = setInterval(() => setTick((n) => n + 1), 30_000)
+    return () => clearInterval(timer)
+  }, [lastExportAt])
+
+  const formatRelativeTime = (iso) => {
+    if (!iso) return "-"
+    const diff = Math.floor((Date.now() - new Date(iso)) / 60_000)
+    if (diff < 1) return "Just now"
+    if (diff < 60) return `${diff}m ago`
+    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`
+    return `${Math.floor(diff / 1440)}d ago`
+  }
 
   // Per-report loading state — tracks which report is currently exporting
   const handleExport = useCallback(
@@ -80,21 +98,7 @@ export default function ReportsPage() {
     [user, exportingId, queryClient]
   )
 
-  const handleGenerateReport = useCallback(async () => {
-    if (exportingId) return
-    setExportingId("generating")
 
-    try {
-      await queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
-      addReportToHistory("Daily Report")
-      toast.success("Reports generated successfully")
-    } catch (err) {
-      console.error("Failed to generate reports:", err)
-      toast.error("Failed to generate reports")
-    } finally {
-      setExportingId(null)
-    }
-  }, [user, exportingId, queryClient])
 
   const isAnyExporting = exportingId !== null
 
@@ -105,15 +109,6 @@ export default function ReportsPage() {
         icon={FileText}
         title="Reports & Export"
         description="Generate and download reports"
-        actions={
-          <Button
-            disabled={isLoading || isAnyExporting}
-            onClick={handleGenerateReport}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            {exportingId === "generating" ? "Generating..." : "Generate Report"}
-          </Button>
-        }
       />
 
       {/* Stat Cards */}
@@ -148,7 +143,7 @@ export default function ReportsPage() {
             isLoading ? (
               <Skeleton className="h-8 w-24" />
             ) : (
-              reportsData?.stats?.lastExport ?? "-"
+              formatRelativeTime(lastExportAt)
             )
           }
           sub={
