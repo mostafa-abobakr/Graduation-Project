@@ -1,36 +1,26 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowUp, ArrowDown, Search, UtensilsCrossed } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext"
-import { PageHeader } from "@/components/shared/PageHeader"
-import { EmptyState } from "@/components/shared/EmptyState"
-import { useLanguage } from "@/contexts/LanguageContext"
+import { useAuth } from "@/contexts/AuthContext";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyState } from "@/components/shared/EmptyState";
+import { LoadingSkeleton } from "@/components/shared/Skeletons";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useMenuPerformance } from "@/hooks/useMenuAnalytics";
 
 export default function MenuAnalyticsPage() {
-  const { t } = useLanguage()
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("orders");
   const [sortAsc, setSortAsc] = useState(false);
   const [timeframe, setTimeframe] = useState("day");
-  const {user}= useAuth();
-  // Fetch the data from the ZeroBite AI Engine
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["menuPerformance", user?.restId],
-    queryFn: async () => {
-      const res = await fetch(`https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/menu/performance/${user.restId}`, {
-        headers: { accept: "application/json" }
-      });
-      if (!res.ok) throw new Error("Failed to fetch menu analytics");
-      const json = await res.json();
-      return json.data; 
-    },
-    staleTime: 1000 * 60 * 5, // 5 minutes
-  });
+  const { user } = useAuth();
+  
+  const { data, isPending, error } = useMenuPerformance(user?.restId);
 
   // Extract the specific array based on the timeframe (day, week, month, all)
   const currentData = data ? data[timeframe] || [] : [];
@@ -48,24 +38,33 @@ export default function MenuAnalyticsPage() {
     .filter((i) => i.item_name.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       const mult = sortAsc ? 1 : -1;
-      if (sortKey === "item_name") return mult * a.item_name.localeCompare(b.item_name);
+      if (sortKey === "item_name")
+        return mult * a.item_name.localeCompare(b.item_name);
       return mult * (a[sortKey] - b[sortKey]);
     });
 
   const SortIcon = ({ col }) => {
     const isActive = sortKey === col;
     const Icon = isActive && sortAsc ? ArrowUp : ArrowDown;
-    return <Icon className={`h-3 w-3 shrink-0 transition-opacity ${isActive ? "opacity-100 text-primary" : "opacity-0"}`} />;
+    return (
+      <Icon
+        className={`h-3 w-3 shrink-0 transition-opacity ${isActive ? "opacity-100 text-primary" : "opacity-0"}`}
+      />
+    );
   };
 
   if (error) {
     return (
       <div className="p-8 text-center text-destructive bg-destructive/10 rounded-xl border border-destructive/20">
-        <h3 className="font-bold text-lg mb-2">{t("Error Loading Analytics")}</h3>
+        <h3 className="font-bold text-lg mb-2">
+          {t("Error Loading Analytics")}
+        </h3>
         <p>{error.message}</p>
       </div>
-    )
+    );
   }
+
+  if (isPending) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
@@ -73,7 +72,9 @@ export default function MenuAnalyticsPage() {
       <PageHeader
         icon={UtensilsCrossed}
         title={t("Menu Item Performance")}
-        description={t("Detailed real-time analytics for every item on your menu.")}
+        description={t(
+          "Detailed real-time analytics for every item on your menu.",
+        )}
       />
 
       {/* Controls Row */}
@@ -95,7 +96,13 @@ export default function MenuAnalyticsPage() {
             className="absolute top-1.5 bottom-1.5 w-[calc(25%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"
             style={{
               transform: `translateX(calc(${
-                timeframe === "day" ? "0" : timeframe === "week" ? "100" : timeframe === "month" ? "200" : "300"
+                timeframe === "day"
+                  ? "0"
+                  : timeframe === "week"
+                    ? "100"
+                    : timeframe === "month"
+                      ? "200"
+                      : "300"
               }%))`,
             }}
           />
@@ -130,9 +137,17 @@ export default function MenuAnalyticsPage() {
                 {[
                   { key: "item_name", label: t("Menu Items"), align: "left" },
                   { key: "orders", label: t("Total Orders"), align: "center" },
-                  { key: "revenue", label: t("Generated Revenue"), align: "center" },
+                  {
+                    key: "revenue",
+                    label: t("Generated Revenue"),
+                    align: "center",
+                  },
                   { key: "profit", label: t("Net Profit"), align: "center" },
-                  { key: "margin_percentage", label: t("Profit Margin"), align: "center" },
+                  {
+                    key: "margin_percentage",
+                    label: t("Profit Margin"),
+                    align: "center",
+                  },
                 ].map(({ key, label, align }) => (
                   <th
                     key={key}
@@ -141,10 +156,13 @@ export default function MenuAnalyticsPage() {
                     }`}
                     onClick={() => handleSort(key)}
                   >
-                    <span className="inline-flex items-center gap-1.5">
+                    <span className="inline-flex items-center gap-2">
                       {label}
                       {key === "item_name" && (
-                        <Badge variant="secondary" className="bg-primary/10 text-primary hover:bg-primary/20 pointer-events-none rounded-md px-1.5 py-0 min-w-[1.5rem] items-center justify-center">
+                        <Badge
+                          variant="secondary"
+                          className="bg-primary/10 text-primary hover:bg-primary/20 pointer-events-none rounded-md px-1.5 py-0 min-w-[1.5rem] items-center justify-center"
+                        >
                           {filtered.length}
                         </Badge>
                       )}
@@ -155,18 +173,7 @@ export default function MenuAnalyticsPage() {
               </tr>
             </thead>
             <tbody>
-              {isLoading ? (
-                // Loading Skeleton Rows
-                Array.from({ length: 6 }).map((_, idx) => (
-                  <tr key={idx} className="border-b border-border/30">
-                    <td className="py-4 px-5"><Skeleton className="h-4 w-32" /></td>
-                    <td className="py-4 px-5"><Skeleton className="h-4 w-16 mx-auto" /></td>
-                    <td className="py-4 px-5"><Skeleton className="h-4 w-20 mx-auto" /></td>
-                    <td className="py-4 px-5"><Skeleton className="h-4 w-20 mx-auto" /></td>
-                    <td className="py-4 px-5"><Skeleton className="h-6 w-16 rounded-full mx-auto" /></td>
-                  </tr>
-                ))
-              ) : filtered.length === 0 ? (
+              {filtered.length === 0 ? (
                 // Empty State
                 <tr>
                   <td colSpan={5} className="p-0">
@@ -223,8 +230,8 @@ export default function MenuAnalyticsPage() {
                           item.margin_percentage >= 70
                             ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                             : item.margin_percentage >= 40
-                            ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-                            : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+                              ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                              : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
                         }`}
                       >
                         {item.margin_percentage.toFixed(1)}%

@@ -9,11 +9,12 @@ export function useScanner({ onSuccess }) {
 
   const scanInvoiceMutation = useMutation({
     mutationFn: async (file) => {
+      const restId = user?.restId;
       const formData = new FormData();
       formData.append("file", file);
 
       const res = await api.post(
-        "https://youseef-awaad-zerobite-ai-engine.hf.space/inventory/invoice-scan/2?mode=auto",
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/inventory/invoice-scan/${restId}?mode=auto`,
         formData,
         {
           headers: {
@@ -42,7 +43,7 @@ export function useScanner({ onSuccess }) {
 
   const processInvoiceMutation = useMutation({
     mutationFn: async ({ mappedItems, newItems, existingInventory }) => {
-      const restId = user?.restId || 2;
+      const restId = user?.restId;
       const promises = [];
 
       // Matched items → new batch restock

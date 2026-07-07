@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import api from "@/api/axios";
 import { CalendarCheck, Ban, MoreVertical, Pencil, Search, Store } from "lucide-react";
 
 import { Card } from "@/components/ui/card";
@@ -30,10 +28,18 @@ import RestaurantBulkActions from "./RestaurantBulkActions";
 import AddRestaurantDialog from "./AddRestaurantDialog";
 import UpdateRestaurantDialog from "./UpdateRestaurantDialog";
 import StatusConfirmDialog from "./StatusConfirmDialog";
+import {
+  useAddRestaurant,
+  useUpdateRestaurant,
+  useUpdateRestaurantStatusBulk
+} from "@/hooks/useAdmin";
 
 export default function RestaurantsTable({ restaurants, loading }) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+
+  const addMutation = useAddRestaurant();
+  const updateMutation = useUpdateRestaurant();
+  const bulkStatusMutation = useUpdateRestaurantStatusBulk();
 
   const [search, setSearch] = useState("");
   const [sortOrder, setSortOrder] = useState("latest");
@@ -103,7 +109,7 @@ export default function RestaurantsTable({ restaurants, loading }) {
   };
 
   // Action Handlers
-  const handleAddSubmit = async (formData) => {
+  const handleAddSubmit = (formData) => {
     if (!formData.restaurantName || !formData.ownerEmail) {
       toast({
         title: "Validation Error",
@@ -112,95 +118,55 @@ export default function RestaurantsTable({ restaurants, loading }) {
       });
       return;
     }
-    try {
-      const token = localStorage.getItem("authToken");
-      await api.post(
-        "/Restaurant",
-        {
-          restaurantName: formData.restaurantName,
-          ownerEmail: formData.ownerEmail,
-          isActive: formData.status === "Active",
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      toast({
-        title: "Success",
-        description: `Restaurant "${formData.restaurantName}" has been added.`,
-      });
-      setIsAddDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["Admin_dashboard"] });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to add restaurant.",
-        variant: "destructive",
-      });
-    }
+    
+    addMutation.mutate({
+      restaurantName: formData.restaurantName,
+      ownerEmail: formData.ownerEmail,
+      isActive: formData.status === "Active",
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: `Restaurant "${formData.restaurantName}" has been added.`,
+        });
+        setIsAddDialogOpen(false);
+      }
+    });
   };
 
-  const handleUpdateSubmit = async (formData) => {
-    try {
-      const token = localStorage.getItem("authToken");
-      await api.put(
-        `/admin/restaurants/${restaurantToUpdate.restaurantId}`,
-        {
-          restaurantName: formData.restaurantName,
-          isActive: formData.status === "Active",
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      toast({
-        title: "Success",
-        description: "Restaurant updated successfully.",
-      });
-      setIsUpdateDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["Admin_dashboard"] });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Failed to update restaurant.",
-        variant: "destructive",
-      });
-    }
+  const handleUpdateSubmit = (formData) => {
+    updateMutation.mutate({
+      id: restaurantToUpdate.restaurantId,
+      payload: {
+        restaurantName: formData.restaurantName,
+        isActive: formData.status === "Active",
+      }
+    }, {
+      onSuccess: () => {
+        toast({
+          title: "Success",
+          description: "Restaurant updated successfully.",
+        });
+        setIsUpdateDialogOpen(false);
+      }
+    });
   };
 
-  const updateStatus = async (targets, isActive, dialogSetter, targetSetter) => {
-    try {
-      const token = localStorage.getItem("authToken");
-
-      await Promise.all(
-        targets.map(async (id) => {
-          const restaurant = restaurants?.find((r) => r.restaurantId === id);
-          if (restaurant) {
-            await api.put(
-              `/admin/restaurants/${id}`,
-              {
-                restaurantName: restaurant.restaurantName,
-                isActive,
-              },
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-          }
-        })
-      );
-
-      toast({
-        title: isActive ? "Accounts Activated" : "Accounts Deactivated",
-        description: `Successfully ${isActive ? "activated" : "deactivated"} ${targets.length} restaurant(s).`,
-      });
-      dialogSetter(false);
-      if (!targetSetter) setSelected([]); // Clear bulk selection
-
-      queryClient.invalidateQueries({ queryKey: ["Admin_dashboard"] });
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: `Failed to ${isActive ? "activate" : "deactivate"} restaurants.`,
-        variant: "destructive",
-      });
-    }
+  const updateStatus = (targets, isActive, dialogSetter, targetSetter) => {
+    bulkStatusMutation.mutate({
+      targets,
+      isActive,
+      restaurantsData: restaurants
+    }, {
+      onSuccess: () => {
+        toast({
+          title: isActive ? "Accounts Activated" : "Accounts Deactivated",
+          description: `Successfully ${isActive ? "activated" : "deactivated"} ${targets.length} restaurant(s).`,
+        });
+        dialogSetter(false);
+        if (!targetSetter) setSelected([]); // Clear bulk selection
+      }
+    });
   };
 
   const handleDeactivateConfirm = () => {

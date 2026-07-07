@@ -1,41 +1,21 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "@/api/axios";
-
 import DashboardCards from "./DashboardCards";
 import RestaurantsTable from "./RestaurantsTable";
+import { useAdminDashboard } from "@/hooks/useAdmin";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
 
-  const fetchDashboard = async () => {
-    try {
-      const token = localStorage.getItem("authToken");
+  const { data, isPending, isError, error } = useAdminDashboard();
 
-      const res = await api.get(
-        "/admin/dashboard",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      return res.data;
-    } catch (error) {
+  useEffect(() => {
+    if (isError) {
       if (error?.response?.status === 403 || error?.response?.status === 401) {
         navigate("/unauthorized");
-      } else {
-        throw error;
       }
     }
-  };
-
-  const { data, isLoading, isError } = useQuery({
-    queryKey: ["Admin_dashboard"],
-    queryFn: fetchDashboard,
-    staleTime: 1000 * 60 * 5,
-  });
+  }, [isError, error, navigate]);
 
   return (
     <div className="space-y-6 animate-fade-in pb-8">
@@ -49,11 +29,11 @@ export default function AdminDashboard() {
         </p>
       </div>
 
-      <DashboardCards data={data} isLoading={isLoading} />
+      <DashboardCards data={data} isLoading={isPending} />
 
       <RestaurantsTable
         restaurants={data?.restaurants || []}
-        loading={isLoading || (!data && !isError)}
+        loading={isPending || (!data && !isError)}
       />
     </div>
   );

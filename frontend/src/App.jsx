@@ -11,11 +11,6 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import ScrollToTopButton from "@/components/ScrollToTopButton";
 import { queryClient } from "@/lib/queryClient";
 
-
-window.addEventListener("data-mutated", () => {
-  queryClient.invalidateQueries({ queryKey: ["notifications"] });
-});
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -26,7 +21,7 @@ const App = () => (
         <Sonner />
         <ScrollToTopButton />
         <InventoryProvider>
-          <RouterProvider router={router} />
+          <RouterProvider router={router} future={{ v7_startTransition: true }} />
         </InventoryProvider>
       </AuthProvider>
       </LanguageProvider>

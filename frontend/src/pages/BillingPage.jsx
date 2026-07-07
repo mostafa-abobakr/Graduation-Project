@@ -27,11 +27,11 @@ export default function BillingPage() {
       {isAdmin ? (
         <Tabs defaultValue="manager" className="w-full">
           <TabsList className="mb-4">
-            <TabsTrigger value="manager" className="gap-1.5">
+            <TabsTrigger value="manager" className="gap-2">
               <Crown className="h-3.5 w-3.5" />
               My Subscription
             </TabsTrigger>
-            <TabsTrigger value="admin" className="gap-1.5">
+            <TabsTrigger value="admin" className="gap-2">
               <Shield className="h-3.5 w-3.5" />
               Platform Admin
             </TabsTrigger>

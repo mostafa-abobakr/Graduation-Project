@@ -1,75 +1,81 @@
-import { Check, ArrowRight, Leaf } from "lucide-react"
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import { useLanguage } from "@/contexts/LanguageContext"
-import { Link } from "react-router-dom"
-import { ThemeToggle } from "@/components/shared/ThemeToggle"
+import { Check, ArrowRight, Leaf } from "lucide-react";
+import MainLogo from "@/assets/logos/MainLogo";
+import TextLogo from "@/assets/logos/TextLogo";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Link } from "react-router-dom";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 export default function BillingPlans() {
-  const navigate = useNavigate()
-  const { t } = useLanguage()
-  const [selectedPlan, setSelectedPlan] = useState("Operations Pro")
+  const navigate = useNavigate();
+  const { t } = useLanguage();
+  const [selectedPlan, setSelectedPlan] = useState("Operations Pro");
 
   const plans = [
     {
       name: "Operations Pro",
       price: "49",
-      description: t("Ideal for growing restaurants focusing on core operations."),
+      description: t(
+        "Ideal for growing restaurants focusing on core operations.",
+      ),
       features: [
         t("Dashboard & POS System"),
         t("AI Insights & Demand Forecasting"),
         t("Inventory Alerts & Forecasting"),
         t("Menu Management & Analytics"),
-        t("Revenue Tracking & Reports")
+        t("Revenue Tracking & Reports"),
       ],
-      badge: t("Most Popular")
+      badge: t("Most Popular"),
     },
     {
       name: "Full Management Suite",
       price: "129",
-      description: t("For premium restaurants that need full staff and operations management."),
+      description: t(
+        "For premium restaurants that need full staff and operations management.",
+      ),
       features: [
         t("All Operations Pro Features"),
         t("Staff Management"),
         t("Smart Staff Scheduling"),
-        t("Advanced Priority Support")
-      ]
-    }
-  ]
+        t("Advanced Priority Support"),
+      ],
+    },
+  ];
 
   const handleContinue = (planName) => {
-    navigate(`/register/payment?plan=${planName}`)
-  }
+    navigate(`/register/payment?plan=${planName}`);
+  };
 
   return (
     <div className="min-h-0 bg-transparent flex flex-col items-center py-6 px-4 sm:px-6 lg:px-8 w-full">
-       {/* Header: Logo and ThemeToggle */}
-            <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
-                <Link to="/" className="inline-flex items-center gap-2.5">
-                    <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Leaf className="h-4.5 w-4.5 text-primary" />
-                    </div>
-                    <span className="text-lg font-bold text-foreground" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-                        ZeroBite
-                    </span>
-                </Link>
-            </div>
+      {/* Header: Logo and ThemeToggle */}
+      <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
+        <Link to="/" className="inline-flex items-center gap-2">
+          <div className="h-9 w-9 flex items-center justify-center">
+            <MainLogo className="h-full w-full text-primary" />
+          </div>
+          <TextLogo className="h-6 w-auto text-foreground" />
+        </Link>
+      </div>
 
-            <div className="absolute top-4 sm:top-6 right-4 rtl:right-auto rtl:left-4 z-10">
-                <ThemeToggle />
-            </div>
+      <div className="absolute top-4 sm:top-6 right-4 rtl:right-auto rtl:left-4 z-10">
+        <ThemeToggle />
+      </div>
 
       <div className="text-center max-w-3xl mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <h1 className="text-3xl font-extrabold text-foreground mb-3 tracking-tight">
           {t("Choose the right plan for your restaurant")}
         </h1>
         <p className="text-base text-muted-foreground">
-          {t("Upgrade your restaurant's efficiency with our powerful features. Select a plan to continue your setup.")}
+          {t(
+            "Upgrade your restaurant's efficiency with our powerful features. Select a plan to continue your setup.",
+          )}
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl w-full animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
         {plans.map((plan) => {
-          const isSelected = selectedPlan === plan.name
+          const isSelected = selectedPlan === plan.name;
           return (
             <div
               key={plan.name}
@@ -85,19 +91,27 @@ export default function BillingPlans() {
                   {plan.badge}
                 </span>
               )}
-              <h2 className={`text-2xl font-bold mb-2 ${isSelected ? "text-primary" : "text-foreground"}`}>
+              <h2
+                className={`text-2xl font-bold mb-2 ${isSelected ? "text-primary" : "text-foreground"}`}
+              >
                 {plan.name}
               </h2>
               <div className="mb-4">
-                <span className="text-4xl font-extrabold text-foreground">${plan.price}</span>
+                <span className="text-4xl font-extrabold text-foreground">
+                  ${plan.price}
+                </span>
                 <span className="text-muted-foreground">/{t("mo")}</span>
               </div>
-              <p className="text-muted-foreground mb-6 flex-grow text-sm">{plan.description}</p>
+              <p className="text-muted-foreground mb-6 flex-grow text-sm">
+                {plan.description}
+              </p>
               <ul className="space-y-4 mb-8">
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-3">
                     <Check className="text-primary" size={18} />
-                    <span className="text-muted-foreground text-sm font-medium">{feature}</span>
+                    <span className="text-muted-foreground text-sm font-medium">
+                      {feature}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -108,17 +122,18 @@ export default function BillingPlans() {
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                 }`}
                 onClick={(e) => {
-                  e.stopPropagation()
-                  setSelectedPlan(plan.name)
-                  handleContinue(plan.name)
+                  e.stopPropagation();
+                  setSelectedPlan(plan.name);
+                  handleContinue(plan.name);
                 }}
               >
-                {t("Select")} {plan.name} <ArrowRight size={18} className="rtl:rotate-180" />
+                {t("Select")} {plan.name}{" "}
+                <ArrowRight size={18} className="rtl:rotate-180" />
               </button>
             </div>
-          )
+          );
         })}
       </div>
     </div>
-  )
+  );
 }

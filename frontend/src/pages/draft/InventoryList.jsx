@@ -12,6 +12,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const statusConfig = {
   "In Stock": { label: "In Stock", class: "bg-primary/15 text-primary hover:bg-primary/25 border-0" },
@@ -47,17 +54,18 @@ export default function InventoryList() {
           />
         </div>
         <div className="flex gap-2">
-          <select 
-            className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-card px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="All">All Statuses</option>
-            <option value="In Stock">In Stock</option>
-            <option value="Low Stock">Low Stock</option>
-            <option value="Expiring">Expiring</option>
-            <option value="Out of Stock">Out of Stock</option>
-          </select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="All">All Statuses</SelectItem>
+              <SelectItem value="In Stock">In Stock</SelectItem>
+              <SelectItem value="Low Stock">Low Stock</SelectItem>
+              <SelectItem value="Expiring">Expiring</SelectItem>
+              <SelectItem value="Out of Stock">Out of Stock</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

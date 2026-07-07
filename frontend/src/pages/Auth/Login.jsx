@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Leaf, Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import {ThemeToggle} from "@/components/shared/ThemeToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ function Login() {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login, isSeeding } = useAuth();
 
@@ -104,7 +105,16 @@ function Login() {
         </div>
         <div>
           <Label htmlFor="password" className="text-foreground text-sm">{t("Password")}</Label>
-          <Input id="password" type="password" placeholder="••••••••" className="mt-1.5 bg-muted/30 border-border/60" {...formik.getFieldProps("password")} required />
+          <div className="relative mt-1.5">
+            <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" className="pr-10 rtl:pl-10 rtl:pr-3 bg-muted/30 border-border/60" {...formik.getFieldProps("password")} required />
+            <button
+              type="button"
+              className="absolute right-3 rtl:left-3 rtl:right-auto top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10 flex items-center justify-center transition-all"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
           {formik.touched.password && formik.errors.password && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>}
         </div>
 

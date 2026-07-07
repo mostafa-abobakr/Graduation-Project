@@ -50,7 +50,7 @@ export function AddEmployeeDialog({ isOpen, onOpenChange }) {
   const handleAddEmployee = (data) => {
     const finalRole = (data.role === "cashier" || data.role === "casher" || data.role === "waiter") ? "employee" : data.role
     addEmployeeMutation.mutate({
-      restID: user?.restId || 0,
+      restID: user?.restId,
       ...data,
       role: finalRole,
       password: data.phone,

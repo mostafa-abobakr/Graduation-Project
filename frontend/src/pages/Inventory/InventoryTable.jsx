@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getValidEmoji } from "@/lib/utils";
 import {
   AlertTriangle,
   Pencil,
@@ -137,7 +138,7 @@ export function InventoryTable({
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
                       <div className="h-10 w-10 flex items-center justify-center rounded-md bg-background/50 text-xl border shrink-0">
-                        {i.imageUrl === "strring" || i.imageUrl === "string" ? "📦" : (i.imageUrl || "📦")}
+                        {getValidEmoji(i.imageUrl)}
                       </div>
                       <div>
                         <Link

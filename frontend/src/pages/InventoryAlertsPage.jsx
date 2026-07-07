@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import api from "@/api/axios";
+import { useInventoryAlerts } from "@/hooks/useInventory";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -260,16 +259,9 @@ export default function InventoryAlertsPage() {
 
   const {
     data: rawAlerts = [],
-    isLoading,
+    isPending: isLoading,
     error,
-  } = useQuery({
-    queryKey: ["inventoryAlerts", user?.restId],
-    queryFn: async () => {
-      const res = await api.get(`/Inventory/restaurant/${user.restId}/alerts`);
-      return res.data;
-    },
-    enabled: !!user?.restId,
-  });
+  } = useInventoryAlerts(user?.restId);
 
   const filterOptions = ["all", "Low Stock", "Expired", "Expiring Soon"];
   const filterLabels = ["All", "Low Stock", "Expired", "Expiring Soon"];

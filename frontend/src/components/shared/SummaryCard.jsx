@@ -74,7 +74,7 @@ export function SummaryCard({
       </div>
 
       {sub && (
-        <p className="text-xs mt-1.5 text-muted-foreground">{sub}</p>
+        <div className="text-xs mt-1.5 text-muted-foreground">{sub}</div>
       )}
 
       {children}

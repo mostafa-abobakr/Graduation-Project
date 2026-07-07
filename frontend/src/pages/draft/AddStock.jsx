@@ -3,6 +3,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { UploadCloud, FileText, CheckCircle2, Scan, Save } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
@@ -69,13 +76,18 @@ export default function AddStock() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Category</label>
-                    <select className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                      <option>Meat & Seafood</option>
-                      <option>Vegetables</option>
-                      <option>Dairy</option>
-                      <option>Pantry</option>
-                      <option>Drinks</option>
-                    </select>
+                    <Select defaultValue="Meat & Seafood">
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Meat & Seafood">Meat & Seafood</SelectItem>
+                        <SelectItem value="Vegetables">Vegetables</SelectItem>
+                        <SelectItem value="Dairy">Dairy</SelectItem>
+                        <SelectItem value="Pantry">Pantry</SelectItem>
+                        <SelectItem value="Drinks">Drinks</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Quantity</label>
@@ -83,12 +95,17 @@ export default function AddStock() {
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Unit</label>
-                    <select className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                      <option>kg</option>
-                      <option>liter</option>
-                      <option>piece</option>
-                      <option>box</option>
-                    </select>
+                    <Select defaultValue="kg">
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select Unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="liter">liter</SelectItem>
+                        <SelectItem value="piece">piece</SelectItem>
+                        <SelectItem value="box">box</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Expiry Date</label>

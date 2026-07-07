@@ -67,7 +67,6 @@ import {
   useDeleteBatch, 
   useUpdateBatch 
 } from "@/hooks/useInventory";
-import api from "@/api/axios";
 import { toast } from "sonner";
 
 import { BatchEditDialog } from "./BatchEditDialog";
@@ -82,7 +81,7 @@ export default function ItemDetailsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const restId = user?.restId || 2;
+  const restId = user?.restId;
   const token = user?.token;
   
   const highlightBatchIdFromState = location.state?.highlightBatchId;

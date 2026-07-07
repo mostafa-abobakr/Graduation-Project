@@ -93,8 +93,8 @@ export function InvoiceUploader({ onFileSelected, onReset }) {
             Upload Invoice Document
           </h3>
           <p className="text-muted-foreground mt-2 max-w-sm">
-            Click to browse or drag and drop your PDF or image here. Our
-            AI will automatically extract items.
+            Click to browse or drag and drop your PDF or image here. Our AI will
+            automatically extract items.
           </p>
         </div>
       ) : (
@@ -127,7 +127,7 @@ export function InvoiceUploader({ onFileSelected, onReset }) {
               variant="secondary"
               size="sm"
               onClick={handleReset}
-              className="h-8 gap-1.5 shadow-sm"
+              className="h-8 gap-2 shadow-sm"
             >
               <RotateCcw className="h-3.5 w-3.5" /> Start Over
             </Button>

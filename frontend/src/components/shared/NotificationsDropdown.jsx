@@ -45,7 +45,7 @@ const dotStyles = {
 
 export function NotificationsDropdown() {
   const { user } = useAuth();
-  const restId = user?.restId || 2;
+  const restId = user?.restId;
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   

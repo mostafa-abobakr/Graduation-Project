@@ -3,9 +3,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Loader2, AlertCircle } from "lucide-react"
-import axios from "axios"
-
-import { useForecast } from "../../hooks/useForecast"
+import { useForecast, useGeocodeCity, useFetchCityWeather } from "../../hooks/useForecast"
 import { useLanguage } from "@/contexts/LanguageContext"
 import ForecastHeader from "./ForecastHeader"
 import ForecastSummaryCards from "./ForecastSummaryCards"
@@ -20,44 +18,35 @@ export default function ForecastPage() {
   
   const [dailyData, setDailyData] = useState([null, 0])
   const [weeklyTemperatures, setWeeklyTemperatures] = useState([0, 0, 0, 0, 0, 0, 0])
-  const [weeklyEvents, setWeeklyEvents] = useState([1, 0, 1, 0, 0, 0, 0])
+  const [weeklyEvents, setWeeklyEvents] = useState([0, 0, 0, 0, 0, 0, 0])
+
+  const cityToSearch = user?.city || user?.address || "mansoura university";
+  const { data: geoData } = useGeocodeCity(cityToSearch);
+  const lat = geoData && geoData.length > 0 ? parseFloat(geoData[0].lat) : null;
+  const lon = geoData && geoData.length > 0 ? parseFloat(geoData[0].lon) : null;
+  const { data: weatherData } = useFetchCityWeather(lat, lon);
 
   useEffect(() => {
-    const fetchDefaultWeather = async () => {
-      const city = user?.city || user?.address || "mansoura university"
-      try {
-        const geoRes = await axios.get(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1`
-        )
-        if (geoRes.data && geoRes.data.length > 0) {
-          const lat = parseFloat(geoRes.data[0].lat)
-          const lon = parseFloat(geoRes.data[0].lon)
-          
-          const weatherRes = await axios.get(
-            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max&timezone=auto`
-          )
-          const maxTemps = weatherRes.data.daily.temperature_2m_max
-          const times = weatherRes.data.daily.time
-          if (maxTemps && maxTemps.length >= 7 && times) {
-            const alignedTemps = [0, 0, 0, 0, 0, 0, 0]
-            times.slice(0, 7).forEach((timeStr, idx) => {
-              const [year, month, day] = timeStr.split("-").map(Number)
-              const date = new Date(year, month - 1, day)
-              const dayOfWeek = date.getDay()
-              const uiIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-              alignedTemps[uiIdx] = Math.round(maxTemps[idx])
-            })
-            setWeeklyTemperatures(alignedTemps)
-            setDailyData([Math.round(maxTemps[0]), 0])
-          }
-        }
-      } catch (error) {
-        console.error("Failed to load initial city weather:", error)
+    if (weatherData && weatherData.daily?.time && weatherData.daily?.temperature_2m_max) {
+      const maxTemps = weatherData.daily.temperature_2m_max;
+      const times = weatherData.daily.time;
+      if (maxTemps.length >= 7) {
+        const alignedTemps = [0, 0, 0, 0, 0, 0, 0];
+        times.slice(0, 7).forEach((timeStr, idx) => {
+          const [year, month, day] = timeStr.split("-").map(Number);
+          const date = new Date(year, month - 1, day);
+          const dayOfWeek = date.getDay();
+          const uiIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          alignedTemps[uiIdx] = Math.round(maxTemps[idx]);
+        });
+        
+        // Prevent infinite re-renders by checking if it actually changed?
+        // Actually, weatherData only changes when the query resolves.
+        setWeeklyTemperatures(alignedTemps);
+        setDailyData(prev => prev[0] !== Math.round(maxTemps[0]) ? [Math.round(maxTemps[0]), prev[1]] : prev);
       }
     }
-    
-    fetchDefaultWeather()
-  }, [user?.city, user?.address])
+  }, [weatherData]);
 
   const { data, isLoading, isError, error, refetch, isFetching } = useForecast({
     alignment,

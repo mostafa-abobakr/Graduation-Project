@@ -99,6 +99,15 @@ export default function ReportsPage() {
   )
 
 
+<<<<<<< HEAD
+=======
+    await queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
+    addReportToHistory("Daily Report")
+    toast.success("Reports generated successfully")
+    
+    setExportingId(null)
+  }, [user, exportingId, queryClient])
+>>>>>>> eb7fdca724df89e68d88c6daf1855595cfb7e295
 
   const isAnyExporting = exportingId !== null
 

@@ -10,7 +10,7 @@ import { toast } from "sonner"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { useAuth } from "@/contexts/AuthContext"
-import { useQueryClient } from "@tanstack/react-query"
+import { useQueryClient, useMutation } from "@tanstack/react-query"
 import {
   useEmployees,
   useShifts,
@@ -23,6 +23,7 @@ import {
 import { EmployeeList } from "./EmployeeList"
 import { ScheduleGrid } from "./ScheduleGrid"
 import { ManageShiftDialog } from "./ManageShiftDialog"
+import { ViewToggler } from "@/components/shared/ViewToggler"
 
 export default function SchedulePage() {
   const { user } = useAuth()
@@ -34,7 +35,6 @@ export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState("")
   const [isEditMode, setIsEditMode] = useState(false)
   const [editingShiftId, setEditingShiftId] = useState(null)
-  const [isGenerating, setIsGenerating] = useState(false)
   const [customRange, setCustomRange] = useState(null)
   const [isRangePickerOpen, setIsRangePickerOpen] = useState(false)
   const [dateRange, setDateRange] = useState({ from: undefined, to: undefined })
@@ -123,18 +123,22 @@ export default function SchedulePage() {
   const deleteRangeMutation = useDeleteScheduleRange();
   const copyLastWeekMutation = useCopyLastWeekSchedule();
 
-  const handleAddShiftClick = (date, prefilledEmpId = "") => {
+  const handleAddShiftClick = (date, prefilledEmpId = "", prefilledShiftType = "Morning") => {
     const formattedDate = new Date(
       date.getTime() - date.getTimezoneOffset() * 60000,
     ).toISOString()
     setSelectedDate(formattedDate)
     setIsEditMode(false)
     setEditingShiftId(null)
+    
+    const startTime = prefilledShiftType === "Night" ? "16:00" : "08:00"
+    const endTime = prefilledShiftType === "Night" ? "00:00" : "16:00"
+
     setFormData({
       empID: prefilledEmpId ? prefilledEmpId.toString() : "",
-      startTime: "08:00",
-      endTime: "16:00",
-      shiftType: "Morning",
+      startTime,
+      endTime,
+      shiftType: prefilledShiftType,
       source: "Manual",
       isOverridden: false,
       updatedAt: null,
@@ -181,7 +185,7 @@ export default function SchedulePage() {
 
     const payload = {
       empID: parseInt(formData.empID, 10),
-      restID: user?.restId || 0,
+      restID: user?.restId,
       day: selectedDate,
       startTime: formData.startTime + ":00",
       endTime: formData.endTime + ":00",
@@ -218,20 +222,16 @@ export default function SchedulePage() {
     });
   };
 
-  const handleGenerateAISchedule = async () => {
-    setIsGenerating(true)
-    const saturday = new Date(baseDate)
-    saturday.setDate(saturday.getDate() - ((saturday.getDay() + 1) % 7))
-    const targetDateStr = new Date(
-      saturday.getTime() - saturday.getTimezoneOffset() * 60000,
-    )
-      .toISOString()
-      .split("T")[0]
+  const generateScheduleMutation = useMutation({
+    mutationFn: async () => {
+      const targetDateStr = new Date(
+        baseDate.getTime() - baseDate.getTimezoneOffset() * 60000,
+      )
+        .toISOString()
+        .split("T")[0]
 
-    const restId = user?.restId || 54
-    console.log(targetDateStr);
+      const restId = user?.restId
 
-    try {
       const response = await fetch(
         `https://youseef-awaad-zerobite-ai-engine.hf.space/scheduling/generate/${restId}?target_date=${targetDateStr}`,
         {
@@ -246,21 +246,18 @@ export default function SchedulePage() {
         throw new Error("Failed to generate schedule")
       }
 
-      const data = await response.json()
-
+      return response.json()
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] })
-
       toast.success("AI Schedule Generated!", {
         description: data.message || "Schedule generated successfully for the week."
       })
-    } catch (error) {
-      console.error(error)
-      toast.error("Error generating schedule", {
-        description: error.message || "Something went wrong."
-      })
-    } finally {
-      setIsGenerating(false)
     }
+  })
+
+  const handleGenerateAISchedule = () => {
+    generateScheduleMutation.mutate()
   }
 
   const handleCopyLastWeek = () => {
@@ -424,14 +421,14 @@ export default function SchedulePage() {
                 <Button
                   variant="default"
                   className="gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white shadow-md shadow-indigo-500/20 transition-all duration-300"
-                  disabled={isGenerating}
+                  disabled={generateScheduleMutation.isPending}
                 >
-                  {isGenerating ? (
+                  {generateScheduleMutation.isPending ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Sparkles className="h-4 w-4" />
                   )}
-                  {isGenerating ? "Processing..." : "Schedule Actions"}
+                  {generateScheduleMutation.isPending ? "Processing..." : "Schedule Actions"}
                   <ChevronDown className="h-4 w-4 opacity-70" />
                 </Button>
               </DropdownMenuTrigger>
@@ -476,47 +473,20 @@ export default function SchedulePage() {
         <div className="flex-1 space-y-4">
           <Card className="p-4 bg-card border-border/60">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex bg-muted/60 p-0.5 rounded-lg border border-border/40 text-xs shrink-0 select-none">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode("day")
-                    setCustomRange(null)
-                  }}
-                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${viewMode === "day" && !customRange
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  This Day
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setViewMode("week")
-                    setCustomRange(null)
-                  }}
-                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${viewMode === "week" && !customRange
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  This Week
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
+              <ViewToggler
+                modes={["day", "week", "custom"]}
+                labels={["This Day", "This Week", "Custom Range"]}
+                viewMode={customRange ? "custom" : viewMode}
+                setViewMode={(mode) => {
+                  if (mode === "custom") {
                     setViewMode("custom")
                     setIsRangePickerOpen(true)
-                  }}
-                  className={`px-3 py-1.5 rounded-md transition-all font-medium ${customRange
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                    }`}
-                >
-                  Custom Range
-                </button>
-              </div>
+                  } else {
+                    setViewMode(mode)
+                    setCustomRange(null)
+                  }
+                }}
+              />
 
               <div className="flex items-center gap-2">
                 <Button

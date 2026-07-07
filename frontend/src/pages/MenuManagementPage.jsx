@@ -54,20 +54,32 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { SummaryCard } from "@/components/shared/SummaryCard";
 import { SkeletonRows } from "@/components/shared/Skeletons";
-import { cn } from "@/lib/utils"
-import { useLanguage } from "@/contexts/LanguageContext"
+import { cn, getValidEmoji } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MENU_ITEM_EMOJIS = {
-  "Drinks": ["☕", "🫖", "🧋", "🥤", "🧃"],
-  "Mains & Fast Food": ["🍔", "🍟", "🍕", "🥪", "🌮", "🌯", "🥩", "🍗", "🍝", "🍜", "🍣"],
+  Drinks: ["☕", "🫖", "🧋", "🥤", "🧃"],
+  "Mains & Fast Food": [
+    "🍔",
+    "🍟",
+    "🍕",
+    "🥪",
+    "🌮",
+    "🌯",
+    "🥩",
+    "🍗",
+    "🍝",
+    "🍜",
+    "🍣",
+  ],
   "Starters & Sides": ["🥗", "🥣", "🫓", "🥖", "🍞", "🧀"],
   "Breakfast & Bakery": ["🥐", "🥯", "🥞", "🧇", "🍳", "🥓"],
-  "Desserts": ["🍰", "🧁", "🍩", "🍪", "🥧", "🍦", "🍨"],
-}
+  Desserts: ["🍰", "🧁", "🍩", "🍪", "🥧", "🍦", "🍨"],
+};
 
 export default function MenuManagementPage() {
-  const { t, language } = useLanguage()
-  const { user } = useAuth()
+  const { t, language } = useLanguage();
+  const { user } = useAuth();
   const restId = user?.restId;
   const { data: inventory = [] } = useInventoryItems(restId);
   const { data: menuItems = [], isLoading: isMenuLoading } = useMenuQuery();
@@ -81,7 +93,7 @@ export default function MenuManagementPage() {
   const fileInputRef = useRef(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  
+
   const location = useLocation();
   const highlightedItemId = location.state?.highlightMenuItemId;
   const [activeHighlightId, setActiveHighlightId] = useState(null);
@@ -94,29 +106,29 @@ export default function MenuManagementPage() {
         const el = document.getElementById(`menu-item-${highlightedItemId}`);
         if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 100);
-      
+
       const timer = setTimeout(() => {
         setActiveHighlightId(null);
       }, 3000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [highlightedItemId, menuItems]);
 
   const processFile = async (file) => {
     if (!file.type.startsWith("image/")) {
-      toast.error(t("Please upload a valid image file"))
-      return
+      toast.error(t("Please upload a valid image file"));
+      return;
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error(t("Image size must be less than 2MB"))
-      return
+      toast.error(t("Image size must be less than 2MB"));
+      return;
     }
 
-    setIsUploading(true)
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("upload_preset", "menu_items_preset")
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "menu_items_preset");
 
     try {
       const response = await fetch(
@@ -124,21 +136,21 @@ export default function MenuManagementPage() {
         {
           method: "POST",
           body: formData,
-        }
-      )
-      const data = await response.json()
+        },
+      );
+      const data = await response.json();
       if (response.ok) {
-        setEditForm((prev) => ({ ...prev, image: data.secure_url }))
-        toast.success(t("Image uploaded successfully"))
+        setEditForm((prev) => ({ ...prev, image: data.secure_url }));
+        toast.success(t("Image uploaded successfully"));
       } else {
-        toast.error(data.error?.message || t("Failed to upload image"))
+        toast.error(data.error?.message || t("Failed to upload image"));
       }
     } catch (error) {
-      toast.error(t("An error occurred during upload"))
+      toast.error(t("An error occurred during upload"));
     } finally {
-      setIsUploading(false)
+      setIsUploading(false);
     }
-  }
+  };
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -181,46 +193,47 @@ export default function MenuManagementPage() {
       setCustomEmojiError("");
       return;
     }
-    const regex = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\uFE0F]+$/u;
+    const regex =
+      /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\uFE0F]+$/u;
     if (!regex.test(val)) {
-      setCustomEmojiError(t("Please enter a valid emoji"))
+      setCustomEmojiError(t("Please enter a valid emoji"));
     } else {
-      setCustomEmojiError("")
-      setEditForm({ ...editForm, image: val })
+      setCustomEmojiError("");
+      setEditForm({ ...editForm, image: val });
     }
-  }
+  };
 
   const toggleRow = (id) => {
-    setExpandedRows((prev) => (prev[id] ? {} : { [id]: true }))
-  }
+    setExpandedRows((prev) => (prev[id] ? {} : { [id]: true }));
+  };
 
   const filteredItems = useMemo(() => {
     return menuItems.filter((item) => {
       const matchesSearch = item.name
         .toLowerCase()
-        .includes(search.toLowerCase())
+        .includes(search.toLowerCase());
       const matchesCategory =
-        categoryFilter === "all" || item.category === categoryFilter
-      return matchesSearch && matchesCategory
-    })
-  }, [menuItems, search, categoryFilter])
+        categoryFilter === "all" || item.category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    });
+  }, [menuItems, search, categoryFilter]);
 
   const uniqueCategories = useMemo(() => {
     const categories = new Set(
-      menuItems.map((i) => i.category).filter(Boolean)
-    )
-    return Array.from(categories).sort()
-  }, [menuItems])
+      menuItems.map((i) => i.category).filter(Boolean),
+    );
+    return Array.from(categories).sort();
+  }, [menuItems]);
 
-  const totalCategories = uniqueCategories.length
+  const totalCategories = uniqueCategories.length;
   const avgMargin = useMemo(() => {
-    if (!menuItems.length) return 0
+    if (!menuItems.length) return 0;
     const sum = menuItems.reduce((acc, item) => {
-      if (item.price === 0) return acc
-      return acc + (item.price - item.cost) / item.price
-    }, 0)
-    return Math.round((sum / menuItems.length) * 100)
-  }, [menuItems])
+      if (item.price === 0) return acc;
+      return acc + (item.price - item.cost) / item.price;
+    }, 0);
+    return Math.round((sum / menuItems.length) * 100);
+  }, [menuItems]);
 
   const openEdit = (item) => {
     setEditForm({
@@ -232,30 +245,30 @@ export default function MenuManagementPage() {
       price: String(item.price),
       category: item.category,
       image: item.image || "",
-    })
+    });
     setIngredientsEdit(
-      item.ingredients ? item.ingredients.map((r) => ({ ...r })) : []
-    )
-    setCustomEmoji("")
-    setCustomEmojiError("")
-    setDialogOpen(true)
-  }
+      item.ingredients ? item.ingredients.map((r) => ({ ...r })) : [],
+    );
+    setCustomEmoji("");
+    setCustomEmojiError("");
+    setDialogOpen(true);
+  };
 
   const addIngredientRow = () => {
     setIngredientsEdit([
       ...ingredientsEdit,
       { inventoryId: "", quantityUsed: "" },
-    ])
-  }
+    ]);
+  };
 
   const removeIngredientRow = (index) => {
-    setIngredientsEdit(ingredientsEdit.filter((_, i) => i !== index))
-  }
+    setIngredientsEdit(ingredientsEdit.filter((_, i) => i !== index));
+  };
 
   const saveEdit = () => {
     if (ingredientsEdit.some((r) => !r.inventoryId || !r.quantityUsed)) {
-      toast.error(t("Please fill out all ingredient details."))
-      return
+      toast.error(t("Please fill out all ingredient details."));
+      return;
     }
 
     const payload = {
@@ -271,11 +284,11 @@ export default function MenuManagementPage() {
         inventoryID: parseInt(ing.inventoryId, 10),
         quantityUsed: parseFloat(ing.quantityUsed) || 0,
       })),
-    }
+    };
 
-    updateMenuItem(payload)
-    setDialogOpen(false)
-  }
+    updateMenuItem(payload);
+    setDialogOpen(false);
+  };
 
   /* ── Search empty state ─────────────────────────────── */
   const SearchEmptyState = () => (
@@ -288,7 +301,7 @@ export default function MenuManagementPage() {
         />
       </TableCell>
     </TableRow>
-  )
+  );
 
   return (
     <div className="space-y-6 animate-fade-in py-5 w-full">
@@ -373,23 +386,23 @@ export default function MenuManagementPage() {
               <SearchEmptyState />
             ) : (
               filteredItems.map((item) => {
-                const isExpanded = expandedRows[item.id]
+                const isExpanded = expandedRows[item.id];
                 const margin =
                   item.price > 0
                     ? Math.round(((item.price - item.cost) / item.price) * 100)
-                    : 0
+                    : 0;
 
                 let marginBadgeClass =
-                  "bg-primary/20 text-primary hover:bg-primary/20"
+                  "bg-primary/20 text-primary hover:bg-primary/20";
                 if (margin >= 65) {
                   marginBadgeClass =
-                    "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/15"
+                    "bg-emerald-500/15 text-emerald-500 hover:bg-emerald-500/15";
                 } else if (margin >= 40) {
                   marginBadgeClass =
-                    "bg-amber-500/15 text-amber-500 hover:bg-amber-500/15"
+                    "bg-amber-500/15 text-amber-500 hover:bg-amber-500/15";
                 } else {
                   marginBadgeClass =
-                    "bg-destructive/15 text-destructive hover:bg-destructive/15"
+                    "bg-destructive/15 text-destructive hover:bg-destructive/15";
                 }
 
                 return (
@@ -398,7 +411,9 @@ export default function MenuManagementPage() {
                       id={`menu-item-${item.id}`}
                       className={cn(
                         "border-border/20 cursor-pointer group transition-colors",
-                        activeHighlightId === item.id ? "bg-amber-500/15 hover:bg-amber-500/15 ring-2 ring-amber-500/50" : ""
+                        activeHighlightId === item.id
+                          ? "bg-amber-500/15 hover:bg-amber-500/15 ring-2 ring-amber-500/50"
+                          : "",
                       )}
                       onClick={() => toggleRow(item.id)}
                     >
@@ -419,7 +434,7 @@ export default function MenuManagementPage() {
                             />
                           ) : (
                             <div className="h-10 w-10 flex items-center justify-center rounded-md bg-background/50 text-xl border  shrink-0">
-                              {item.image || "🍽️"}
+                              {getValidEmoji(item.image, "🍽️")}
                             </div>
                           )}
                           <span>{item.name}</span>
@@ -428,8 +443,8 @@ export default function MenuManagementPage() {
                       <TableCell className="text-center">
                         {item.category ? (
                           <Badge
-                              variant="outline"
-                              className="bg-background/50 font-normal text-muted-foreground border-border/50"
+                            variant="outline"
+                            className="bg-background/50 font-normal text-muted-foreground border-border/50"
                           >
                             {item.category}
                           </Badge>
@@ -484,15 +499,17 @@ export default function MenuManagementPage() {
                                 {item.ingredients.map((r, idx) => {
                                   const inv = inventory.find(
                                     (i) =>
-                                      String(i.id) === String(r.inventoryId)
-                                  )
+                                      String(i.id) === String(r.inventoryId),
+                                  );
                                   return (
                                     <div
                                       key={idx}
                                       className="flex justify-between items-center text-sm px-3 py-2 border border-border/40 rounded-md bg-muted/50"
                                     >
-                                      <span className="text-foreground text-xs flex items-center gap-1.5">
-                                        <span>{inv?.imageUrl || "📦"}</span>
+                                      <span className="text-foreground text-xs flex items-center gap-2">
+                                        <span>
+                                          {getValidEmoji(inv?.imageUrl)}
+                                        </span>
                                         <span>{inv?.name || t("Unknown")}</span>
                                       </span>
                                       <span className="text-primary font-mono text-[10px]">
@@ -500,12 +517,14 @@ export default function MenuManagementPage() {
                                         {inv?.unit || ""}
                                       </span>
                                     </div>
-                                  )
+                                  );
                                 })}
                               </div>
                             ) : (
                               <div className="text-sm text-muted-foreground italic pl-3 border-l-2 border-primary/50">
-                                {t("No ingredients defined. Edit to add composition.")}
+                                {t(
+                                  "No ingredients defined. Edit to add composition.",
+                                )}
                               </div>
                             )}
                           </div>
@@ -595,43 +614,55 @@ export default function MenuManagementPage() {
                     <PopoverContent className="w-[280px] p-3" align="start">
                       <div className="space-y-4">
                         <div className="max-h-[220px] overflow-y-auto pr-2 space-y-3 scrollbar-thin">
-                          {Object.entries(MENU_ITEM_EMOJIS).map(([group, emojis]) => (
-                            <div key={group}>
-                              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">{t(group)}</div>
-                              <div className="grid grid-cols-6 gap-1">
-                                {emojis.map(e => (
-                                  <Button
-                                    key={e}
-                                    variant="ghost"
-                                    className={cn(
-                                      "h-8 w-8 p-0 text-lg hover:bg-muted/50",
-                                      editForm.image === e && "bg-muted/80 ring-1 ring-border"
-                                    )}
-                                    onClick={() => {
-                                      setEditForm({ ...editForm, image: e })
-                                      setCustomEmoji("")
-                                      setCustomEmojiError("")
-                                    }}
-                                  >
-                                    {e}
-                                  </Button>
-                                ))}
+                          {Object.entries(MENU_ITEM_EMOJIS).map(
+                            ([group, emojis]) => (
+                              <div key={group}>
+                                <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                                  {t(group)}
+                                </div>
+                                <div className="grid grid-cols-6 gap-1">
+                                  {emojis.map((e) => (
+                                    <Button
+                                      key={e}
+                                      variant="ghost"
+                                      className={cn(
+                                        "h-8 w-8 p-0 text-lg hover:bg-muted/50",
+                                        editForm.image === e &&
+                                          "bg-muted/80 ring-1 ring-border",
+                                      )}
+                                      onClick={() => {
+                                        setEditForm({ ...editForm, image: e });
+                                        setCustomEmoji("");
+                                        setCustomEmojiError("");
+                                      }}
+                                    >
+                                      {e}
+                                    </Button>
+                                  ))}
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            ),
+                          )}
                         </div>
                         <div className="pt-3 border-t border-border/40">
-                          <Label className="text-xs text-muted-foreground mb-1.5 block">{t("Custom Emoji")}</Label>
+                          <Label className="text-xs text-muted-foreground mb-1.5 block">
+                            {t("Custom Emoji")}
+                          </Label>
                           <Input
                             value={customEmoji}
                             onChange={handleCustomEmojiChange}
                             placeholder={t("Paste one emoji...")}
                             className={cn(
                               "bg-background/50 h-8 text-sm",
-                              customEmojiError && "border-destructive focus-visible:ring-destructive"
+                              customEmojiError &&
+                                "border-destructive focus-visible:ring-destructive",
                             )}
                           />
-                          {customEmojiError && <p className="text-[10px] text-destructive mt-1.5 font-medium">{customEmojiError}</p>}
+                          {customEmojiError && (
+                            <p className="text-[10px] text-destructive mt-1.5 font-medium">
+                              {customEmojiError}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </PopoverContent>
@@ -740,9 +771,9 @@ export default function MenuManagementPage() {
                     <Select
                       value={r.inventoryId ? String(r.inventoryId) : undefined}
                       onValueChange={(v) => {
-                        const newR = [...ingredientsEdit]
-                        newR[idx].inventoryId = v
-                        setIngredientsEdit(newR)
+                        const newR = [...ingredientsEdit];
+                        newR[idx].inventoryId = v;
+                        setIngredientsEdit(newR);
                       }}
                     >
                       <SelectTrigger className="flex-1 bg-background/50 border-border/40">
@@ -754,7 +785,7 @@ export default function MenuManagementPage() {
                             <div className="flex items-center gap-2">
                               {/* Automatically shows emoji if available, else a box */}
                               <span className="text-base opacity-90">
-                                {inv.imageUrl || "📦"}
+                                {getValidEmoji(inv.imageUrl)}
                               </span>
                               <span>{inv.name}</span>
                             </div>
@@ -768,16 +799,16 @@ export default function MenuManagementPage() {
                         type="number"
                         value={r.quantityUsed}
                         onChange={(e) => {
-                          const newR = [...ingredientsEdit]
-                          newR[idx].quantityUsed = e.target.value
-                          setIngredientsEdit(newR)
+                          const newR = [...ingredientsEdit];
+                          newR[idx].quantityUsed = e.target.value;
+                          setIngredientsEdit(newR);
                         }}
                         className="bg-background/50 border-border/40 pr-10"
                         placeholder={t("Qty")}
                       />
                       <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-primary font-medium">
                         {inventory.find(
-                          (i) => String(i.id) === String(r.inventoryId)
+                          (i) => String(i.id) === String(r.inventoryId),
                         )?.unit || ""}
                       </span>
                     </div>
@@ -812,5 +843,5 @@ export default function MenuManagementPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

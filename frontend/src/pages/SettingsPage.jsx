@@ -9,11 +9,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useState, useRef, useEffect } from "react";
 import { User, Store, Palette, Bell, Settings, Save, Clock, Bot, CalendarDays, Camera, Key, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { useAuth } from "@/contexts/AuthContext"
 import { PageHeader } from "@/components/shared/PageHeader"
 import { useTheme } from "@/components/shared/ThemeProvider"
 import { useLanguage } from "@/contexts/LanguageContext"
-import api from "@/api/axios"
+import { useSettings, useUpdateSettings, useUploadAvatar, useChangePassword } from "@/hooks/useSettings"
 
 export default function SettingsPage() {
   const { user, isAdmin } = useAuth()
@@ -24,9 +25,6 @@ export default function SettingsPage() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.photoUrl || "");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [isLoadingSettings, setIsLoadingSettings] = useState(true);
-  const [isSaving, setIsSaving] = useState(false)
-  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
   const fileInputRef = useRef(null)
 
   // Profile Settings
@@ -73,79 +71,69 @@ export default function SettingsPage() {
     weeklyReport: false,
   });
 
-  // Fetch settings on mount
-  useEffect(() => {
-    const fetchSettings = async () => {
-      if (!user?.restId) {
-        setIsLoadingSettings(false)
-        return
-      }
-      try {
-        const response = await api.get(`/Settings/all/${user.restId}`)
-        const data = response.data
+  // Fetch settings using React Query
+  const { data: settingsData, isLoading: isLoadingSettings } = useSettings(user?.restId);
 
-        if (data.profile) {
-          setProfile((prev) => ({
-            ...prev,
-            name: data.profile.name || "",
-            lastName: data.profile.lastName || "",
-            email: data.profile.email || "",
-            role: data.profile.role || "",
-            imageUrl: data.profile.imageUrl || "",
-          }))
-          if (data.profile.imageUrl) {
-            setAvatarUrl(data.profile.imageUrl)
-          }
+  // Sync form state when data is loaded
+  useEffect(() => {
+    if (settingsData) {
+      const data = settingsData;
+      if (data.profile) {
+        setProfile((prev) => ({
+          ...prev,
+          name: data.profile.name || "",
+          lastName: data.profile.lastName || "",
+          email: data.profile.email || "",
+          role: data.profile.role || "",
+          imageUrl: data.profile.imageUrl || "",
+        }))
+        if (data.profile.imageUrl) {
+          setAvatarUrl(data.profile.imageUrl)
         }
-        if (data.restaurant) {
-          setRestaurant({
-            name: data.restaurant.name || "",
-            phone: data.restaurant.phone || "",
-            address: data.restaurant.address || "",
-            capacity: data.restaurant.capacity || 0,
-          })
-        }
-        if (data.scheduling) {
-          setScheduling({
-            openTime: data.scheduling.openTime || "",
-            closeTime: data.scheduling.closeTime || "",
-            maxWeeklyHours: data.scheduling.maxWeeklyHours || 40,
-            minRestHours: data.scheduling.minRestHours || 8,
-            firstDayOfWeek: data.scheduling.firstDayOfWeek || "monday",
-            aiAutoScheduling: data.scheduling.aiAutoScheduling || false,
-          })
-        }
-        if (data.preferences) {
-          setPreferences({
-            theme: data.preferences.theme || "system",
-            language: data.preferences.language || "en",
-          })
-        }
-        if (data.notifications) {
-          setNotifications({
-            emailNotifs: data.notifications.emailNotifs ?? false,
-            pushNotifs: data.notifications.pushNotifs ?? false,
-            shiftAlerts: data.notifications.shiftAlerts ?? false,
-            weeklyReport: data.notifications.weeklyReport ?? false,
-          })
-        }
-      } catch (error) {
-        console.error("Failed to fetch settings:", error)
-        toast.error("Failed to load settings.")
-      } finally {
-        setIsLoadingSettings(false)
+      }
+      if (data.restaurant) {
+        setRestaurant({
+          name: data.restaurant.name || "",
+          phone: data.restaurant.phone || "",
+          address: data.restaurant.address || "",
+          capacity: data.restaurant.capacity || 0,
+        })
+      }
+      if (data.scheduling) {
+        setScheduling({
+          openTime: data.scheduling.openTime || "",
+          closeTime: data.scheduling.closeTime || "",
+          maxWeeklyHours: data.scheduling.maxWeeklyHours || 40,
+          minRestHours: data.scheduling.minRestHours || 8,
+          firstDayOfWeek: data.scheduling.firstDayOfWeek || "monday",
+          aiAutoScheduling: data.scheduling.aiAutoScheduling || false,
+        })
+      }
+      if (data.preferences) {
+        setPreferences({
+          theme: data.preferences.theme || "system",
+          language: data.preferences.language || "en",
+        })
+      }
+      if (data.notifications) {
+        setNotifications({
+          emailNotifs: data.notifications.emailNotifs ?? false,
+          pushNotifs: data.notifications.pushNotifs ?? false,
+          shiftAlerts: data.notifications.shiftAlerts ?? false,
+          weeklyReport: data.notifications.weeklyReport ?? false,
+        })
       }
     }
+  }, [settingsData]);
 
-    fetchSettings()
-  }, [user?.restId])
+  const updateSettingsMutation = useUpdateSettings();
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!user?.restId) return
-
-    setIsSaving(true)
-    try {
-      await api.put(`/Settings/all/${user.restId}`, {
+    
+    updateSettingsMutation.mutate({
+      restId: user.restId,
+      payload: {
         profile: {
           name: profile.name,
           lastName: profile.lastName,
@@ -157,24 +145,32 @@ export default function SettingsPage() {
         scheduling,
         preferences,
         notifications,
-      })
-      if (preferences.theme) {
-        setTheme(preferences.theme)
       }
-      if (preferences.language) {
-        changeLanguage(preferences.language)
+    }, {
+      onSuccess: () => {
+        if (preferences.theme) {
+          setTheme(preferences.theme)
+        }
+        if (preferences.language) {
+          changeLanguage(preferences.language)
+        }
       }
-
-      toast.success("Settings saved successfully!")
-    } catch (error) {
-      console.error("Failed to save settings:", error)
-      toast.error("Failed to save settings.")
-    } finally {
-      setIsSaving(false)
-    }
+    })
   }
 
-  const handleAvatarChange = async (e) => {
+
+
+  const uploadAvatarMutation = useUploadAvatar();
+  
+  const handleUploadAvatarSuccess = ({ response, file }) => {
+    const newUrl = response.data?.imageUrl || response.data?.photoUrl || response.data?.url || URL.createObjectURL(file)
+    setAvatarUrl(newUrl)
+    setProfile((prev) => ({ ...prev, imageUrl: newUrl }))
+    setIsUploadingAvatar(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  const handleAvatarChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -189,38 +185,40 @@ export default function SettingsPage() {
     }
 
     setIsUploadingAvatar(true);
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const method = avatarUrl ? "put" : "post";
-      const response = await api[method]("/Settings/photo", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      const newUrl = response.data?.imageUrl || response.data?.photoUrl || response.data?.url || URL.createObjectURL(file)
-      setAvatarUrl(newUrl)
-      setProfile((prev) => ({ ...prev, imageUrl: newUrl }))
-      toast.success("Photo updated successfully!");
-    } catch (error) {
-      console.error("Failed to upload photo:", error);
-      toast.error("Failed to upload photo.");
-    } finally {
-      setIsUploadingAvatar(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
+    uploadAvatarMutation.mutate(
+      { file, isUpdate: !!avatarUrl },
+      {
+        onSuccess: handleUploadAvatarSuccess,
+        onError: () => setIsUploadingAvatar(false)
+      }
+    );
   };
 
+  const passwordMutation = useChangePassword();
+  
+  const handlePasswordUpdate = () => {
+    passwordMutation.mutate({
+      currentPassword: profile.currentPassword,
+      newPassword: profile.newPassword,
+      confirmPassword: profile.confirmPassword,
+    }, {
+      onSuccess: () => {
+        setIsChangingPassword(false)
+        setProfile({ ...profile, currentPassword: "", newPassword: "", confirmPassword: "" })
+      }
+    })
+  }
+
   return (
-    <div className="space-y-6 animate-fade-in py-5 max-w-4xl mx-auto">
+    <div className="space-y-5 py-5 animate-fade-in">
       <PageHeader
         icon={Settings}
         title="Profile & Settings"
         description="Manage your account profile, preferences, and restaurant rules"
         actions={
-          <Button onClick={handleSave} className="gap-2" disabled={isSaving || isLoadingSettings}>
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {isSaving ? "Saving..." : "Save Changes"}
+          <Button onClick={handleSave} className="gap-2" disabled={updateSettingsMutation.isPending || isLoadingSettings}>
+            {updateSettingsMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            {updateSettingsMutation.isPending ? "Saving..." : "Save Changes"}
           </Button>
         }
       />
@@ -424,27 +422,10 @@ export default function SettingsPage() {
                       Cancel
                     </Button>
                     <Button
-                      disabled={!canSubmit || isUpdatingPassword}
-                      onClick={async () => {
-                        setIsUpdatingPassword(true)
-                        try {
-                          await api.post("/Settings/change-password", {
-                            currentPassword: profile.currentPassword,
-                            newPassword: profile.newPassword,
-                            confirmPassword: profile.confirmPassword,
-                          })
-                          toast.success("Password updated successfully!")
-                          setIsChangingPassword(false)
-                          setProfile({ ...profile, currentPassword: "", newPassword: "", confirmPassword: "" })
-                        } catch (error) {
-                          console.error("Failed to update password:", error)
-                          toast.error(error.response?.data?.message || error.message || "Failed to update password.")
-                        } finally {
-                          setIsUpdatingPassword(false)
-                        }
-                      }}
+                      disabled={!canSubmit || passwordMutation.isPending}
+                      onClick={handlePasswordUpdate}
                     >
-                      {isUpdatingPassword && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      {passwordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Update Password
                     </Button>
                   </div>
