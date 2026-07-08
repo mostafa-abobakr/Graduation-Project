@@ -1,5 +1,5 @@
 
-import axios from "axios";
+import api from "@/api/axios";
 import { toast } from "sonner";
 
 
@@ -22,8 +22,8 @@ export const registerUser = async () => {
   }
 
   try {
-    const response = await axios.post(
-      "/api/Auth/register",
+    const response = await api.post(
+      "/Auth/register",
       formData,
     )
     const id = response.data.restId;
@@ -88,7 +88,7 @@ export const registerUser = async () => {
 
 const signIn = async (email, password) => {
   try {
-    const response = await axios.post("/api/Auth/login",
+    const response = await api.post("/Auth/login",
       { email, password },
       {
         headers: {
@@ -120,7 +120,7 @@ const signIn = async (email, password) => {
 
 export const seedRestaurantInfo = async (id) => {
   try {
-    const seedResp = await axios.post(
+    const seedResp = await api.post(
       `https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${id}`,
       "",
       {

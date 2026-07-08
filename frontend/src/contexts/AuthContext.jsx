@@ -1,14 +1,13 @@
 import { createContext, useContext, useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { toast } from "@/hooks/use-toast"
-import axios from "axios"
 import { jwtDecode } from "jwt-decode"
 import { queryClient } from "@/lib/queryClient"
 import { useTheme } from "@/components/shared/ThemeProvider"
 import { useLanguage } from "@/contexts/LanguageContext"
 import api from "@/api/axios"
 
-const API_BASE = "/api/Auth";
+const API_BASE = "/Auth";
 
 const AuthContext = createContext(null);
 
@@ -85,7 +84,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     setIsLoading(true);
     try {
-      const response = await axios({
+      const response = await api({
         method: "post",
         url: `${API_BASE}/login`,
         headers: { "Content-Type": "application/json" },
@@ -112,7 +111,7 @@ export function AuthProvider({ children }) {
         if (userData.restId) {
           setIsSeeding(true)
           try {
-            await axios.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${userData.restId}`)
+            await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${userData.restId}`)
             console.log("Database seeded successfully during login")
           } catch (seedErr) {
             const errorDetail = seedErr.response?.data?.detail || seedErr.response?.data?.message || ""
@@ -141,7 +140,7 @@ export function AuthProvider({ children }) {
   const register = async (data) => {
     setIsLoading(true);
     try {
-      const res = await axios({
+      const res = await api({
         method: "post",
         url: `${API_BASE}/register`,
         headers: { "Content-Type": "application/json" },
