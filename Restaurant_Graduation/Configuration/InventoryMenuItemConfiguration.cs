@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Restaurant_Graduation.Entites;
 
@@ -21,6 +21,9 @@ namespace Restaurant_Graduation.Configuration
                    .WithMany(m => m.InventoryMenuItems)
                    .HasForeignKey(im => im.MenuItemID)
                    .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Property(im => im.QuantityUsed)
+                   .HasColumnType("decimal(18, 2)");
         }
     }
 }

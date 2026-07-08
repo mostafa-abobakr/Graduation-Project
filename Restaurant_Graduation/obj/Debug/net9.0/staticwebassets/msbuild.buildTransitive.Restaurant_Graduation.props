@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\buildMultiTargeting\Restaurant_Gruduation.props" />
-</Project>

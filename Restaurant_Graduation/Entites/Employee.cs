@@ -1,4 +1,4 @@
-﻿namespace Restaurant_Graduation.Entites
+namespace Restaurant_Graduation.Entites
 {
     public class Employee
     {
@@ -8,8 +8,13 @@
         public string Role { get; set; }
         public decimal Salary { get; set; }
         public string Phone { get; set; }
-        public DateTime HireDate { get; set; }
         public string Status { get; set; }
+        public string Shift { get; set; } // Fixed typo from 'Shif'
+        public int WorkingHoursPerDay { get; set; }
+        public int WorkingDaysPerWeek { get; set; }
+        public string Email { get; set; }
+        public string HashedPassword { get; set; }
+        public DateTime HireDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 

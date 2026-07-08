@@ -1,4 +1,4 @@
-﻿namespace Restaurant_Graduation.Entites
+namespace Restaurant_Graduation.Entites
 {
     public class Restaurant
     {
@@ -8,6 +8,13 @@
         public string Address { get; set; }
         public string City { get; set; }
         public string Phone { get; set; }
+        public int SeatingCapacity { get; set; } = 120;
+        public string OpeningTime { get; set; } = "09:00 AM";
+        public string ClosingTime { get; set; } = "11:00 PM";
+        public bool EmailNotifications { get; set; } = true;
+        public bool PushNotifications { get; set; } = true;
+        public bool WasteAlerts { get; set; } = true;
+        public bool WeeklyReport { get; set; } = true;
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }
 

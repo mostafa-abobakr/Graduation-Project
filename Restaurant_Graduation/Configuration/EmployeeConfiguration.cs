@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
 using Restaurant_Graduation.Entites;
 
@@ -26,6 +26,19 @@ namespace Restaurant_Graduation.Configuration
 
             builder.Property(e => e.Status)
                    .HasMaxLength(20);
+
+            builder.Property(e => e.Shift)
+                   .HasMaxLength(20);
+
+            builder.Property(e => e.Email)
+                   .IsRequired()
+                   .HasMaxLength(150);
+                   
+            builder.HasIndex(e => e.Email)
+                   .IsUnique(); // Ensure emails are unique
+
+            builder.Property(e => e.HashedPassword)
+                   .IsRequired();
 
             builder.Property(e => e.HireDate)
                    .IsRequired();
