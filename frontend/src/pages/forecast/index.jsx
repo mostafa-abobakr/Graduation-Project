@@ -79,9 +79,9 @@ export default function ForecastPage() {
         setModalOpen={setModalOpen} 
       />
 
-      <ForecastSummaryCards data={data} alignment={alignment} isLoading={isFetching || isLoading || !data} />
+      <ForecastSummaryCards data={data} alignment={alignment} isLoading={isLoading} />
 
-      <ForecastTable items={data?.items || []} alignment={alignment} isLoading={isFetching || isLoading || !data} />
+      <ForecastTable items={data?.items || []} alignment={alignment} isLoading={isLoading} />
 
       <ForecastSettingsModal
         open={modalOpen}

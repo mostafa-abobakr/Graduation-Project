@@ -109,16 +109,39 @@ export function AuthProvider({ children }) {
         localStorage.setItem("authToken", response.data.token);
 
         if (userData.restId) {
+          const seedKey = `hasSeeded_${userData.restId}`;
+          const untilTodayKey = `lastSeededDate_${userData.restId}`;
+          const today = new Date().toISOString().split('T')[0];
+
           setIsSeeding(true)
           try {
-            await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${userData.restId}`)
-            console.log("Database seeded successfully during login")
-          } catch (seedErr) {
-            const errorDetail = seedErr.response?.data?.detail || seedErr.response?.data?.message || ""
-            if (errorDetail.includes("already has menu items") || errorDetail.includes("Cannot re-seed")) {
-              console.log("Database already seeded. Proceeding silently.")
-            } else {
-              console.error("Seeding failed on login:", seedErr)
+            if (!localStorage.getItem(seedKey)) {
+              try {
+                await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${userData.restId}`)
+                console.log("Database seeded successfully during login")
+                localStorage.setItem(seedKey, "true");
+              } catch (seedErr) {
+                const errorData = seedErr.response?.data;
+                const errorDetail = errorData?.detail || errorData?.message || (typeof errorData === 'string' ? errorData : "");
+                if (typeof errorDetail === 'string' && (errorDetail.includes("already has menu items") || errorDetail.includes("Cannot re-seed"))) {
+                  console.log("Database already seeded. Proceeding silently.")
+                  localStorage.setItem(seedKey, "true");
+                } else {
+                  console.error("Seeding failed on login:", seedErr)
+                }
+              }
+            }
+
+            if (localStorage.getItem(untilTodayKey) !== today) {
+              try {
+                const untilTodayResp = await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/untilToday/${userData.restId}`, "", {
+                  headers: { accept: "application/json" }
+                })
+                console.log("Seed until today response:", untilTodayResp.data)
+                localStorage.setItem(untilTodayKey, today);
+              } catch (untilTodayErr) {
+                console.error("Failed to seed until today:", untilTodayErr)
+              }
             }
           } finally {
             setIsSeeding(false)

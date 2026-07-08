@@ -10,7 +10,7 @@ export const useAdminDashboard = () => {
       const res = await api.get("/admin/dashboard", { signal });
       return res.data;
     },
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 2,
   });
 };
 

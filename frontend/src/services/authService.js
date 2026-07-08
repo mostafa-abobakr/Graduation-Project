@@ -119,20 +119,50 @@ const signIn = async (email, password) => {
 }
 
 export const seedRestaurantInfo = async (id) => {
-  try {
-    const seedResp = await api.post(
-      `https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${id}`,
-      "",
-      {
-        headers: {
-          accept: "application/json",
-        },
+  const seedKey = `hasSeeded_${id}`;
+  const untilTodayKey = `lastSeededDate_${id}`;
+  const today = new Date().toISOString().split('T')[0];
+
+  let initialSeedSuccess = false;
+
+  if (localStorage.getItem(seedKey)) {
+    initialSeedSuccess = true;
+  } else {
+    try {
+      await api.post(
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${id}`,
+        "",
+        { headers: { accept: "application/json" } }
+      );
+      localStorage.setItem(seedKey, "true");
+      initialSeedSuccess = true;
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.response?.data || error.message;
+      const errorDetail = error.response?.data?.detail || errorMessage || "";
+      if (typeof errorDetail === 'string' && (errorDetail.includes("already has menu items") || errorDetail.includes("Cannot re-seed"))) {
+        localStorage.setItem(seedKey, "true");
+        initialSeedSuccess = true;
+      } else {
+        return { success: false, error: errorMessage };
       }
-    );
-    return { success: true, data: seedResp.data };
-  } catch (error) {
-    const errorMessage = error.response?.data?.message || error.response?.data || error.message;
-    return { success: false, error: errorMessage };
+    }
   }
+
+  if (initialSeedSuccess && localStorage.getItem(untilTodayKey) !== today) {
+    try {
+      const untilTodayResp = await api.post(
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/seed/untilToday/${id}`,
+        "",
+        { headers: { accept: "application/json" } }
+      );
+      localStorage.setItem(untilTodayKey, today);
+      return { success: true, data: untilTodayResp.data };
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.response?.data || error.message;
+      return { success: false, error: "Initial seed succeeded, but untilToday failed: " + errorMessage };
+    }
+  }
+
+  return { success: true, data: "Already up to date locally." };
 };
 

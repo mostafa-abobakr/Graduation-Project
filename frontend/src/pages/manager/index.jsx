@@ -60,10 +60,7 @@ const ManagerDashboard = () => {
 
       return res.json()
     },
-    // refetchInterval: (query) => {
-    //   return query.state.data ? false : 3000
-    // },
-
+    staleTime: 30 * 1000,
     retry: false,
   })
 

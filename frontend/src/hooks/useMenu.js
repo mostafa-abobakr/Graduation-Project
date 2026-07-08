@@ -29,6 +29,7 @@ export const useMenuQuery = () => {
       }));
     },
     enabled: !!restId,
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 };
 

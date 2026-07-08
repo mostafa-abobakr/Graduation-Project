@@ -10,6 +10,7 @@ export function useSettings(restId) {
       return response.data;
     },
     enabled: !!restId,
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 }
 
