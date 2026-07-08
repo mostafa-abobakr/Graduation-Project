@@ -99,15 +99,6 @@ export default function ReportsPage() {
   )
 
 
-<<<<<<< HEAD
-=======
-    await queryClient.invalidateQueries({ queryKey: ["reportsList", user?.restId] })
-    addReportToHistory("Daily Report")
-    toast.success("Reports generated successfully")
-    
-    setExportingId(null)
-  }, [user, exportingId, queryClient])
->>>>>>> eb7fdca724df89e68d88c6daf1855595cfb7e295
 
   const isAnyExporting = exportingId !== null
 
@@ -121,7 +112,7 @@ export default function ReportsPage() {
       />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+     {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <SummaryCard
           title="Reports Generated"
           value={
@@ -164,7 +155,7 @@ export default function ReportsPage() {
           }
           icon={Download}
         />
-      </div>
+      </div> */}
 
       {/* Reports List */}
       <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
