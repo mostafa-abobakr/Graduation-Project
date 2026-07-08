@@ -214,7 +214,7 @@ export default function ItemDetailsPage() {
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <Package className="h-12 w-12 text-muted-foreground opacity-50" />
         <h2 className="text-xl font-semibold text-foreground">Item not found</h2>
-        <Button variant="outline" onClick={() => navigate("/inventory")}>
+        <Button variant="outline" onClick={() => navigate("/dashboard/inventory/stock")}>
           Back to Inventory
         </Button>
       </div>
@@ -229,7 +229,7 @@ export default function ItemDetailsPage() {
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => navigate("/inventory")}
+          onClick={() => navigate("/dashboard/inventory/stock")}
           className="rounded-full hover:bg-muted/50"
         >
           <ArrowLeft className="h-5 w-5" />

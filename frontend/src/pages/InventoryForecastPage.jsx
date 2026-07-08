@@ -171,18 +171,18 @@ export default function InventoryForecastPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, idx) => (
                   <tr key={idx} className="border-b border-border/30">
-                    <td className="py-3 px-4"><Skeleton className="h-4 w-12" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-4 w-32" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-4 w-16 mx-auto" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-4 w-16 mx-auto" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-4 w-16 mx-auto" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-5 w-16" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-5 w-[140px]" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
-                        <Skeleton className="flex-1 h-1.5 rounded-full" />
-                        <Skeleton className="h-3 w-8" />
+                        <Skeleton className="flex-1 h-2 rounded-full" />
+                        <Skeleton className="h-4 w-10" />
                       </div>
                     </td>
-                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto rounded-full" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-6 w-24 mx-auto rounded-md" /></td>
                   </tr>
                 ))
               ) : filtered.length === 0 ? (

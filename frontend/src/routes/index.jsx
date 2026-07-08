@@ -1,5 +1,5 @@
 import React from "react";
-import { createBrowserRouter, redirect, Outlet } from "react-router-dom";
+import { createBrowserRouter, redirect, Outlet, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { ROUTES } from "./ROUTES";
 
@@ -18,6 +18,7 @@ const DashboardLayout = Loadable(lazy(() => import("../components/layout/Dashboa
 const LandingPage = Loadable(lazy(() => import("../pages/LandingPage")));
 const NotFound = Loadable(lazy(() => import("../pages/NotFound")));
 const Login = Loadable(lazy(() => import("@/pages/Auth/Login")));
+const ForgetPassword = Loadable(lazy(() => import("@/pages/Auth/PasswordRecovery/ForgetPassword")));
 const Register = Loadable(lazy(() => import("@/pages/Auth/Register")));
 const RegisterPage = Loadable(lazy(() => import("@/pages/Auth/Register/RegisterPage")));
 const RegisterRestaurant = Loadable(lazy(() => import("@/pages/Auth/Register/RegisterRestaurant")));
@@ -64,6 +65,10 @@ const Routes = [
     path: ROUTES.LOGIN,
     element: <Login />,
   },
+  {
+    path: ROUTES.FORGOT_PASSWORD,
+    element: <ForgetPassword />,
+  },
  
   {
     path: "/register",
@@ -100,12 +105,16 @@ const Routes = [
   //   element: <SquareAuthPage/>,
   // },
   {
-    path: ROUTES.DASHBOARD,
+    path: ROUTES.DASHBOARD_ROOT,
     element: <DashboardLayout />,
     loader: requireAuth,
     children: [
       {
         index: true,
+        element: <Navigate to={ROUTES.DASHBOARD} replace />,
+      },
+      {
+        path: ROUTES.DASHBOARD,
         element: <DashboardIndex />,
       },
       {
@@ -152,20 +161,31 @@ const Routes = [
         path: ROUTES.BILLING,
         element: <BillingPage />,
       },
+      { 
+        path: ROUTES.INVENTORY, 
+        element: <InventoryPage /> 
+      },
+      { 
+        path: "/dashboard/inventory/add-stock", 
+        element: <AddStock /> 
+      },
+      { 
+        path: "/dashboard/inventory/alerts", 
+        element: <InventoryAlertsPage /> 
+      },
+      { 
+        path: "/dashboard/inventory/forecast", 
+        element: <InventoryForecastPage /> 
+      },
+      { 
+        path: "/dashboard/inventory/draft", 
+        element: <InventoryOverview /> 
+      },
+      { 
+        path: "/dashboard/inventory/:id", 
+        element: <ItemDetailsPage /> 
+      },
     ],
-  },
-  {
-    path: ROUTES.INVENTORY,
-    element: <DashboardLayout />,
-    loader: requireAuth,
-    children: [
-      { index: true, element: <InventoryPage /> },
-      { path: "add-stock", element: <AddStock /> },
-      { path: "alerts", element: <InventoryAlertsPage /> },
-      { path: "forecast", element: <InventoryForecastPage /> },
-      { path: ":id", element: <ItemDetailsPage /> },
-      { path: "draft", element: <InventoryOverview /> },
-    ]
   },
   {
     path: "*",

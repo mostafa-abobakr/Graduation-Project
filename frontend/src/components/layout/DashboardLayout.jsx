@@ -68,38 +68,34 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion } from "framer-motion";
 
-const managerAnalyticsItems = [
-  { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Forecast", url: "/dashboard/forecast", icon: Brain },
-  {
-    title: "Menu Analytics",
-    url: "/dashboard/menu-analytics",
-    icon: UtensilsCrossed,
-  },
-  { title: "Revenue", url: "/dashboard/revenue", icon: DollarSign },
+const managerHomeItems = [
+  { title: "Overview", url: "/dashboard/overview", icon: LayoutDashboard },
   { title: "AI Insights", url: "/dashboard/insights", icon: Lightbulb },
 ];
 
-const managerManagementItems = [
-  { title: "Menu Management", url: "/dashboard/menu", icon: ChefHat },
-  { title: "Staff", url: "/dashboard/staff", icon: Users },
-  { title: "Schedule", url: "/dashboard/schedule", icon: CalendarDays },
+const managerFinanceItems = [
+  { title: "Revenue", url: "/dashboard/finance/revenue", icon: DollarSign },
+  { title: "Sales Forecast", url: "/dashboard/finance/forecast", icon: Brain },
+  { title: "Reports", url: "/dashboard/finance/reports", icon: FileText },
+];
+
+const managerMenuItems = [
+  { title: "Management", url: "/dashboard/menu/management", icon: ChefHat },
+  { title: "Analytics", url: "/dashboard/menu/analytics", icon: UtensilsCrossed },
 ];
 
 const managerInventoryItems = [
-  { title: "Inventory", url: "/inventory", icon: Package },
-  // { title: "Receive Stock", url: "/inventory/add-stock", icon: PlusCircle },
-  { title: "Stock Alerts", url: "/inventory/alerts", icon: Bell },
-  {
-    title: "Inventory Forecast",
-    url: "/inventory/forecast",
-    icon: AlertTriangle,
-  },
-  // {title: "Draft", url: "/inventory/draft", icon: ChefHat }
+  { title: "Current Stock", url: "/dashboard/inventory/stock", icon: Package },
+  { title: "Alerts", url: "/dashboard/inventory/alerts", icon: Bell },
+  { title: "Forecast", url: "/dashboard/inventory/forecast", icon: AlertTriangle },
 ];
 
-const managerOtherItems = [
-  { title: "Reports", url: "/dashboard/reports", icon: FileText },
+const managerTeamItems = [
+  { title: "Staff", url: "/dashboard/team/staff", icon: Users },
+  { title: "Schedule", url: "/dashboard/team/schedule", icon: CalendarDays },
+];
+
+const managerSystemItems = [
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 
@@ -144,7 +140,7 @@ function AppSidebar() {
                             <SidebarMenuSubButton asChild>
                               <NavLink
                                 to={subItem.url}
-                                end={subItem.url === "/dashboard/inventory"}
+                                end={subItem.url === "/dashboard/inventory/stock"}
                                 className="flex items-center w-full px-2 py-1.5 transition-colors text-muted-foreground hover:text-foreground"
                                 activeClassName="bg-primary/10 text-primary font-medium rounded-md"
                               >
@@ -165,7 +161,7 @@ function AppSidebar() {
                 <SidebarMenuButton asChild>
                   <NavLink
                     to={item.url}
-                    end={item.url === "/dashboard" || item.url === "/inventory"}
+                    end={item.url === "/dashboard/overview"}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-all duration-150"
                     activeClassName="bg-primary/10 text-primary font-medium"
                   >
@@ -205,13 +201,17 @@ function AppSidebar() {
           <>{renderGroup("Platform", adminItems)}</>
         ) : (
           <>
-            {renderGroup("Analytics", managerAnalyticsItems)}
+            {renderGroup("Home", managerHomeItems)}
             <Separator className="mx-3 w-auto" />
-            {renderGroup("Management", managerManagementItems)}
+            {renderGroup("Finance & Reports", managerFinanceItems)}
             <Separator className="mx-3 w-auto" />
-            {renderGroup("Inventory Tracking", managerInventoryItems)}
+            {renderGroup("Menu", managerMenuItems)}
             <Separator className="mx-3 w-auto" />
-            {renderGroup("Other", managerOtherItems)}
+            {renderGroup("Inventory", managerInventoryItems)}
+            <Separator className="mx-3 w-auto" />
+            {renderGroup("Team", managerTeamItems)}
+            <Separator className="mx-3 w-auto" />
+            {renderGroup("System", managerSystemItems)}
           </>
         )}
       </SidebarContent>

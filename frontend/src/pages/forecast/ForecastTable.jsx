@@ -89,26 +89,30 @@ export default function ForecastTable({ items, alignment, isLoading }) {
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  <TableCell>
-                    <Skeleton className="h-4 w-4" />
+                  <TableCell className="text-center">
+                    <Skeleton className="h-4 w-6" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-32 mx-auto" />
+                    <div className="flex justify-center">
+                      <Skeleton className="h-5 w-[140px]" />
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-12 mx-auto" />
+                    <Skeleton className="h-5 w-16 mx-auto" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-16 mx-auto" />
+                    <Skeleton className="h-5 w-20 mx-auto" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-16 mx-auto" />
+                    <Skeleton className="h-5 w-20 mx-auto" />
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-6 w-16 rounded-full mx-auto" />
+                    <div className="flex justify-center">
+                      <Skeleton className="h-6 w-20 rounded-md" />
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Skeleton className="h-4 w-4 mx-auto" />
+                    <Skeleton className="h-5 w-5 mx-auto" />
                   </TableCell>
                 </TableRow>
               ))

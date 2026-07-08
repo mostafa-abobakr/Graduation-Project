@@ -56,7 +56,7 @@ export default function ForecastSummaryCards({ data, alignment, isLoading }) {
             iconColorClass="text-primary"
             iconWrapper
             trend={stat.change}
-            sub={
+            trendSub={
               <span className="text-muted-foreground">
                 {alignment === "day" ? t("vs yesterday") : t("vs last week")}
               </span>

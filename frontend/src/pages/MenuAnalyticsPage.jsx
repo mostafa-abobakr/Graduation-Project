@@ -8,7 +8,6 @@ import { ArrowUp, ArrowDown, Search, UtensilsCrossed } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { LoadingSkeleton } from "@/components/shared/Skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMenuPerformance } from "@/hooks/useMenuAnalytics";
 
@@ -63,8 +62,6 @@ export default function MenuAnalyticsPage() {
       </div>
     );
   }
-
-  if (isPending) return <LoadingSkeleton />;
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
@@ -173,7 +170,30 @@ export default function MenuAnalyticsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.length === 0 ? (
+              {isPending ? (
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <tr key={idx} className="border-b border-border/30">
+                    <td className="py-4 px-5">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 rounded-md shrink-0" />
+                        <Skeleton className="h-5 w-32" />
+                      </div>
+                    </td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-5 w-16 mx-auto" />
+                    </td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-5 w-20 mx-auto" />
+                    </td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-5 w-20 mx-auto" />
+                    </td>
+                    <td className="py-4 px-5">
+                      <Skeleton className="h-6 w-16 rounded-full mx-auto" />
+                    </td>
+                  </tr>
+                ))
+              ) : filtered.length === 0 ? (
                 // Empty State
                 <tr>
                   <td colSpan={5} className="p-0">
