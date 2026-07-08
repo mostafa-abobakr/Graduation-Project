@@ -142,7 +142,7 @@ export function InventoryTable({
                       </div>
                       <div>
                         <Link
-                          to={`/inventory/${i.id}`}
+                          to={`/dashboard/inventory/${i.id}`}
                           className="font-medium text-foreground hover:text-primary transition-colors block"
                         >
                           {i.name}
@@ -219,7 +219,7 @@ export function InventoryTable({
                         title="Details"
                         className="h-7 w-7 text-gray-500 hover:text-white hover:bg-white/10 transition-colors shrink-0"
                       >
-                        <Link to={`/inventory/${i.id}`}>
+                        <Link to={`/dashboard/inventory/${i.id}`}>
                           <Eye className="h-4 w-4" />
                         </Link>
                       </Button>

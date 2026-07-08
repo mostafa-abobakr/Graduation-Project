@@ -48,6 +48,7 @@ import {
   Percent,
   UploadCloud,
   Loader2,
+  ChefHat
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -306,7 +307,7 @@ export default function MenuManagementPage() {
   return (
     <div className="space-y-6 animate-fade-in py-5 w-full">
       <PageHeader
-        icon={Utensils}
+        icon={ChefHat}
         title={t("Menu Management")}
         description={t("Manage your restaurant menu items and ingredients")}
       />

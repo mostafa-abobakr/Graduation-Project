@@ -36,7 +36,7 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
     <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
       <div className="p-5 pb-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h3 className="text-base font-semibold text-foreground flex items-center">
-          {t("Staff Directory")}
+          {t("Staff")}
           {!isLoading && (
             <Badge
               variant="secondary"

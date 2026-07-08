@@ -115,21 +115,21 @@ export function NotificationsDropdown() {
       if (notification.batchID) {
         state.highlightBatchId = notification.batchID;
       }
-      navigate(`/inventory/${notification.inventoryID}`, { state });
+      navigate(`/dashboard/inventory/${notification.inventoryID}`, { state });
       setOpen(false);
     } else if (notification.category === "Menu") {
       const state = {};
       if (notification.referenceID) {
         state.highlightMenuItemId = notification.referenceID;
       }
-      navigate(`/dashboard/menu`, { state });
+      navigate(`/dashboard/menu/management`, { state });
       setOpen(false);
     } else if (notification.category === "Schedule") {
       const state = {};
       if (notification.referenceDate) {
         state.targetDate = notification.referenceDate;
       }
-      navigate(`/dashboard/schedule`, { state });
+      navigate(`/dashboard/team/schedule`, { state });
       setOpen(false);
     }
   };

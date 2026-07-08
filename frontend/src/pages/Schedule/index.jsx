@@ -404,7 +404,7 @@ export default function SchedulePage() {
     <div className="space-y-6 animate-fade-in py-5">
       <PageHeader
         icon={CalendarDays}
-        title="Staff Schedule Manager"
+        title="Schedule Management"
         description="Create and manage weekly staff schedules"
         actions={
           <div className="flex gap-2">

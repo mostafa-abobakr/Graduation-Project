@@ -120,7 +120,26 @@ export default function RevenuePage() {
 
   const { data, isPending, isError, error } = useRevenueData(user?.restId);
 
-  if (isPending) return <LoadingSkeleton />;
+  if (isPending) {
+    return (
+      <div className="space-y-5 animate-fade-in py-5">
+        <PageHeader
+          icon={DollarSign}
+          title={t("Revenue Analytics")}
+          description={t("Revenue trends and profit analysis")}
+          actions={
+            <ViewToggler
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              modes={VIEWS.map((v) => v.id)}
+              labels={VIEWS.map((v) => t(v.label))}
+            />
+          }
+        />
+        <LoadingSkeleton />
+      </div>
+    );
+  }
 
   if (isError) {
     return (

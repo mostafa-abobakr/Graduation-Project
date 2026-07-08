@@ -6,6 +6,7 @@ export function SummaryCard({
   title,
   value,
   sub,
+  trendSub,
   icon: Icon,
   iconColorClass = "text-muted-foreground",
   iconWrapper = false,
@@ -52,25 +53,35 @@ export function SummaryCard({
           {value}
         </div>
 
-        {trend !== undefined && typeof trend === "string" && (
-          <div
-            className={cn(
-              "flex items-center text-[10px] font-bold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full shrink-0",
-              (trendIsPositive ?? trend.startsWith("+"))
-                ? "bg-emerald-500/10 text-emerald-500"
-                : "bg-rose-500/10 text-rose-500"
+        {(trend !== undefined || trendSub) && (
+          <div className="flex flex-col items-end gap-0.5">
+            {trend !== undefined && typeof trend === "string" && (
+              <div
+                className={cn(
+                  "flex items-center text-[10px] font-bold px-2 mt-4 py-0.5 sm:px-2.5 sm:py-1 rounded-full shrink-0",
+                  (trendIsPositive ?? trend.startsWith("+"))
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : "bg-rose-500/10 text-rose-500"
+                )}
+              >
+                {(trendIsPositive ?? trend.startsWith("+")) ? (
+                  <TrendingUp className="h-3 w-3 mr-1" strokeWidth={3} />
+                ) : (
+                  <TrendingDown className="h-3 w-3 mr-1" strokeWidth={3} />
+                )}
+                {trend}
+              </div>
             )}
-          >
-            {(trendIsPositive ?? trend.startsWith("+")) ? (
-              <TrendingUp className="h-3 w-3 mr-1" strokeWidth={3} />
-            ) : (
-              <TrendingDown className="h-3 w-3 mr-1" strokeWidth={3} />
+
+            {trend !== undefined && typeof trend !== "string" && trend}
+
+            {trendSub && (
+              <div className="text-[10px] text-muted-foreground/80 font-medium whitespace-nowrap text-right pr-0.5">
+                {trendSub}
+              </div>
             )}
-            {trend}
           </div>
         )}
-
-        {trend !== undefined && typeof trend !== "string" && trend}
       </div>
 
       {sub && (

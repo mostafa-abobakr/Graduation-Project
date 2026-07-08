@@ -25,7 +25,7 @@ export default function AddStock() {
   const handleManualSubmit = (e) => {
     e.preventDefault();
     toast.success("Item added successfully");
-    navigate('/dashboard/inventory/list');
+    navigate('/dashboard/inventory/stock');
   };
 
   const handleSimulateScan = () => {
@@ -44,7 +44,7 @@ export default function AddStock() {
 
   const handleSaveScanned = () => {
     toast.success("3 items added from invoice");
-    navigate('/dashboard/inventory/list');
+    navigate('/dashboard/inventory/stock');
   };
 
   return (

@@ -31,7 +31,7 @@ export default function InventoryOverview() {
           </CardContent>
         </Card>
 
-        <Card className="bg-card border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/dashboard/inventory/list')}>
+        <Card className="bg-card border-border/50 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/dashboard/inventory/stock')}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t("Low stock items")}</CardTitle>
             <div className="h-8 w-8 rounded-full bg-warning/10 flex items-center justify-center">
@@ -130,7 +130,7 @@ export default function InventoryOverview() {
               <h3 className="font-semibold text-lg text-foreground">AI Inventory Insights</h3>
               <p className="text-muted-foreground mt-1">Based on current usage velocity, <strong>Whole Milk</strong> will run out by tomorrow evening. Consider increasing the reorder threshold to 15 liters to accommodate recent peak hour spikes.</p>
               <div className="mt-3 flex gap-3">
-                <button className="text-sm font-medium text-primary hover:underline" onClick={() => navigate('/dashboard/inventory/add')}>Reorder Now</button>
+                <button className="text-sm font-medium text-primary hover:underline" onClick={() => navigate('/dashboard/inventory/add-stock')}>Reorder Now</button>
                 <button className="text-sm font-medium text-muted-foreground hover:text-foreground">View details</button>
               </div>
             </div>
