@@ -90,6 +90,7 @@ export function NotificationsDropdown() {
         };
       });
     },
+    enabled: !!restId,
     refetchInterval: 60000,
   });
 

@@ -48,12 +48,16 @@ export default function ForecastPage() {
     }
   }, [weatherData]);
 
-  const { data, isLoading, isError, error, refetch, isFetching } = useForecast({
+  const { data, isLoading: isForecastLoading, isError, error, refetch, isFetching } = useForecast({
     alignment,
     dailyData,
     weeklyTemperatures,
     weeklyEvents,
   })
+
+  // Consider it loading if either the forecast query is loading, or we haven't received initial weather data yet
+  const isWeatherReady = dailyData && dailyData[0] !== null && dailyData[0] !== undefined;
+  const isLoading = isForecastLoading || !isWeatherReady;
 
   if (isError) {
     return (

@@ -78,10 +78,10 @@ export default function AIInsightsPage() {
   const [period, setPeriod] = useState("day"); // "day" | "week"
   const { user } = useAuth();
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["forecastAlerts"],
+    queryKey: ["forecastAlerts", user?.restId],
     queryFn: async () => {
       const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/alerts/forecast/${user.restId}`,
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/alerts/forecast/${user?.restId}`,
         {
           method: "POST",
           headers: {
@@ -95,6 +95,7 @@ export default function AIInsightsPage() {
         throw new Error(`Failed to fetch forecast alerts: ${res.statusText}`);
       return res.json();
     },
+    enabled: !!user?.restId,
     staleTime: 5 * 60 * 1000,
   });
 

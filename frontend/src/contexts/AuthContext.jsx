@@ -113,38 +113,38 @@ export function AuthProvider({ children }) {
           const untilTodayKey = `lastSeededDate_${userData.restId}`;
           const today = new Date().toISOString().split('T')[0];
 
-          setIsSeeding(true)
-          try {
-            if (!localStorage.getItem(seedKey)) {
-              try {
-                await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${userData.restId}`)
-                console.log("Database seeded successfully during login")
-                localStorage.setItem(seedKey, "true");
-              } catch (seedErr) {
-                const errorData = seedErr.response?.data;
-                const errorDetail = errorData?.detail || errorData?.message || (typeof errorData === 'string' ? errorData : "");
-                if (typeof errorDetail === 'string' && (errorDetail.includes("already has menu items") || errorDetail.includes("Cannot re-seed"))) {
-                  console.log("Database already seeded. Proceeding silently.")
-                  localStorage.setItem(seedKey, "true");
-                } else {
-                  console.error("Seeding failed on login:", seedErr)
-                }
-              }
-            }
+          const needsInitialSeed = !localStorage.getItem(seedKey);
 
-            if (localStorage.getItem(untilTodayKey) !== today) {
-              try {
-                const untilTodayResp = await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/untilToday/${userData.restId}`, "", {
-                  headers: { accept: "application/json" }
-                })
-                console.log("Seed until today response:", untilTodayResp.data)
-                localStorage.setItem(untilTodayKey, today);
-              } catch (untilTodayErr) {
-                console.error("Failed to seed until today:", untilTodayErr)
+          if (needsInitialSeed) {
+            setIsSeeding(true);
+            try {
+              await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${userData.restId}`);
+              console.log("Database seeded successfully during login");
+              localStorage.setItem(seedKey, "true");
+            } catch (seedErr) {
+              const errorData = seedErr.response?.data;
+              const errorDetail = errorData?.detail || errorData?.message || (typeof errorData === 'string' ? errorData : "");
+              if (typeof errorDetail === 'string' && (errorDetail.includes("already has menu items") || errorDetail.includes("Cannot re-seed"))) {
+                console.log("Database already seeded. Proceeding silently.");
+                localStorage.setItem(seedKey, "true");
+              } else {
+                console.error("Seeding failed on login:", seedErr);
               }
+            } finally {
+              setIsSeeding(false);
             }
-          } finally {
-            setIsSeeding(false)
+          }
+
+          if (localStorage.getItem(untilTodayKey) !== today) {
+            try {
+              const untilTodayResp = await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/untilToday/${userData.restId}`, "", {
+                headers: { accept: "application/json" }
+              });
+              console.log("Seed until today response:", untilTodayResp.data);
+              localStorage.setItem(untilTodayKey, today);
+            } catch (untilTodayErr) {
+              console.error("Failed to seed until today:", untilTodayErr);
+            }
           }
         }
 

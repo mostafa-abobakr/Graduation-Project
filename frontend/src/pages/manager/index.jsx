@@ -50,10 +50,10 @@ const ManagerDashboard = () => {
   // });
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ["dashboardData"],
+    queryKey: ["dashboardData", user?.restId],
     queryFn: async () => {
       const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restId}`
+        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user?.restId}`
       )
 
       if (!res.ok) throw new Error("Not ready yet")
@@ -62,8 +62,8 @@ const ManagerDashboard = () => {
     },
     staleTime: 30 * 1000,
     retry: false,
+    enabled: !!user?.restId,
   })
-
   if (isLoading)
     return (
       <div className="flex flex-col py-5 " dir="ltr">
