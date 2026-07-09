@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useFormik } from "formik";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,7 +13,7 @@ import { signupValidationSchema } from "@/schemas/auth/validations";
 import { useRegisterContext } from "@/contexts/Valdation";
 import { Loader2 } from "lucide-react";
 
-const validationSchema = signupValidationSchema.pick(["restaurantName", "restaurantPhone"])
+const validationSchema = signupValidationSchema.pick({ restaurantName: true, restaurantPhone: true });
 
 const RegisterRestaurant = () => {
   const navigate = useNavigate()
@@ -20,20 +21,24 @@ const RegisterRestaurant = () => {
   const [submitError, setSubmitError] = useState("")
   const { formData, updateFromData } = useRegisterContext()
 
-  const formik = useFormik({
-    initialValues: {
+  const { register, handleSubmit, formState: { errors, touchedFields }, setValue, watch } = useForm({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
       restaurantName: formData.restaurantName || "",
       restaurantPhone: formData.restaurantPhone || "",
     },
-    validationSchema,
-    onSubmit: async (values) => {
-      setIsSubmitting(true)
-      updateFromData(values)
-      // Changed to navigate to the new location page
-      navigate("/register/restaurant-location")
-      setIsSubmitting(false)
-    },
-  })
+    mode: "all",
+  });
+
+  const onSubmit = async (values) => {
+    setIsSubmitting(true)
+    updateFromData(values)
+    // Changed to navigate to the new location page
+    navigate("/register/restaurant-location")
+    setIsSubmitting(false)
+  };
+
+  const restaurantPhoneValue = watch("restaurantPhone");
 
   return (
     <AuthContainer
@@ -42,7 +47,7 @@ const RegisterRestaurant = () => {
       className="min-h-0 py-6 bg-transparent "
     >
       <form
-        onSubmit={formik.handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         noValidate
         className="w-full flex flex-col gap-5 "
       >
@@ -58,10 +63,10 @@ const RegisterRestaurant = () => {
               name="restaurantName"
               placeholder="Restaurant Name"
               className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("restaurantName")}
+              {...register("restaurantName")}
             />
           </div>
-          {formik.touched.restaurantName && formik.errors.restaurantName && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.restaurantName}</p>}
+          {touchedFields.restaurantName && errors.restaurantName && <p className="text-sm font-medium text-destructive mt-1">{errors.restaurantName.message}</p>}
         </div>
 
         <div className="space-y-2 relative">
@@ -77,20 +82,20 @@ const RegisterRestaurant = () => {
               autoComplete="tel"
               placeholder="Restaurant Phone"
               className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("restaurantPhone")}
+              {...register("restaurantPhone")}
             />
           </div>
-          {formik.touched.restaurantPhone && formik.errors.restaurantPhone && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.restaurantPhone}</p>}
+          {touchedFields.restaurantPhone && errors.restaurantPhone && <p className="text-sm font-medium text-destructive mt-1">{errors.restaurantPhone.message}</p>}
           
           <div className="flex items-center space-x-2 mt-2">
             <Checkbox 
               id="samePhone" 
-              checked={formik.values.restaurantPhone === formData.userPhone && formData.userPhone !== ""}
+              checked={restaurantPhoneValue === formData.userPhone && formData.userPhone !== ""}
               onCheckedChange={(checked) => {
                 if (checked && formData.userPhone) {
-                  formik.setFieldValue("restaurantPhone", formData.userPhone);
+                  setValue("restaurantPhone", formData.userPhone, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                 } else {
-                  formik.setFieldValue("restaurantPhone", "");
+                  setValue("restaurantPhone", "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
                 }
               }}
             />

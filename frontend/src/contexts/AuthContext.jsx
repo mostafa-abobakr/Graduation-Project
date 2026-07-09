@@ -169,7 +169,6 @@ export function AuthProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         data: data,
       });
-      toast({ title: "Account created!", description: "you can  log in with your credentials." });
     } catch (e) {
       const errorData = e.response?.data;
       const errorMsg = errorData?.message || (typeof errorData === 'string' ? errorData : "Registration failed");

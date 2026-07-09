@@ -30,6 +30,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { Utensils, CalendarDays } from "lucide-react";
+import api from "@/api/axios";
 
 const iconMap = { waste: Trash2, inventory: Package, alert: AlertTriangle, menu: Utensils, schedule: CalendarDays };
 const priorityStyles = {
@@ -56,9 +57,9 @@ export function NotificationsDropdown() {
   const { data: fetchedNotifications = [] } = useQuery({
     queryKey: ["notifications", restId],
     queryFn: async () => {
-      const res = await fetch(`https://resturantai.runasp.net/api/Notifications/${restId}`);
-      if (!res.ok) return [];
-      const data = await res.json();
+      try {
+        const res = await api.get(`https://resturantai.runasp.net/api/Notifications/${restId}`);
+        const data = res.data;
       
       const combined = [
         ...(data.inventory || []),
@@ -89,6 +90,9 @@ export function NotificationsDropdown() {
           referenceDate: n.referenceDate,
         };
       });
+      } catch (error) {
+        return [];
+      }
     },
     enabled: !!restId,
     refetchInterval: 60000,

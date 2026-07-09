@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useFormik } from "formik";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,12 +13,12 @@ import { useRegisterContext } from "@/contexts/Valdation";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const validationSchema = signupValidationSchema.pick([
-  "fullName",
-  "email",
-  "userPhone",
-  "password",
-]);
+const validationSchema = signupValidationSchema.pick({
+  fullName: true,
+  email: true,
+  userPhone: true,
+  password: true,
+});
 
 const RegisterPage = () => {
   const { t } = useLanguage();
@@ -28,39 +29,40 @@ const RegisterPage = () => {
   const { formData, updateFromData } = useRegisterContext()
 
 
-  const formik = useFormik({
-    initialValues: {
+  const { register, handleSubmit, formState: { errors, touchedFields } } = useForm({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
       fullName: formData.fullName || "",
       email: formData.email || "",
       userPhone: formData.userPhone || "",
       password: formData.password || "",
     },
-    validationSchema,
-    onSubmit: async (values) => {
-      setIsSubmitting(true)
-      setSubmitError("")
-      try {
+    mode: "all",
+  });
 
-        updateFromData(values)
-        navigate("/register/restaurant-details")
-      } catch (error) {
-        setSubmitError(error.message || t("Registration failed. Please try again."))
-      } finally {
-        setIsSubmitting(false)
-      }
-    },
-  })
+  const onSubmit = async (values) => {
+    setIsSubmitting(true)
+    setSubmitError("")
+    try {
+      updateFromData(values)
+      navigate("/register/restaurant-details")
+    } catch (error) {
+      setSubmitError(error.message || t("Registration failed. Please try again."))
+    } finally {
+      setIsSubmitting(false)
+    }
+  };
 
   return (
     <AuthContainer
       title={t("Create your account")}
-      description={t("Start your 14-day free trial")}
+      description={t("Start your 30-day free trial")}
       footerText={t("Already have an account?")}
       footerLinkText={t("Log in")}
       footerLinkTo="/login"
       className="min-h-0 py-6 bg-transparent"
     >
-      <form onSubmit={formik.handleSubmit} noValidate className="w-full flex flex-col gap-5" >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="w-full flex flex-col gap-5" >
         <div className="space-y-2 relative">
           <Label htmlFor="fullName" className="font-semibold">{t("Full Name")}</Label>
           <div className="relative">
@@ -70,13 +72,14 @@ const RegisterPage = () => {
             <Input
               id="fullName"
               name="fullName"
+              autoComplete="name"
               placeholder={t("username")}
               className="pl-[2.5rem] rtl:pr-[2.5rem] rtl:pl-3 bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("fullName")}
+              {...register("fullName")}
             />
           </div>
-          {formik.touched.fullName && formik.errors.fullName && (
-            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.fullName}</p>
+          {touchedFields.fullName && errors.fullName && (
+            <p className="text-sm font-medium text-destructive mt-1">{errors.fullName.message}</p>
           )}
         </div>
 
@@ -90,13 +93,14 @@ const RegisterPage = () => {
               id="email"
               name="email"
               type="email"
+              autoComplete="email"
               placeholder={t("you@restaurant.com")}
               className="pl-[2.5rem] rtl:pr-[2.5rem] rtl:pl-3 bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("email")}
+              {...register("email")}
             />
           </div>
-          {formik.touched.email && formik.errors.email && (
-            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.email}</p>
+          {touchedFields.email && errors.email && (
+            <p className="text-sm font-medium text-destructive mt-1">{errors.email.message}</p>
           )}
         </div>
 
@@ -111,14 +115,14 @@ const RegisterPage = () => {
               id="userPhone"
               name="userPhone"
               type="tel"
+              autoComplete="tel"
               placeholder={t("01xxxxxxxxx")}
-
               className="pl-[2.5rem] rtl:pr-[2.5rem] rtl:pl-3 bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("userPhone")}
+              {...register("userPhone")}
             />
           </div>
-          {formik.touched.userPhone && formik.errors.userPhone && (
-            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.userPhone}</p>
+          {touchedFields.userPhone && errors.userPhone && (
+            <p className="text-sm font-medium text-destructive mt-1">{errors.userPhone.message}</p>
           )}
         </div>
 
@@ -132,9 +136,10 @@ const RegisterPage = () => {
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
               placeholder="••••••••"
               className="pl-[2.5rem] rtl:pr-[2.5rem] rtl:pl-3 bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("password")}
+              {...register("password")}
             />
             <button
               type="button"
@@ -144,8 +149,8 @@ const RegisterPage = () => {
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          {formik.touched.password && formik.errors.password && (
-            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>
+          {touchedFields.password && errors.password && (
+            <p className="text-sm font-medium text-destructive mt-1">{errors.password.message}</p>
           )}
         </div>
 

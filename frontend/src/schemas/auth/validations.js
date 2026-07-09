@@ -1,32 +1,20 @@
-import * as Yup from "yup";
+import * as z from "zod";
 
-export const loginValidationSchema = Yup.object({
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  password: Yup.string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
+export const loginValidationSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  password: z.string().min(1, "Password is required").min(8, "Password must be at least 8 characters"),
 });
 
-export const signupValidationSchema = Yup.object({
-  fullName: Yup.string().required("Full Name is required"),
-  email: Yup.string()
-    .email("Invalid email address")
-    .required("Email is required"),
-  userPhone: Yup.number()
-    .typeError("Phone must be a number")
-    .required("Phone is required")
+export const signupValidationSchema = z.object({
+  fullName: z.string().min(1, "Full Name is required"),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  userPhone: z.string()
+    .min(1, "Phone is required")
+    .regex(/^\d+$/, "Phone must be a number")
     .min(11, "Phone Number must be at least 11 number"),
-  password: Yup.string()
-    .min(8, "Password must be at least 8 characters")
-    .required("Password is required"),
-  restaurantName: Yup.string()
-    .required("Restaurant Name is required"),
-  address: Yup.string()
-    .required("Address is required"),
-  city: Yup.string()
-    .required("City is required"),
-  restaurantPhone: Yup.string()
-    .required("Restaurant Phone is required"),
-}); 
+  password: z.string().min(1, "Password is required").min(8, "Password must be at least 8 characters"),
+  restaurantName: z.string().min(1, "Restaurant Name is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  restaurantPhone: z.string().min(1, "Restaurant Phone is required"),
+});

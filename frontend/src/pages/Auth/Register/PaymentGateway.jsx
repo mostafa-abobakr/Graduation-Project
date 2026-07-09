@@ -5,6 +5,7 @@ import { Loader2, CreditCard, Lock, CheckCircle, Leaf } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { toast } from "sonner";
+import { toast as uiToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,6 +113,7 @@ export default function PaymentGateway() {
     // Simulating Payment Gateway Delay
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
+    uiToast({ title: "Account created!", description: "You can now log in with your credentials." });
     setSuccess(true);
     setLoading(false);
 
@@ -348,7 +350,7 @@ export default function PaymentGateway() {
               ) : (
                 <>
                   <Lock className="w-5 h-5 me-2" />
-                  {price === 0 ? "Start Free Plan" : `Start 14-Day Free Trial`}
+                  {price === 0 ? "Start Free Plan" : `Start 30-Day Free Trial`}
                 </>
               )}
             </Button>
@@ -392,7 +394,7 @@ export default function PaymentGateway() {
           </div>
 
           <div className="bg-primary/10 rounded-xl p-4 text-sm text-primary border border-primary/20 mt-auto mb-4">
-            <strong className="block mb-1">14-Day Free Trial Included</strong>
+            <strong className="block mb-1">30-Day Free Trial Included</strong>
             You won't be charged until your trial ends. You can cancel anytime.
           </div>
 

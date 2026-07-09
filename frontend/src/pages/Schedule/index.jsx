@@ -24,6 +24,7 @@ import { EmployeeList } from "./EmployeeList"
 import { ScheduleGrid } from "./ScheduleGrid"
 import { ManageShiftDialog } from "./ManageShiftDialog"
 import { ViewToggler } from "@/components/shared/ViewToggler"
+import api from "@/api/axios"
 
 export default function SchedulePage() {
   const { user } = useAuth()
@@ -232,21 +233,12 @@ export default function SchedulePage() {
 
       const restId = user?.restId
 
-      const response = await fetch(
+      const response = await api.post(
         `https://youseef-awaad-zerobite-ai-engine.hf.space/scheduling/generate/${restId}?target_date=${targetDateStr}`,
-        {
-          method: "POST",
-          headers: {
-            "accept": "application/json",
-          },
-        }
+        {}
       )
 
-      if (!response.ok) {
-        throw new Error("Failed to generate schedule")
-      }
-
-      return response.json()
+      return response.data
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["shifts"] })

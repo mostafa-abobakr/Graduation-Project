@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import { Input } from "@/components/ui/input"
-import { useFormik } from "formik"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { loginValidationSchema } from "@/schemas/auth/validations"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import SquareAuthPage from "@/pages/pos/SquareAuthPage"
@@ -48,16 +49,18 @@ const PosForm = ({ title, bgClass, textClass, icon }) => {
     }, 1000)
   }
 
-  const formik = useFormik({
-    initialValues: {
+  const { register, handleSubmit, formState: { errors, touchedFields } } = useForm({
+    resolver: zodResolver(loginValidationSchema),
+    defaultValues: {
       email: "",
       password: ""
     },
-    validationSchema: loginValidationSchema,
-    onSubmit: (values) => {
-      signinHandler(values)
-    }
+    mode: "all",
   })
+
+  const onSubmit = (values) => {
+    signinHandler(values)
+  }
 
   const auth = searchParams.get("auth")
   if (auth) {
@@ -78,7 +81,7 @@ const PosForm = ({ title, bgClass, textClass, icon }) => {
         {icon}
         <h1 className="font-bold text-2xl mb-6 text-foreground tracking-tight">{title}</h1>
       </div>
-      <form onSubmit={formik.handleSubmit} className="border border-border/60 bg-card text-card-foreground shadow-lg rounded-2xl p-6 w-full max-w-md">
+      <form onSubmit={handleSubmit(onSubmit)} className="border border-border/60 bg-card text-card-foreground shadow-lg rounded-2xl p-6 w-full max-w-md">
         <h1 className="mb-1 font-semibold text-lg text-foreground">Sign in to {title}</h1>
         <p className="mb-6 text-sm text-muted-foreground">
           Enter your credentials to authorize the application
@@ -91,10 +94,10 @@ const PosForm = ({ title, bgClass, textClass, icon }) => {
           type="email"
           placeholder="you@restaurant.com"
           className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary h-[3rem]"
-          {...formik.getFieldProps("email")}
+          {...register("email")}
         />
-        {formik.touched.email && formik.errors.email && (
-          <p className="text-sm font-medium text-destructive mt-1">{formik.errors.email}</p>
+        {touchedFields.email && errors.email && (
+          <p className="text-sm font-medium text-destructive mt-1">{errors.email.message}</p>
         )}
 
         <h4 className="mt-4 text-foreground text-sm font-semibold mb-1">Password</h4>
@@ -104,10 +107,10 @@ const PosForm = ({ title, bgClass, textClass, icon }) => {
           type="password"
           placeholder="Enter your password"
           className="bg-background border-border text-foreground placeholder:text-muted-foreground focus-visible:ring-primary h-[3rem]"
-          {...formik.getFieldProps("password")}
+          {...register("password")}
         />
-        {formik.touched.password && formik.errors.password && (
-          <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>
+        {touchedFields.password && errors.password && (
+          <p className="text-sm font-medium text-destructive mt-1">{errors.password.message}</p>
         )}
 
         <button 

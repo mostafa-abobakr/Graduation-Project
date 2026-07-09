@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useFormik } from "formik";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { loginValidationSchema } from "@/schemas/auth/validations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import {ThemeToggle} from "@/components/shared/ThemeToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -34,36 +34,38 @@ function Login() {
     onError: (err) => console.error("Training failed:", err)
   });
 
-  const formik = useFormik({
-    initialValues: { email: "", password: "" },
-    validationSchema: loginValidationSchema,
-    onSubmit: async (values) => {
-      try {
-        setIsSubmitting(true);
-        setSubmitError("");
-
-        const success = await login(values.email, values.password);
-        
-  
-        if (success) {
-          // 1. Get the user object that was just saved by the login function
-          const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-          
-          // 2. Trigger the training API using TanStack Query useMutation
-          if (storedUser?.restId) {
-            trainMutation.mutate(storedUser.restId);
-          }
-
-          // 3. Navigate to dashboard
-          navigate("/dashboard");
-        }
-      } catch (error) {
-        setSubmitError(error.response?.data?.message || t("Login failed."));
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
+  const { register, handleSubmit, formState: { errors, touchedFields, isValid } } = useForm({
+    resolver: zodResolver(loginValidationSchema),
+    defaultValues: { email: "", password: "" },
+    mode: "all",
   });
+
+  const onSubmit = async (values) => {
+    try {
+      setIsSubmitting(true);
+      setSubmitError("");
+
+      const success = await login(values.email, values.password);
+      
+
+      if (success) {
+        // 1. Get the user object that was just saved by the login function
+        const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+        
+        // 2. Trigger the training API using TanStack Query useMutation
+        if (storedUser?.restId) {
+          trainMutation.mutate(storedUser.restId);
+        }
+
+        // 3. Navigate to dashboard
+        navigate("/dashboard");
+      }
+    } catch (error) {
+      setSubmitError(error.response?.data?.message || t("Login failed."));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isSeeding) {
     return (
@@ -97,16 +99,16 @@ function Login() {
       footerLinkText={t("Sign up")}
       footerLinkTo="/register"
     >
-      <form onSubmit={formik.handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <Label htmlFor="email" className="text-foreground text-sm">{t("Email")}</Label>
-          <Input id="email" type="email" placeholder={t("you@restaurant.com")} className="mt-1.5 bg-muted/30 border-border/60" {...formik.getFieldProps("email")} required />
-          {formik.touched.email && formik.errors.email && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.email}</p>}
+          <Input id="email" type="email" placeholder={t("you@restaurant.com")} className="mt-1.5 bg-muted/30 border-border/60" {...register("email")} required />
+          {touchedFields.email && errors.email && <p className="text-sm font-medium text-destructive mt-1">{errors.email.message}</p>}
         </div>
         <div>
           <Label htmlFor="password" className="text-foreground text-sm">{t("Password")}</Label>
           <div className="relative mt-1.5">
-            <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" className="pr-10 rtl:pl-10 rtl:pr-3 bg-muted/30 border-border/60" {...formik.getFieldProps("password")} required />
+            <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" className="pr-10 rtl:pl-10 rtl:pr-3 bg-muted/30 border-border/60" {...register("password")} required />
             <button
               type="button"
               className="absolute right-3 rtl:left-3 rtl:right-auto top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground z-10 flex items-center justify-center transition-all"
@@ -115,7 +117,7 @@ function Login() {
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           </div>
-          {formik.touched.password && formik.errors.password && <p className="text-sm font-medium text-destructive mt-1">{formik.errors.password}</p>}
+          {touchedFields.password && errors.password && <p className="text-sm font-medium text-destructive mt-1">{errors.password.message}</p>}
         </div>
 
         {submitError && <div className="text-destructive text-[14px] font-medium bg-destructive/10 p-3 rounded-md">{submitError}</div>}
@@ -124,7 +126,7 @@ function Login() {
           <Link to="/login/forgot-password" className="text-[0.875rem] font-bold text-primary hover:text-primary/80 transition-colors">{t("forgot password?")}</Link>
         </div> */}
 
-        <Button type="submit" className="w-full h-10" disabled={isSubmitting || !formik.isValid}>
+        <Button type="submit" className="w-full h-10" disabled={isSubmitting || !isValid}>
           {isSubmitting && <Loader2 className="h-4 w-4 me-2 animate-spin" />}
           {t("Log In")}
         </Button>

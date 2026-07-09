@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useFormik } from "formik";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-lea
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-const validationSchema = signupValidationSchema.pick(["address", "city"]);
+const validationSchema = signupValidationSchema.pick({ address: true, city: true });
 const defaultCenter = { lat: 30.0444, lng: 31.2357 };
 const markerIcon = L.icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -70,35 +71,40 @@ const RestaurantLocation = () => {
   const [isMapExpanded, setIsMapExpanded] = useState(false)
   const [isUserTyping, setIsUserTyping] = useState(false)
   const { formData, updateFromData } = useRegisterContext()
-  const { register, login } = useAuth();
+  const { register: registerUser, login } = useAuth();
 
-  const formik = useFormik({
-    initialValues: {
+  const { register, handleSubmit, formState: { errors, touchedFields }, setValue, watch } = useForm({
+    resolver: zodResolver(validationSchema),
+    defaultValues: {
       address: formData.address || "",
       city: formData.city || "",
     },
-    validationSchema,
-    onSubmit: async (values) => {
-      setIsSubmitting(true);
-      setSubmitError("");
-      try {
-        updateFromData(values); // 1. Save data to local storage
-        const completeData = { ...formData, ...values };
-        await register(completeData); // 2. Register
-        // await login(completeData.email, completeData.password);
-        navigate("/register/connect-pos"); // 3. Navigate
-        localStorage.removeItem("register");
-      } catch (error) {
-        setSubmitError(error.response?.data?.message || "Registration failed. Please try again.");
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
+    mode: "all",
   });
 
+  const addressValue = watch("address");
+  const cityValue = watch("city");
+
+  const onSubmit = async (values) => {
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      updateFromData(values); // 1. Save data to local storage
+      const completeData = { ...formData, ...values };
+      await registerUser(completeData); // 2. Register
+      // await login(completeData.email, completeData.password);
+      navigate("/register/connect-pos"); // 3. Navigate
+      localStorage.removeItem("register");
+    } catch (error) {
+      setSubmitError(error.response?.data?.message || "Registration failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const searchText = useMemo(
-    () => formik.values.address?.trim() || formik.values.city?.trim() || "",
-    [formik.values.address, formik.values.city]
+    () => addressValue?.trim() || cityValue?.trim() || "",
+    [addressValue, cityValue]
   );
 
   useEffect(() => {
@@ -149,11 +155,11 @@ const RestaurantLocation = () => {
       );
       const data = await response.json();
       if (data?.display_name) {
-        formik.setFieldValue("address", data.display_name);
+        setValue("address", data.display_name, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
       }
       const city = extractCity(data?.address || {});
       if (city) {
-        formik.setFieldValue("city", city);
+        setValue("city", city, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
       }
     } catch {
       // Keep map movement even when reverse geocoding fails.
@@ -164,10 +170,10 @@ const RestaurantLocation = () => {
     setIsUserTyping(false)
     const lat = Number(item.lat)
     const lng = Number(item.lon)
-    formik.setFieldValue("address", item.display_name || "");
+    setValue("address", item.display_name || "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     const city = extractCity(item.address || {});
     if (city) {
-      formik.setFieldValue("city", city);
+      setValue("city", city, { shouldValidate: true, shouldDirty: true, shouldTouch: true });
     }
     if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
       setMapCenter({ lat, lng });
@@ -252,7 +258,7 @@ const RestaurantLocation = () => {
       className="min-h-0 py-6 bg-transparent w-full"
     >
       <form
-        onSubmit={formik.handleSubmit}
+        onSubmit={handleSubmit(onSubmit)}
         noValidate
         className="w-full max-w-[700px] flex flex-col gap-5 bg-card text-card-foreground "
       >
@@ -285,17 +291,23 @@ const RestaurantLocation = () => {
               name="address"
               placeholder="Search and select your address"
               className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem] w-full"
-              value={formik.values.address}
-              onChange={(event) => {
-                formik.setFieldValue("address", event.target.value)
-                setIsUserTyping(true)
-                setShowSuggestions(true)
-              }}
+              {...(() => {
+                const { onChange, onBlur, name, ref } = register("address");
+                return {
+                  name,
+                  ref,
+                  onChange: (event) => {
+                    onChange(event);
+                    setIsUserTyping(true);
+                    setShowSuggestions(true);
+                  },
+                  onBlur: (event) => {
+                    onBlur(event);
+                    setShowSuggestions(false);
+                  }
+                };
+              })()}
               onFocus={() => setShowSuggestions(true)}
-              onBlur={(event) => {
-                formik.handleBlur(event)
-                setShowSuggestions(false)
-              }}
             />
             {showSuggestions && (suggestions.length > 0 || isSearchingAddress) && (
               <div className="absolute top-[3.2rem] z-[9999] w-full rounded-md border border-border bg-background shadow-md">
@@ -317,8 +329,8 @@ const RestaurantLocation = () => {
               </div>
             )}
           </div>
-          {formik.touched.address && formik.errors.address && (
-            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.address}</p>
+          {touchedFields.address && errors.address && (
+            <p className="text-sm font-medium text-destructive mt-1">{errors.address.message}</p>
           )}
 
           <div className="border border-border/50 rounded-lg overflow-hidden shadow-sm relative group">
@@ -361,11 +373,11 @@ const RestaurantLocation = () => {
               name="city"
               placeholder="City"
               className="pl-[2.5rem] bg-muted/20 border-border/80 h-[3rem]"
-              {...formik.getFieldProps("city")}
+              {...register("city")}
             />
           </div>
-          {formik.touched.city && formik.errors.city && (
-            <p className="text-sm font-medium text-destructive mt-1">{formik.errors.city}</p>
+          {touchedFields.city && errors.city && (
+            <p className="text-sm font-medium text-destructive mt-1">{errors.city.message}</p>
           )}
         </div>
 

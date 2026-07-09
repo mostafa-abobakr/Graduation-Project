@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext"
 import { Button } from "@/components/ui/button"
 import { AlertCircle, Loader2, RefreshCw } from "lucide-react"
 import { motion } from "framer-motion"
+import api from "@/api/axios"
 
 const staggerContainer = {
   hidden: { opacity: 0 },
@@ -30,35 +31,22 @@ const ManagerDashboard = () => {
   const [viewMode, setViewMode] = useState("today")
   const { user } = useAuth()
   const { t } = useLanguage()
-  // console.log(user);
-
-
-  // const { data, isLoading, error } = useQuery({
-  //   queryKey: ["dashboardData"],
-  //   queryFn: async () => {
-  //     const token = localStorage.getItem("authToken");
-
-  //     const res = await fetch(
-  //       `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user.restId}`,
-  //       { method: "GET", headers: { accept: "application/json", }, },
-  //     );
-  //     if (!res.ok) {
-  //       throw new Error(`Failed to fetch dashboard data: ${res.statusText}`);
-  //     }
-  //     return res.json();
-  //   },
-  // });
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ["dashboardData", user?.restId],
     queryFn: async () => {
-      const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user?.restId}`
-      )
-
-      if (!res.ok) throw new Error("Not ready yet")
-
-      return res.json()
+      try {
+        const res = await api.get(
+          `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/dashboard/${user?.restId}`
+        )
+        return res.data
+      } catch (err) {
+        // preserve existing fallback logic
+        if (err.response && err.response.status === 404) {
+          throw new Error("Not ready yet")
+        }
+        throw err;
+      }
     },
     staleTime: 30 * 1000,
     retry: false,

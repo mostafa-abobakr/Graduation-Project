@@ -27,7 +27,9 @@ export default function InventoryForecastPage() {
 
   const [alignment, setAlignment] = useState("day");
   const [dailyData, setDailyData] = useState([null, 0]);
-  const [weeklyTemperatures, setWeeklyTemperatures] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [weeklyTemperatures, setWeeklyTemperatures] = useState([
+    0, 0, 0, 0, 0, 0, 0,
+  ]);
   const [weeklyEvents, setWeeklyEvents] = useState([0, 0, 0, 0, 0, 0, 0]);
 
   const cityToSearch = user?.city || user?.address || "mansoura university";
@@ -37,7 +39,11 @@ export default function InventoryForecastPage() {
   const { data: weatherData } = useFetchCityWeather(lat, lon);
 
   useEffect(() => {
-    if (weatherData && weatherData.daily?.time && weatherData.daily?.temperature_2m_max) {
+    if (
+      weatherData &&
+      weatherData.daily?.time &&
+      weatherData.daily?.temperature_2m_max
+    ) {
       const maxTemps = weatherData.daily.temperature_2m_max;
       const times = weatherData.daily.time;
       if (maxTemps.length >= 7) {
@@ -49,9 +55,13 @@ export default function InventoryForecastPage() {
           const uiIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
           alignedTemps[uiIdx] = Math.round(maxTemps[idx]);
         });
-        
+
         setWeeklyTemperatures(alignedTemps);
-        setDailyData(prev => prev[0] !== Math.round(maxTemps[0]) ? [Math.round(maxTemps[0]), prev[1]] : prev);
+        setDailyData((prev) =>
+          prev[0] !== Math.round(maxTemps[0])
+            ? [Math.round(maxTemps[0]), prev[1]]
+            : prev,
+        );
       }
     }
   }, [weatherData]);
@@ -61,10 +71,11 @@ export default function InventoryForecastPage() {
     alignment,
     dailyData,
     weeklyTemperatures,
-    weeklyEvents
+    weeklyEvents,
   });
 
-  const isWeatherReady = dailyData && dailyData[0] !== null && dailyData[0] !== undefined;
+  const isWeatherReady =
+    dailyData && dailyData[0] !== null && dailyData[0] !== undefined;
   const isLoading = isPending || !isWeatherReady;
 
   const enriched = useMemo(() => {
@@ -91,9 +102,11 @@ export default function InventoryForecastPage() {
     });
   }, [enriched, search, filter]);
 
-  const shortageCount = data?.itemsShort ?? enriched.filter((r) => r.isShort).length;
-  const sufficientCount = data?.sufficient ?? (enriched.length - shortageCount);
-  const totalShortage = data?.totalShortage ?? enriched.reduce((s, r) => s + r.shortage, 0);
+  const shortageCount =
+    data?.itemsShort ?? enriched.filter((r) => r.isShort).length;
+  const sufficientCount = data?.sufficient ?? enriched.length - shortageCount;
+  const totalShortage =
+    data?.totalShortage ?? enriched.reduce((s, r) => s + r.shortage, 0);
 
   if (error) {
     return (
@@ -242,19 +255,33 @@ export default function InventoryForecastPage() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, idx) => (
                   <tr key={idx} className="border-b border-border/30">
-                    <td className="py-3 px-4"><Skeleton className="h-5 w-16" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-5 w-[140px]" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
-                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
+                    <td className="py-3 px-4">
+                      <Skeleton className="h-5 w-16" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <Skeleton className="h-5 w-[140px]" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <Skeleton className="h-5 w-20 mx-auto" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <Skeleton className="h-5 w-20 mx-auto" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <Skeleton className="h-5 w-20 mx-auto" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <Skeleton className="h-5 w-20 mx-auto" />
+                    </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <Skeleton className="flex-1 h-2 rounded-full" />
                         <Skeleton className="h-4 w-10" />
                       </div>
                     </td>
-                    <td className="py-3 px-4"><Skeleton className="h-6 w-24 mx-auto rounded-md" /></td>
+                    <td className="py-3 px-4">
+                      <Skeleton className="h-6 w-24 mx-auto rounded-md" />
+                    </td>
                   </tr>
                 ))
               ) : filtered.length === 0 ? (

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useLanguage } from "@/contexts/LanguageContext";
-
+import api from "@/api/axios";
 import {
   Lightbulb,
   TrendingDown,
@@ -80,20 +80,15 @@ export default function AIInsightsPage() {
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["forecastAlerts", user?.restId],
     queryFn: async () => {
-      const res = await fetch(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/alerts/forecast/${user?.restId}`,
-        {
-          method: "POST",
-          headers: {
-            accept: "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({}),
-        },
-      );
-      if (!res.ok)
-        throw new Error(`Failed to fetch forecast alerts: ${res.statusText}`);
-      return res.json();
+      try {
+        const res = await api.post(
+          `https://youseef-awaad-zerobite-ai-engine.hf.space/analytics/alerts/forecast/${user?.restId}`,
+          {}
+        );
+        return res.data;
+      } catch (error) {
+        throw new Error(`Failed to fetch forecast alerts: ${error.message}`);
+      }
     },
     enabled: !!user?.restId,
     staleTime: 5 * 60 * 1000,

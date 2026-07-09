@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useInventoryItems } from "@/hooks/useInventory";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMenuQuery, useUpdateMenuItem } from "@/hooks/useMenu";
+import api from "@/api/axios";
 import {
   Table,
   TableBody,
@@ -132,22 +133,27 @@ export default function MenuManagementPage() {
     formData.append("upload_preset", "menu_items_preset");
 
     try {
-      const response = await fetch(
+      // Note: Cloudinary does not require our internal auth token.
+      // We rely on axios to set the correct Content-Type for FormData.
+      const response = await api.post(
         "https://api.cloudinary.com/v1_1/dzf0esgoy/image/upload",
+        formData,
         {
-          method: "POST",
-          body: formData,
-        },
+          transformRequest: [(data, headers) => {
+            delete headers.Authorization;
+            return data;
+          }]
+        }
       );
-      const data = await response.json();
-      if (response.ok) {
+      const data = response.data;
+      if (response.status === 200) {
         setEditForm((prev) => ({ ...prev, image: data.secure_url }));
         toast.success(t("Image uploaded successfully"));
       } else {
         toast.error(data.error?.message || t("Failed to upload image"));
       }
     } catch (error) {
-      toast.error(t("An error occurred during upload"));
+      toast.error(error.response?.data?.error?.message || t("An error occurred during upload"));
     } finally {
       setIsUploading(false);
     }
