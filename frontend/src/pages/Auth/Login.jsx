@@ -120,9 +120,9 @@ function Login() {
 
         {submitError && <div className="text-destructive text-[14px] font-medium bg-destructive/10 p-3 rounded-md">{submitError}</div>}
         
-        <div className="flex justify-end mt-2">
+        {/* <div className="flex justify-end mt-2">
           <Link to="/login/forgot-password" className="text-[0.875rem] font-bold text-primary hover:text-primary/80 transition-colors">{t("forgot password?")}</Link>
-        </div>
+        </div> */}
 
         <Button type="submit" className="w-full h-10" disabled={isSubmitting || !formik.isValid}>
           {isSubmitting && <Loader2 className="h-4 w-4 me-2 animate-spin" />}

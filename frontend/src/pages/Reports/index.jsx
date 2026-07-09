@@ -101,6 +101,8 @@ export default function ReportsPage() {
     [user, exportingId, queryClient]
   )
 
+
+
   const isAnyExporting = exportingId !== null
 
   return (
@@ -113,7 +115,7 @@ export default function ReportsPage() {
       />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+     {/* <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <SummaryCard
           title="Reports Generated"
           value={
@@ -156,7 +158,7 @@ export default function ReportsPage() {
           }
           icon={Download}
         />
-      </div>
+      </div> */}
 
       {/* Reports List */}
       <Card className="bg-card border-border/60 premium-shadow overflow-hidden">
