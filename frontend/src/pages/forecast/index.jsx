@@ -8,13 +8,11 @@ import { useLanguage } from "@/contexts/LanguageContext"
 import ForecastHeader from "./ForecastHeader"
 import ForecastSummaryCards from "./ForecastSummaryCards"
 import ForecastTable from "./ForecastTable"
-import ForecastSettingsModal from "./ForecastSettingsModal"
 
 export default function ForecastPage() {
   const { t } = useLanguage()
   const { user } = useAuth()
   const [alignment, setAlignment] = useState("day")
-  const [modalOpen, setModalOpen] = useState(false)
   
   const [dailyData, setDailyData] = useState([null, 0])
   const [weeklyTemperatures, setWeeklyTemperatures] = useState([0, 0, 0, 0, 0, 0, 0])
@@ -80,24 +78,11 @@ export default function ForecastPage() {
       <ForecastHeader 
         alignment={alignment} 
         setAlignment={setAlignment} 
-        setModalOpen={setModalOpen} 
       />
 
       <ForecastSummaryCards data={data} alignment={alignment} isLoading={isLoading} />
 
       <ForecastTable items={data?.items || []} alignment={alignment} isLoading={isLoading} />
-
-      <ForecastSettingsModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        dailyData={dailyData}
-        setDailyData={setDailyData}
-        weeklyTemperatures={weeklyTemperatures}
-        setWeeklyTemperatures={setWeeklyTemperatures}
-        weeklyEvents={weeklyEvents}
-        setWeeklyEvents={setWeeklyEvents}
-        onApply={refetch}
-      />
     </div>
   )
 }

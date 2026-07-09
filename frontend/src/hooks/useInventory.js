@@ -198,20 +198,37 @@ export function useInventoryAlerts(restId) {
   });
 }
 
-export function useInventoryForecast(restId) {
-  return useQuery({
-    queryKey: ["inventoryForecast", restId],
+export function useInventoryForecast({ restId, alignment, dailyData, weeklyTemperatures, weeklyEvents }) {
+  const isDayEnabled = dailyData && dailyData[0] !== null && dailyData[0] !== undefined;
+  const isWeekEnabled = weeklyTemperatures && weeklyTemperatures.length > 0;
+
+  const dayQuery = useQuery({
+    queryKey: ["inventoryForecast", "day", restId, dailyData],
     queryFn: async ({ signal }) => {
-      try {
-        const res = await api.get(`/InventoryForecast/restaurant/${restId}`, { signal });
-        return res.data;
-      } catch (err) {
-        if (err.response && err.response.status === 404) {
-          return { items: [], itemsShort: 0, sufficient: 0, totalShortage: 0 };
-        }
-        throw err;
-      }
+      const payload = {
+        temperature: dailyData[0],
+        event: dailyData[1] || 0,
+      };
+      console.log("[Inventory Forecast] Daily Payload:", payload);
+      const res = await api.post(`/InventoryForecast/daily/restaurant/${restId}`, payload, { signal });
+      return res.data;
     },
-    enabled: !!restId,
+    enabled: !!restId && isDayEnabled,
   });
+
+  const weekQuery = useQuery({
+    queryKey: ["inventoryForecast", "week", restId, weeklyTemperatures, weeklyEvents],
+    queryFn: async ({ signal }) => {
+      const payload = {
+        weeklyTemperatures,
+        weeklyEvents: weeklyEvents || [0,0,0,0,0,0,0],
+      };
+      console.log("[Inventory Forecast] Weekly Payload:", payload);
+      const res = await api.post(`/InventoryForecast/restaurant/${restId}`, payload, { signal });
+      return res.data;
+    },
+    enabled: !!restId && isWeekEnabled,
+  });
+
+  return alignment === "day" ? dayQuery : weekQuery;
 }

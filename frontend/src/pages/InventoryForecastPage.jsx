@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInventoryForecast } from "@/hooks/useInventory";
+import { useGeocodeCity, useFetchCityWeather } from "@/hooks/useForecast";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -24,13 +25,53 @@ export default function InventoryForecastPage() {
   const [filter, setFilter] = useState("all");
   const { user } = useAuth();
 
-  const { data, isPending: isLoading, error } = useInventoryForecast(user?.restId);
+  const [alignment, setAlignment] = useState("day");
+  const [dailyData, setDailyData] = useState([null, 0]);
+  const [weeklyTemperatures, setWeeklyTemperatures] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [weeklyEvents, setWeeklyEvents] = useState([0, 0, 0, 0, 0, 0, 0]);
+
+  const cityToSearch = user?.city || user?.address || "mansoura university";
+  const { data: geoData } = useGeocodeCity(cityToSearch);
+  const lat = geoData && geoData.length > 0 ? parseFloat(geoData[0].lat) : null;
+  const lon = geoData && geoData.length > 0 ? parseFloat(geoData[0].lon) : null;
+  const { data: weatherData } = useFetchCityWeather(lat, lon);
+
+  useEffect(() => {
+    if (weatherData && weatherData.daily?.time && weatherData.daily?.temperature_2m_max) {
+      const maxTemps = weatherData.daily.temperature_2m_max;
+      const times = weatherData.daily.time;
+      if (maxTemps.length >= 7) {
+        const alignedTemps = [0, 0, 0, 0, 0, 0, 0];
+        times.slice(0, 7).forEach((timeStr, idx) => {
+          const [year, month, day] = timeStr.split("-").map(Number);
+          const date = new Date(year, month - 1, day);
+          const dayOfWeek = date.getDay();
+          const uiIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          alignedTemps[uiIdx] = Math.round(maxTemps[idx]);
+        });
+        
+        setWeeklyTemperatures(alignedTemps);
+        setDailyData(prev => prev[0] !== Math.round(maxTemps[0]) ? [Math.round(maxTemps[0]), prev[1]] : prev);
+      }
+    }
+  }, [weatherData]);
+
+  const { data, isPending, error } = useInventoryForecast({
+    restId: user?.restId,
+    alignment,
+    dailyData,
+    weeklyTemperatures,
+    weeklyEvents
+  });
+
+  const isWeatherReady = dailyData && dailyData[0] !== null && dailyData[0] !== undefined;
+  const isLoading = isPending || !isWeatherReady;
 
   const enriched = useMemo(() => {
     if (!data?.items) return [];
     return data.items.map((r) => ({
       ...r,
-      isShort: r.status === "Shortage",
+      isShort: r.status === "Reorder Required",
       shortage: Math.abs(r.shortage || 0),
     }));
   }, [data]);
@@ -72,11 +113,38 @@ export default function InventoryForecastPage() {
 
   return (
     <div className="space-y-5 py-5 animate-fade-in">
-      <PageHeader
-        icon={AlertTriangle}
-        title="Inventory Forecast"
-        description="Required vs in-stock comparison across inventory items"
-      />
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <PageHeader
+          icon={AlertTriangle}
+          title="Inventory Forecast"
+          description="Required vs in-stock comparison across inventory items"
+        />
+        <div className="relative flex bg-muted/60 p-1.5 rounded-xl shadow-inner border border-border/40">
+          <div
+            className="absolute top-1.5 bottom-1.5 w-[calc(50%-3px)] bg-background rounded-lg shadow transition-transform duration-300 ease-out"
+            style={{
+              transform: `translateX(${alignment === "day" ? "0%" : "calc(100% - 6px)"})`,
+            }}
+          />
+          {[
+            { id: "day", label: "Tomorrow" },
+            { id: "week", label: "This Week" },
+          ].map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => setAlignment(mode.id)}
+              aria-pressed={alignment === mode.id}
+              className={`relative z-10 px-4 py-1 text-[13px] font-bold tracking-wide capitalize transition-colors duration-200 ${
+                alignment === mode.id
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <SummaryCard
@@ -159,6 +227,9 @@ export default function InventoryForecastPage() {
                 <th className="text-center py-3 px-4 text-muted-foreground font-medium">
                   Shortage
                 </th>
+                <th className="text-center py-3 px-4 text-muted-foreground font-medium">
+                  Suggested Order
+                </th>
                 <th className="text-center py-3 px-4 text-muted-foreground font-medium w-[200px]">
                   Coverage
                 </th>
@@ -176,6 +247,7 @@ export default function InventoryForecastPage() {
                     <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
                     <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
                     <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
+                    <td className="py-3 px-4"><Skeleton className="h-5 w-20 mx-auto" /></td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">
                         <Skeleton className="flex-1 h-2 rounded-full" />
@@ -187,7 +259,7 @@ export default function InventoryForecastPage() {
                 ))
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-0">
+                  <td colSpan={8} className="p-0">
                     <EmptyState
                       searchQuery={search}
                       searchItemName="items"
@@ -230,6 +302,9 @@ export default function InventoryForecastPage() {
                       }`}
                     >
                       {r.isShort ? `${fmt(r.shortage)}` : "0"}
+                    </td>
+                    <td className="py-3 px-4 text-center text-primary font-semibold mono">
+                      {fmt(r.suggestedOrderQuantity)}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-2">

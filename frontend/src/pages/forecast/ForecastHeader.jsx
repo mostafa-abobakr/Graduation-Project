@@ -1,9 +1,9 @@
 import React from "react"
 import { Button } from "@/components/ui/button"
-import { Settings, Brain } from "lucide-react"
+import { Brain } from "lucide-react"
 import { useLanguage } from "@/contexts/LanguageContext"
 
-export default function ForecastHeader({ alignment, setAlignment, setModalOpen }) {
+export default function ForecastHeader({ alignment, setAlignment }) {
   const { t, language } = useLanguage()
   const now = new Date()
 

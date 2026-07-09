@@ -25,6 +25,7 @@ export function useForecast({ alignment, dailyData, weeklyTemperatures, weeklyEv
         temperature_celsius: dailyData[0],
         event_day: dailyData[1],
       };
+      console.log("[Sales Forecast] Daily Payload:", payload);
       const response = await axios.post(
         `${AI_ENGINE_URL}/forecast/dashboard/day/${user?.restId}`,
         payload,
@@ -50,6 +51,7 @@ export function useForecast({ alignment, dailyData, weeklyTemperatures, weeklyEv
         weekly_temperatures: weeklyTemperatures,
         weekly_events: weeklyEvents,
       };
+      console.log("[Sales Forecast] Weekly Payload:", payload);
       const response = await axios.post(
         `${AI_ENGINE_URL}/forecast/dashboard/week/${user?.restId}`,
         payload,
