@@ -12,17 +12,17 @@ const posOptions = [
   {
     id: "toast",
     name: "Toast POS",
-    icon: <img src={toastIcon} alt="Toast POS" className="w-10 h-10 object-contain" />
+    icon: <img src={toastIcon} alt="Toast POS" loading="lazy" className="w-10 h-10 object-contain" />
   },
   {
     id: "square",
     name: "Square",
-    icon: <img src={squareIcon} alt="Square" className="w-10 h-10 object-contain" />
+    icon: <img src={squareIcon} alt="Square" loading="lazy" className="w-10 h-10 object-contain" />
   },
   {
     id: "geidea",
     name: "Geidea",
-    icon: <img src={geideaIcon} alt="Geidea" className="w-10 h-10 object-contain" />
+    icon: <img src={geideaIcon} alt="Geidea" loading="lazy" className="w-10 h-10 object-contain" />
   }
 ]
 
@@ -54,6 +54,7 @@ export default function ConnectPOS() {
               <img
                 src={toastIcon}
                 alt="Toast"
+                loading="lazy"
                 className="w-14 h-14 mx-auto mb-4 rounded-lg p-2.5 object-contain"
               />
             }
@@ -69,6 +70,7 @@ export default function ConnectPOS() {
               <img
                 src={squareIcon}
                 alt="Square"
+                loading="lazy"
                 className="w-14 h-14 mx-auto p-3 mb-4 rounded-lg bg-white object-contain"
               />
             }
@@ -84,6 +86,7 @@ export default function ConnectPOS() {
               <img
                 src={geideaIcon}
                 alt="Geidea"
+                loading="lazy"
                 className="w-14 h-14 mx-auto p-3.5 mb-4 rounded-lg object-contain"
               />
             }

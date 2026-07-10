@@ -41,7 +41,6 @@ export function AuthProvider({ children }) {
     return null;
   });
   const [isLoading, setIsLoading] = useState(false)
-  const [isSeeding, setIsSeeding] = useState(false)
   const [hasSyncedPrefs, setHasSyncedPrefs] = useState(false)
 
   // You can adjust isAdmin logic based on backend response, e.g. user.role
@@ -108,46 +107,6 @@ export function AuthProvider({ children }) {
         localStorage.setItem("user", JSON.stringify(userData));
         localStorage.setItem("authToken", response.data.token);
 
-        if (userData.restId) {
-          const seedKey = `hasSeeded_${userData.restId}`;
-          const untilTodayKey = `lastSeededDate_${userData.restId}`;
-          const today = new Date().toISOString().split('T')[0];
-
-          const needsInitialSeed = !localStorage.getItem(seedKey);
-
-          if (needsInitialSeed) {
-            setIsSeeding(true);
-            try {
-              await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${userData.restId}`);
-              console.log("Database seeded successfully during login");
-              localStorage.setItem(seedKey, "true");
-            } catch (seedErr) {
-              const errorData = seedErr.response?.data;
-              const errorDetail = errorData?.detail || errorData?.message || (typeof errorData === 'string' ? errorData : "");
-              if (typeof errorDetail === 'string' && (errorDetail.includes("already has menu items") || errorDetail.includes("Cannot re-seed"))) {
-                console.log("Database already seeded. Proceeding silently.");
-                localStorage.setItem(seedKey, "true");
-              } else {
-                console.error("Seeding failed on login:", seedErr);
-              }
-            } finally {
-              setIsSeeding(false);
-            }
-          }
-
-          if (localStorage.getItem(untilTodayKey) !== today) {
-            try {
-              const untilTodayResp = await api.post(`https://youseef-awaad-zerobite-ai-engine.hf.space/seed/untilToday/${userData.restId}`, "", {
-                headers: { accept: "application/json" }
-              });
-              console.log("Seed until today response:", untilTodayResp.data);
-              localStorage.setItem(untilTodayKey, today);
-            } catch (untilTodayErr) {
-              console.error("Failed to seed until today:", untilTodayErr);
-            }
-          }
-        }
-
         toast({ title: "Welcome back!", description: `Logged in successfully` });
         return true;
       }
@@ -191,26 +150,36 @@ export function AuthProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const syncPreferences = async () => {
       if (user && user.restId && !hasSyncedPrefs) {
         setHasSyncedPrefs(true)
         try {
-          const response = await api.get(`/Settings/all/${user.restId}`)
+          const response = await api.get(`/Settings/all/${user.restId}`, {
+            signal: controller.signal
+          })
           const prefs = response.data?.preferences
           if (prefs) {
             if (prefs.theme) setTheme(prefs.theme)
             if (prefs.language) changeLanguage(prefs.language)
           }
         } catch (e) {
-          console.error("Failed to sync preferences from backend:", e)
+          if (e.name !== 'CanceledError' && e.code !== 'ERR_CANCELED') {
+            console.error("Failed to sync preferences from backend:", e)
+          }
         }
       }
     }
     syncPreferences()
+
+    return () => {
+      controller.abort();
+    }
   }, [user, hasSyncedPrefs, setTheme, changeLanguage])
 
   return (
-    <AuthContext.Provider value={{ user, isAdmin, isLoading, isSeeding, login, register, logout }}>
+    <AuthContext.Provider value={{ user, isAdmin, isLoading, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );

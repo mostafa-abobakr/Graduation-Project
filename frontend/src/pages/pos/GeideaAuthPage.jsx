@@ -56,7 +56,7 @@ export default function PosAuthorizePage() {
     return (
       <AuthorizationSuccess
         title="Geidea"
-        icon={<img src={geideaIcon} alt="Geidea" className="w-14 h-14 object-contain drop-shadow-sm" />}
+        icon={<img src={geideaIcon} alt="Geidea" loading="lazy" className="w-14 h-14 object-contain drop-shadow-sm" />}
         bgColor="bg-transparent"
         textColor="text-orange-600 dark:text-orange-400"
         buttonText="Continue to Geidea"
@@ -71,6 +71,7 @@ export default function PosAuthorizePage() {
           <img
             src={geideaIcon}
             alt="Geidea"
+            loading="lazy"
             className="w-16 h-16 object-contain drop-shadow-sm"
           />
           <h1 className="text-2xl font-bold mt-4 text-foreground">

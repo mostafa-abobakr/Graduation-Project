@@ -12,6 +12,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMutation } from "@tanstack/react-query";
 import AuthContainer from "@/components/AuthContainer";
+import { seedRestaurantInfo } from "@/services/authService";
 
 function Login() {
   const { t } = useLanguage();
@@ -19,12 +20,14 @@ function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isSeedingLocal, setIsSeedingLocal] = useState(false);
 
-  const { login, isSeeding } = useAuth();
+  const { login } = useAuth();
 
   const trainMutation = useMutation({
     mutationFn: async (restId) => {
-      const response = await fetch(`https://youseef-awaad-zerobite-ai-engine.hf.space/train/${restId}`, {
+      const AI_ENGINE_URL = import.meta.env.VITE_AI_ENGINE_URL || "https://youseef-awaad-zerobite-ai-engine.hf.space";
+      const response = await fetch(`${AI_ENGINE_URL}/train/${restId}`, {
         method: 'POST'
       });
       if (!response.ok) throw new Error("Training request failed");
@@ -52,12 +55,28 @@ function Login() {
         // 1. Get the user object that was just saved by the login function
         const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
         
-        // 2. Trigger the training API using TanStack Query useMutation
         if (storedUser?.restId) {
+          // Check if seeding is needed
+          const seedKey = `hasSeeded_${storedUser.restId}`;
+          const untilTodayKey = `lastSeededDate_${storedUser.restId}`;
+          const today = new Date().toISOString().split('T')[0];
+          
+          if (!localStorage.getItem(seedKey) || localStorage.getItem(untilTodayKey) !== today) {
+            setIsSeedingLocal(true);
+            try {
+              await seedRestaurantInfo(storedUser.restId);
+            } catch (err) {
+              console.error("Seeding failed during login flow:", err);
+            } finally {
+              setIsSeedingLocal(false);
+            }
+          }
+
+          // Trigger the training API using TanStack Query useMutation
           trainMutation.mutate(storedUser.restId);
         }
 
-        // 3. Navigate to dashboard
+        // Navigate to dashboard
         navigate("/dashboard");
       }
     } catch (error) {
@@ -67,7 +86,7 @@ function Login() {
     }
   };
 
-  if (isSeeding) {
+  if (isSeedingLocal) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 w-full bg-background animate-in fade-in duration-300">
         <div className="bg-card text-card-foreground border border-border/60 rounded-3xl shadow-2xl p-10 max-w-xl w-full text-center animate-in zoom-in-95 duration-500">

@@ -217,6 +217,7 @@ export default function MenuAnalyticsPage() {
                           <img
                             src={item.image_url}
                             alt={item.item_name}
+                            loading="lazy"
                             className="h-10 w-10 rounded-md object-cover border border-border/40"
                           />
                         ) : (

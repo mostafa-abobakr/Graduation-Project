@@ -189,11 +189,13 @@ function AppSidebar() {
     >
       <SidebarContent>
         <div className={`pt-4 ${collapsed ? "px-2" : "px-4"}`}>
-          <Link to="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 flex items-center justify-center shrink-0">
-              <MainLogo className="h-full w-full text-primary" />
-            </div>
-            {!collapsed && <TextLogo className="h-5 w-auto text-foreground" />}
+          <Link to="/">
+            <motion.div layoutId="app-logo-transition" className="flex items-center gap-2">
+              <div className="h-8 w-8 flex items-center justify-center shrink-0">
+                <MainLogo className="h-full w-full text-primary" />
+              </div>
+              {!collapsed && <TextLogo className="h-5 w-auto text-foreground" />}
+            </motion.div>
           </Link>
         </div>
         <Separator className="mx-3 w-auto" />

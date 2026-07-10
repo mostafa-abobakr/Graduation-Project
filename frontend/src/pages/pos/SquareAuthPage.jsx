@@ -55,7 +55,7 @@ export default function PosAuthorizePage() {
     return (
       <AuthorizationSuccess
         title="Square"
-        icon={<img src={squareIcon} alt="Toast" className="w-8 h-8 object-contain" />}
+        icon={<img src={squareIcon} alt="Toast" loading="lazy" className="w-8 h-8 object-contain" />}
         bgColor="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900"
         textColor="text-foreground"
         buttonText="Continue to Square"
@@ -68,7 +68,7 @@ export default function PosAuthorizePage() {
       <div className="w-full max-w-2xl text-center">
         <div className="mb-6">
           <div className="w-14 h-14 mx-auto p-4 rounded-lg bg-zinc-900 dark:bg-zinc-100 flex items-center justify-center shadow-sm">
-          <img src={squareIcon} alt="Toast" className="w-8 h-8 object-contain" />
+          <img src={squareIcon} alt="Toast" loading="lazy" className="w-8 h-8 object-contain" />
           </div>
           <h1 className="text-2xl font-bold mt-3 text-foreground">Square</h1>
         </div>

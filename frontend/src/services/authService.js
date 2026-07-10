@@ -57,15 +57,7 @@ export const registerUser = async () => {
     }
     else if (data && typeof data === "object") {
       // ASP.NET validation format: { errors: { FieldName: ["msg1", ...] } }
-      if (data.message === "Email already exists") {
 
-        console.log("Email already exists");
-        const result = await signIn(email, password)
-        if (result.success) {
-          return { success: true, data: response.data };
-        }
-
-      }
       if (data.errors && typeof data.errors === "object") {
         serverMessage = Object.values(data.errors).flat().join(", ");
       } else if (data.title) {
@@ -86,37 +78,7 @@ export const registerUser = async () => {
 };
 
 
-const signIn = async (email, password) => {
-  try {
-    const response = await api.post("/Auth/login",
-      { email, password },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-    const id = response.data.restId;
-    console.log(response.data);
 
-    console.log(id);
-    if (!id) {
-      return { success: false, error: "Registration succeeded, but restaurant ID is missing" };
-    }
-    const seedResult = await seedRestaurantInfo(id);
-    if (!seedResult.success) {
-      return { success: false, error: "Registration succeeded, but data seeding failed: " + seedResult.error };
-    }
-    toast.success("Registration successful!");
-    return { success: true, data: response.data };
-  }
-  catch (error) {
-    const data = error.response?.data;
-    console.log(data);
-    let serverMessage = "Cannot connect to server. Please try again.";
-    toast.error(serverMessage);
-    return { success: false, error: serverMessage };
-  }
-}
 
 export const seedRestaurantInfo = async (id) => {
   const seedKey = `hasSeeded_${id}`;
@@ -129,8 +91,9 @@ export const seedRestaurantInfo = async (id) => {
     initialSeedSuccess = true;
   } else {
     try {
+      const AI_ENGINE_URL = import.meta.env.VITE_AI_ENGINE_URL || "https://youseef-awaad-zerobite-ai-engine.hf.space";
       await api.post(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/seed/${id}`,
+        `${AI_ENGINE_URL}/seed/${id}`,
         "",
         { headers: { accept: "application/json" } }
       );
@@ -150,8 +113,9 @@ export const seedRestaurantInfo = async (id) => {
 
   if (initialSeedSuccess && localStorage.getItem(untilTodayKey) !== today) {
     try {
+      const AI_ENGINE_URL = import.meta.env.VITE_AI_ENGINE_URL || "https://youseef-awaad-zerobite-ai-engine.hf.space";
       const untilTodayResp = await api.post(
-        `https://youseef-awaad-zerobite-ai-engine.hf.space/seed/untilToday/${id}`,
+        `${AI_ENGINE_URL}/seed/untilToday/${id}`,
         "",
         { headers: { accept: "application/json" } }
       );

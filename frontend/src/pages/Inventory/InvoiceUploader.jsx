@@ -166,6 +166,7 @@ export function InvoiceUploader({ onFileSelected, onReset }) {
                   src={previewUrl}
                   alt="Invoice Preview"
                   draggable={false}
+                  loading="lazy"
                   className="w-full h-full object-contain select-none pointer-events-none"
                 />
               </div>

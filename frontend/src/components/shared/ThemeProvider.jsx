@@ -22,7 +22,13 @@ export function ThemeProvider({ children }) {
     localStorage.setItem("zerobite-theme", theme)
   }, [theme])
 
-  const toggleTheme = () => setTheme(t => (t === "dark" ? "light" : "dark"))
+  const toggleTheme = () => setTheme(t => {
+    if (t === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+      return systemTheme === "dark" ? "light" : "dark"
+    }
+    return t === "dark" ? "light" : "dark"
+  })
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>

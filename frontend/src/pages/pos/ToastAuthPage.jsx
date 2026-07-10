@@ -56,8 +56,7 @@ export default function PosAuthorizePage() {
   if (isSuccess) {
     return (
       <AuthorizationSuccess
-        title="Toast"
-        icon={<img src={toastIcon} alt="Toast" className="w-8 h-8 object-contain" />}
+        icon={<img src={toastIcon} alt="Toast" loading="lazy" className="w-8 h-8 object-contain" />}
         bgColor="bg-orange-600"
         textColor="text-orange-600 dark:text-orange-400"
         buttonText="Continue to Toast"
@@ -71,7 +70,7 @@ export default function PosAuthorizePage() {
         {/* Header */}
         <div className="mb-6">
           <div className="w-14 h-14 mx-auto p-3.5 rounded-lg  flex items-center justify-center shadow-sm">
-            <img src={toastIcon} alt="Toast" className="w-7 h-7 " />
+            <img src={toastIcon} alt="Toast" loading="lazy" className="w-7 h-7 " />
           </div>
           <h1 className="text-2xl font-bold mt-3 text-foreground">Toast</h1>
         </div>

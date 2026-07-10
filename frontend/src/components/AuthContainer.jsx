@@ -5,6 +5,7 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import MainLogo from "@/assets/logos/MainLogo";
 import TextLogo from "@/assets/logos/TextLogo";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 function AuthContainer({
   title,
@@ -24,11 +25,13 @@ function AuthContainer({
       )}
     >
       <div className="absolute top-4 sm:top-6 left-4 sm:left-6 z-10 rtl:left-auto rtl:right-4 sm:rtl:right-6">
-        <Link to="/" className="inline-flex items-center gap-2">
-          <div className="h-9 w-9 flex items-center justify-center">
-            <MainLogo className="h-full w-full text-primary" />
-          </div>
-          <TextLogo className="h-6 w-auto text-foreground" />
+        <Link to="/">
+          <motion.div layoutId="app-logo-transition" className="inline-flex items-center gap-2">
+            <div className="h-8 w-8 flex items-center justify-center">
+              <MainLogo className="h-full w-full text-primary" />
+            </div>
+            <TextLogo className="h-5 w-auto text-foreground" />
+          </motion.div>
         </Link>
       </div>
 

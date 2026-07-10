@@ -160,12 +160,12 @@ export default function LandingPage() {
     <PageTransition className="min-h-screen bg-background">
       <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <motion.div layoutId="app-logo-transition" className="flex items-center gap-2">
             <div className="h-8 w-8 flex items-center justify-center">
               <MainLogo className="h-full w-full text-primary" />
             </div>
             <TextLogo className="h-5 w-auto text-foreground" />
-          </div>
+          </motion.div>
           <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
             <a
               href="#features"

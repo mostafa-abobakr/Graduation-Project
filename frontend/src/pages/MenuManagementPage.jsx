@@ -437,6 +437,7 @@ export default function MenuManagementPage() {
                             <img
                               src={item.image}
                               alt={item.name}
+                              loading="lazy"
                               className="h-10 w-10 rounded-md object-cover border border-border/40"
                             />
                           ) : (
@@ -707,6 +708,7 @@ export default function MenuManagementPage() {
                       <img
                         src={editForm.image}
                         alt="Uploaded"
+                        loading="lazy"
                         className="absolute inset-0 w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">

@@ -33,7 +33,6 @@ export const useInventoryItems = (restId) => {
     },
     enabled: !!restId,
     staleTime: 10 * 1000,
-    refetchInterval: 4 * 1000,
   });
 };
 
@@ -49,7 +48,6 @@ export const useBatchDetails = (restId, itemId) => {
     },
     enabled: !!itemId && !!restId,
     staleTime: 10 * 1000,
-    refetchInterval: 4 * 1000,
   });
 };
 
@@ -65,7 +63,6 @@ export const useItemTransactions = (restId, itemId) => {
     },
     enabled: !!itemId && !!restId,
     staleTime: 10 * 1000,
-    refetchInterval: 4 * 1000,
   });
 };
 
@@ -194,7 +191,6 @@ export function useInventoryAlerts(restId) {
     },
     enabled: !!restId,
     staleTime: 10 * 1000,
-    refetchInterval: 4 * 1000,
   });
 }
 
