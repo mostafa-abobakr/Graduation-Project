@@ -51,9 +51,9 @@ const Register = () => {
   const showProgress = !!matchedStep && !isExternalPosFlow
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative">
       {showProgress && (
-        <div className="w-full max-w-xl mx-auto pt-8 px-6 animate-fade-in">
+        <div className="w-full max-w-xl mx-auto pt-24 lg:pt-8 px-6 animate-fade-in">
           {/* Stepper Grid/Flex */}
           <div className="flex items-start justify-between relative">
             {/* Connecting lines background */}
@@ -85,7 +85,7 @@ const Register = () => {
                   {/* Label */}
                   <span
                     className={cn(
-                      "mt-2.5 text-xs font-semibold whitespace-nowrap transition-colors duration-300",
+                      "mt-2.5 text-[10px] sm:text-xs font-semibold text-center leading-tight max-w-[64px] sm:max-w-none transition-colors duration-300",
                       isActive
                         ? "text-primary"
                         : isCompleted

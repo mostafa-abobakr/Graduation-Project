@@ -294,20 +294,20 @@ export default function SettingsPage() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className={`grid w-full grid-cols-5 mb-6 bg-muted/50 p-1`}>
-          <TabsTrigger value="profile" className="gap-2">
+        <TabsList className="flex flex-wrap w-full mb-6 bg-muted/50 p-1 h-auto gap-1 justify-start">
+          <TabsTrigger value="profile" className="gap-2 flex-1 md:flex-none">
             <User className="h-4 w-4 hidden sm:block" /> Profile
           </TabsTrigger>
-          <TabsTrigger value="restaurant" className="gap-2">
+          <TabsTrigger value="restaurant" className="gap-2 flex-1 md:flex-none">
             <Store className="h-4 w-4 hidden sm:block" /> Restaurant
           </TabsTrigger>
-          <TabsTrigger value="scheduling" className="gap-2">
+          <TabsTrigger value="scheduling" className="gap-2 flex-1 md:flex-none">
             <Clock className="h-4 w-4 hidden sm:block" /> Scheduling
           </TabsTrigger>
-          <TabsTrigger value="preferences" className="gap-2">
+          <TabsTrigger value="preferences" className="gap-2 flex-1 md:flex-none">
             <Palette className="h-4 w-4 hidden sm:block" /> Preferences
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
+          <TabsTrigger value="notifications" className="gap-2 flex-1 md:flex-none">
             <Bell className="h-4 w-4 hidden sm:block" /> Notifications
           </TabsTrigger>
         </TabsList>
@@ -332,46 +332,48 @@ export default function SettingsPage() {
                   onChange={handleAvatarChange}
                   aria-label="Upload profile photo"
                 />
-                <div className="flex items-center gap-5">
-                  <div className="relative group">
-                    <Avatar className="h-20 w-20">
-                      <AvatarImage src={avatarUrl} alt="Profile picture" />
-                      <AvatarFallback className="text-4xl bg-primary/10 text-primary font-bold">
-                        {profile.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .substring(0, 2)
-                          .toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploadingAvatar}
-                      className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      aria-label="Upload profile photo"
-                      tabIndex={0}
-                    >
-                      {isUploadingAvatar ? (
-                        <Loader2 className="h-5 w-5 text-background animate-spin" />
-                      ) : (
-                        <Camera className="h-5 w-5 text-background" />
-                      )}
-                    </button>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                  <div className="flex items-center gap-5 w-full sm:w-auto flex-1 min-w-0">
+                    <div className="relative group shrink-0">
+                      <Avatar className="h-20 w-20">
+                        <AvatarImage src={avatarUrl} alt="Profile picture" />
+                        <AvatarFallback className="text-4xl bg-primary/10 text-primary font-bold">
+                          {profile.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .substring(0, 2)
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploadingAvatar}
+                        className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        aria-label="Upload profile photo"
+                        tabIndex={0}
+                      >
+                        {isUploadingAvatar ? (
+                          <Loader2 className="h-5 w-5 text-background animate-spin" />
+                        ) : (
+                          <Camera className="h-5 w-5 text-background" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-foreground truncate">
+                        {profile.name} {profile.lastName}
+                      </h3>
+                      <p className="text-sm text-muted-foreground truncate">
+                        {profile.role}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1 truncate">
+                        {profile.email}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-foreground">
-                      {profile.name} {profile.lastName}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">
-                      {profile.role}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {profile.email}
-                    </p>
-                  </div>
-                  <div className="flex flex-col gap-2 mt-2">
+                  <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto shrink-0 mt-2 sm:mt-0 items-center sm:items-end">
                     <Button
                       variant="outline"
                       size="sm"
@@ -453,7 +455,7 @@ export default function SettingsPage() {
           </Card>
 
           <Card className="p-6 bg-card border-border/60 premium-shadow">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-1">
                   Security
@@ -466,7 +468,7 @@ export default function SettingsPage() {
                 <Button
                   variant="outline"
                   onClick={() => setIsChangingPassword(true)}
-                  className="gap-2"
+                  className="gap-2 shrink-0 w-full sm:w-auto"
                 >
                   <Key className="h-4 w-4" /> Change Password
                 </Button>

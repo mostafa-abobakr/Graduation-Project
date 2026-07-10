@@ -77,7 +77,7 @@ function Login() {
         }
 
         // Navigate to dashboard
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       }
     } catch (error) {
       setSubmitError(error.response?.data?.message || t("Login failed."));

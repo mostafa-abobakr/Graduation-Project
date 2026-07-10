@@ -56,6 +56,14 @@ const requireAuth = () => {
   return null;
 };
 
+const requireGuest = () => {
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    throw redirect(ROUTES.DASHBOARD);
+  }
+  return null;
+};
+
 const Routes = [
   {
     path: ROUTES.LANDING,
@@ -64,6 +72,7 @@ const Routes = [
   {
     path: ROUTES.LOGIN,
     element: <Login />,
+    loader: requireGuest,
   },
   {
     path: ROUTES.FORGOT_PASSWORD,
