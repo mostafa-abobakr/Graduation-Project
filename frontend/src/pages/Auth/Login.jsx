@@ -33,7 +33,7 @@ function Login() {
       if (!response.ok) throw new Error("Training request failed");
       return response.json();
     },
-    onSuccess: (data) => console.log("Training response:", data),
+    onSuccess: () => {},
     onError: (err) => console.error("Training failed:", err)
   });
 

@@ -25,7 +25,7 @@ export function SummaryCard({
       )}
     >
       <div className="flex items-center justify-between mb-3">
-        <span className="text-sm font-semibold text-muted-foreground line-clamp-1 break-all mr-2">
+        <span className="text-sm font-semibold text-muted-foreground line-clamp-1 break-all me-2">
           {title}
         </span>
         {Icon && (
@@ -65,9 +65,9 @@ export function SummaryCard({
                 )}
               >
                 {(trendIsPositive ?? trend.startsWith("+")) ? (
-                  <TrendingUp className="h-3 w-3 mr-1" strokeWidth={3} />
+                  <TrendingUp className="h-3 w-3 me-1" strokeWidth={3} />
                 ) : (
-                  <TrendingDown className="h-3 w-3 mr-1" strokeWidth={3} />
+                  <TrendingDown className="h-3 w-3 me-1" strokeWidth={3} />
                 )}
                 {trend}
               </div>
@@ -76,7 +76,7 @@ export function SummaryCard({
             {trend !== undefined && typeof trend !== "string" && trend}
 
             {trendSub && (
-              <div className="text-[10px] text-muted-foreground/80 font-medium whitespace-nowrap text-right pr-0.5">
+              <div className="text-[10px] text-muted-foreground/80 font-medium whitespace-nowrap text-end pe-0.5">
                 {trendSub}
               </div>
             )}

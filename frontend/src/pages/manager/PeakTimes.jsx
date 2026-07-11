@@ -4,8 +4,10 @@ import { Progress } from "@/components/ui/progress"
 import { Clock, Calendar, Activity } from "lucide-react"
 import { useLanguage } from "@/contexts/LanguageContext"
 
+import { formatNumber } from "@/lib/formatNumber"
+
 const PeakTimes = ({ data, viewMode }) => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   if (!data) return null
 
@@ -14,7 +16,7 @@ const PeakTimes = ({ data, viewMode }) => {
     const hour = parseInt(hours, 10)
     const ampm = hour >= 12 ? "PM" : "AM"
     const hour12 = hour % 12 || 12
-    return `${hour12} ${t(ampm)}`
+    return `${formatNumber(hour12, language === 'ar')} ${t(ampm)}`
   }
 
   // On Today view, show more hours and hide Top Days
@@ -33,7 +35,7 @@ const PeakTimes = ({ data, viewMode }) => {
           <CardTitle className="text-lg md:text-xl font-bold text-foreground">
             {t("Peak Times")}
           </CardTitle>
-          <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
+          <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0 ms-2">
             <Activity className="w-4 h-4" />
           </div>
         </div>
@@ -43,9 +45,9 @@ const PeakTimes = ({ data, viewMode }) => {
         <div className="space-y-6 flex-1 flex flex-col justify-between">
           {/* Top Hours Section */}
           <section className="space-y-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              <span className="text-sm font-semibold text-foreground tracking-tight">
+            <div className={`flex items-center gap-2 ${language === 'ar' ? 'flex-row-reverse text-right' : 'flex-row text-left'}`}>
+              <Clock className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-sm font-semibold text-foreground tracking-tight w-full">
                 {t("Busiest Hours")}
               </span>
             </div>
@@ -58,7 +60,7 @@ const PeakTimes = ({ data, viewMode }) => {
                       {formatTo12Hr(item.hour)}
                     </span>
                     <span className="text-xs font-semibold text-muted-foreground bg-muted/50 px-2.5 py-0.5 rounded-full border border-border/50">
-                      {item.order_count.toLocaleString()} {t("orders")}
+                      {formatNumber(item.order_count, language === 'ar')} {t("orders")}
                     </span>
                   </div>
                   <Progress
@@ -76,9 +78,9 @@ const PeakTimes = ({ data, viewMode }) => {
           {/* Top Days Section */}
           {viewMode !== "today" && (
             <section className="pt-2">
-              <div className="flex items-center gap-2 mb-3">
-                <Calendar className="h-4 w-4 text-primary" />
-                <span className="text-sm font-semibold text-foreground tracking-tight">
+              <div className={`flex items-center gap-2 mb-3 ${language === 'ar' ? 'flex-row-reverse text-right' : 'flex-row text-left'}`}>
+                <Calendar className="h-4 w-4 text-primary shrink-0" />
+                <span className="text-sm font-semibold text-foreground tracking-tight w-full">
                   {t("Top Days (Revenue)")}
                 </span>
               </div>
@@ -100,7 +102,7 @@ const PeakTimes = ({ data, viewMode }) => {
                       {t(day.day)}
                     </span>
                     <span className="text-sm md:text-base font-black tracking-tight text-foreground truncate max-w-full">
-                      ${(day.revenue / 1000).toFixed(1)}{t("k")}
+                      ${formatNumber(day.revenue / 1000, language === 'ar', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}{t("k")}
                     </span>
                   </div>
                 ))}

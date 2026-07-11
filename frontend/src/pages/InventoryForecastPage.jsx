@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useInventoryForecast } from "@/hooks/useInventory";
-import { useGeocodeCity, useFetchCityWeather } from "@/hooks/useForecast";
+import { useGeocodeCity, useFetchCityWeather, useFetchHolidays } from "@/hooks/useForecast";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,16 +27,16 @@ export default function InventoryForecastPage() {
 
   const [alignment, setAlignment] = useState("day");
   const [dailyData, setDailyData] = useState([null, 0]);
-  const [weeklyTemperatures, setWeeklyTemperatures] = useState([
-    0, 0, 0, 0, 0, 0, 0,
-  ]);
-  const [weeklyEvents, setWeeklyEvents] = useState([0, 0, 0, 0, 0, 0, 0]);
+  const [weeklyTemperatures, setWeeklyTemperatures] = useState([]);
+  const [weeklyEvents, setWeeklyEvents] = useState([]);
 
   const cityToSearch = user?.city || user?.address || "mansoura university";
   const { data: geoData } = useGeocodeCity(cityToSearch);
   const lat = geoData && geoData.length > 0 ? parseFloat(geoData[0].lat) : null;
   const lon = geoData && geoData.length > 0 ? parseFloat(geoData[0].lon) : null;
   const { data: weatherData } = useFetchCityWeather(lat, lon);
+  const currentYear = new Date().getFullYear();
+  const { data: holidaysData } = useFetchHolidays("EG", currentYear);
 
   useEffect(() => {
     if (
@@ -48,23 +48,36 @@ export default function InventoryForecastPage() {
       const times = weatherData.daily.time;
       if (maxTemps.length >= 7) {
         const alignedTemps = [0, 0, 0, 0, 0, 0, 0];
+        const alignedEvents = [0, 0, 0, 0, 0, 0, 0];
+        
         times.slice(0, 7).forEach((timeStr, idx) => {
           const [year, month, day] = timeStr.split("-").map(Number);
           const date = new Date(year, month - 1, day);
           const dayOfWeek = date.getDay();
           const uiIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+          
           alignedTemps[uiIdx] = Math.round(maxTemps[idx]);
+          
+          if (holidaysData) {
+            const isHoliday = holidaysData.some(h => h.date.iso.startsWith(timeStr));
+            alignedEvents[uiIdx] = isHoliday ? 1 : 0;
+          }
         });
+        let firstDayHoliday = 0;
+        if (holidaysData) {
+          firstDayHoliday = holidaysData.some(h => h.date.iso.startsWith(times[0])) ? 1 : 0;
+        }
 
-        setWeeklyTemperatures(alignedTemps);
-        setDailyData((prev) =>
-          prev[0] !== Math.round(maxTemps[0])
-            ? [Math.round(maxTemps[0]), prev[1]]
-            : prev,
+        setWeeklyTemperatures(prev => JSON.stringify(prev) !== JSON.stringify(alignedTemps) ? alignedTemps : prev);
+        setWeeklyEvents(prev => JSON.stringify(prev) !== JSON.stringify(alignedEvents) ? alignedEvents : prev);
+        setDailyData(prev => 
+          prev[0] !== Math.round(maxTemps[0]) || prev[1] !== firstDayHoliday 
+            ? [Math.round(maxTemps[0]), firstDayHoliday] 
+            : prev
         );
       }
     }
-  }, [weatherData]);
+  }, [weatherData, holidaysData]);
 
   const { data, isPending, error } = useInventoryForecast({
     restId: user?.restId,

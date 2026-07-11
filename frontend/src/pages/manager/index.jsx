@@ -54,7 +54,7 @@ const ManagerDashboard = () => {
   })
   if (isLoading)
     return (
-      <div className="flex flex-col py-5 " dir="ltr">
+      <div className="flex flex-col py-5 ">
         <Header viewMode={viewMode} setViewMode={setViewMode} />
 
         <div className="flex-1 pt-5 space-y-4 md:space-y-5">
@@ -115,7 +115,7 @@ const ManagerDashboard = () => {
     return "day";
   };
   const dashboardData = data?.data?.[getViewKey()];
-  // console.log("dashboardData", dashboardData)
+  
 
   const statistics = dashboardData?.revenue;
   const costReduction = dashboardData?.cost_reduction;
@@ -125,7 +125,7 @@ const ManagerDashboard = () => {
 
 
   return (
-    <div className="flex flex-col py-5 " dir="ltr">
+    <div className="flex flex-col py-5 ">
       {/* Header */}
       <Header viewMode={viewMode} setViewMode={setViewMode} />
 

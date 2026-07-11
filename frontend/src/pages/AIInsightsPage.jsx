@@ -17,8 +17,10 @@ import {
   Rocket,
   Info,
   DollarSign,
-  ArrowUpRight,
+  CalendarDays,
+  PartyPopper,
 } from "lucide-react";
+import { useFetchHolidays } from "@/hooks/useForecast";
 import { useAuth } from "@/contexts/AuthContext";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ViewToggler } from "@/components/shared/ViewToggler";
@@ -38,6 +40,7 @@ const iconMap = {
   high_margin_surge: { Icon: Rocket, color: "text-emerald-600" },
   forecast_revenue_drop: { Icon: TrendingDown, color: "text-rose-500" },
   forecast_revenue_spike: { Icon: TrendingUp, color: "text-emerald-500" },
+  event: { Icon: PartyPopper, color: "text-primary" },
 };
 
 function AlertIcon({ type, severity }) {
@@ -61,7 +64,7 @@ const severityStyles = {
 function fmt(n) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
-    currency: "USD",
+    currency: "EGP",
     maximumFractionDigits: 0,
   }).format(n);
 }
@@ -73,6 +76,7 @@ function Skeleton({ className }) {
   );
 }
 
+// ── Upcoming events injected into alerts ─────────────────────────────────────
 export default function AIInsightsPage() {
   const { t } = useLanguage();
   const [period, setPeriod] = useState("day"); // "day" | "week"
@@ -95,7 +99,41 @@ export default function AIInsightsPage() {
   });
 
   const periodData = data?.[period];
-  const alerts = periodData?.alerts ?? [];
+  let alerts = periodData?.alerts ?? [];
+
+  const currentYear = new Date().getFullYear();
+  const { data: holidaysData, isLoading: isHolidaysLoading } = useFetchHolidays("EG", currentYear);
+
+  if (holidaysData) {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    const nextWeekStr = nextWeek.toISOString().split("T")[0];
+    const todayStr = today.toISOString().split("T")[0];
+
+    let eventsForPeriod = [];
+    if (period === "day") {
+      eventsForPeriod = holidaysData.filter(h => h.date.iso === tomorrowStr);
+      eventsForPeriod.push({ name: "Dummy Tomorrow Party", type: ["Local Festival"], date: { iso: tomorrowStr } });
+    } else if (period === "week") {
+      eventsForPeriod = holidaysData.filter(h => h.date.iso >= todayStr && h.date.iso < nextWeekStr);
+      const dummyDay = new Date(today);
+      dummyDay.setDate(today.getDate() + 3);
+      eventsForPeriod.push({ name: "Dummy Week Festival", type: ["Music Event"], date: { iso: dummyDay.toISOString().split("T")[0] } });
+    }
+
+    const eventAlerts = eventsForPeriod.map(e => ({
+      type: "event",
+      severity: "info",
+      message: `${e.name} (${e.type?.[0] || "Event"}) is scheduled for ${new Date(e.date.iso).toLocaleDateString()}`,
+    }));
+
+    alerts = [...eventAlerts, ...alerts];
+  }
 
   return (
     <div className="space-y-5 animate-fade-in py-5">
@@ -115,7 +153,7 @@ export default function AIInsightsPage() {
       />
 
       {/* ── Alert list ───────────────────────────────────────────────────── */}
-      <Card className="flex flex-col bg-card border-border/60 premium-shadow">
+      <Card className="flex flex-col bg-card border-border/60 premium-shadow h-full">
         <CardHeader className="p-5 pb-3 shrink-0">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base font-bold text-foreground">
@@ -156,10 +194,10 @@ export default function AIInsightsPage() {
                 {alerts.map((alert, index) => (
                   <li
                     key={index}
-                    className="flex items-start gap-3 p-3 rounded-lg border border-border/50 bg-background shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-200"
+                    className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-background shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-200"
                   >
                     {/* Icon */}
-                    <div className="mt-0.5 p-1.5 rounded-full shrink-0 shadow-xs border border-border/40 bg-muted/20">
+                    <div className="p-1.5 rounded-full shrink-0 shadow-xs border border-border/40 bg-muted/20">
                       <AlertIcon type={alert.type} severity={alert.severity} />
                     </div>
 
@@ -170,7 +208,7 @@ export default function AIInsightsPage() {
 
                     {/* Severity badge */}
                     <span
-                      className={`shrink-0 mt-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize ${
+                      className={`shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize ${
                         severityStyles[alert.severity] ?? severityStyles.info
                       }`}
                     >

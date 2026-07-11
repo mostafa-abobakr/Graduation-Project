@@ -287,7 +287,7 @@ export function ItemFormDialog({ open, setOpen, editingItem, onSave }) {
             </div>
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">
-                Cost per Unit ($)
+                Cost per Unit (EGP)
               </Label>
               <Input
                 type="number"

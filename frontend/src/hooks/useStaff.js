@@ -5,8 +5,8 @@ import { toast } from "sonner";
 export const useStaffQuery = () => {
   return useQuery({
     queryKey: ["staff"],
-    queryFn: async ({ signal }) => {
-      const response = await api.get("/Employees", { signal })
+    queryFn: async () => {
+      const response = await api.get("/Employees")
       const data = response.data
 
       return {
@@ -25,8 +25,8 @@ export const useStaffQuery = () => {
 export const useEmployeeDetails = (empId, isOpen) => {
   return useQuery({
     queryKey: ["employee", empId],
-    queryFn: async ({ signal }) => {
-      const response = await api.get(`/Employees/single/${empId}`, { signal })
+    queryFn: async () => {
+      const response = await api.get(`/Employees/single/${empId}`)
       return response.data
     },
     enabled: isOpen && !!empId,

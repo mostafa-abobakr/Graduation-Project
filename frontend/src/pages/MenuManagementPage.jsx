@@ -58,6 +58,7 @@ import { SummaryCard } from "@/components/shared/SummaryCard";
 import { SkeletonRows } from "@/components/shared/Skeletons";
 import { cn, getValidEmoji } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatNumber } from "@/lib/formatNumber";
 
 const MENU_ITEM_EMOJIS = {
   Drinks: ["☕", "🫖", "🧋", "🥤", "🧃"],
@@ -466,10 +467,10 @@ export default function MenuManagementPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-center text-sm text-muted-foreground">
-                        ${item.cost.toFixed(2)}
+                        {formatNumber(item.cost, language === 'ar', { style: 'currency', currency: 'EGP' })}
                       </TableCell>
                       <TableCell className="text-center font-semibold text-foreground">
-                        ${item.price.toFixed(2)}
+                        {formatNumber(item.price, language === 'ar', { style: 'currency', currency: 'EGP' })}
                       </TableCell>
                       <TableCell className="text-center">
                         <Badge className={`${marginBadgeClass} border-0`}>
@@ -738,7 +739,7 @@ export default function MenuManagementPage() {
             <div className="grid grid-cols-2 gap-6 p-4 bg-muted/30 rounded-lg border border-border/40">
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">
-                  {t("Cost ($)")}
+                  {t("Cost (EGP)")}
                 </Label>
                 <Input
                   type="number"
@@ -749,7 +750,7 @@ export default function MenuManagementPage() {
               </div>
               <div>
                 <Label className="text-xs text-muted-foreground mb-1 block">
-                  {t("Price ($)")}
+                  {t("Price (EGP)")}
                 </Label>
                 <Input
                   type="number"

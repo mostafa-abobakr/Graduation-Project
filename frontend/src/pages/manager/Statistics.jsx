@@ -3,42 +3,43 @@ import { DollarSign, ShoppingBag, Receipt, PieChart } from "lucide-react"
 import { SummaryCard } from "@/components/shared/SummaryCard"
 import { useLanguage } from "@/contexts/LanguageContext"
 
+import { formatNumber } from "@/lib/formatNumber"
+
 const Statistics = ({ data }) => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   if (!data) return null
 
-  const fmt = (v) =>
-    Intl.NumberFormat("en-US", {
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(v)
+  const fmt = (v) => formatNumber(v, language === 'ar', {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  })
 
   const statsData = [
     {
       title: "Total Revenue",
-      prefix: "$",
+      suffix: "EGP",
       value: data.total_revenue,
       change: data.revenue_change_pct,
       icon: DollarSign,
     },
     {
       title: "Net Profit",
-      prefix: "$",
+      suffix: "EGP",
       value: data.total_profit,
       change: data.profit_change_pct,
       icon: PieChart,
     },
     {
       title: "Total Orders",
-      prefix: "",
+      suffix: "",
       value: data.total_orders,
       change: data.orders_change_pct,
       icon: ShoppingBag,
     },
     {
       title: "Avg Order Value",
-      prefix: "$",
+      suffix: "EGP",
       value: data.avg_order_value,
       change: data.avg_order_value_change_pct,
       icon: Receipt,
@@ -51,7 +52,7 @@ const Statistics = ({ data }) => {
         <SummaryCard
           key={stat.title}
           title={t(stat.title)}
-          value={`${stat.prefix}${fmt(stat.value)}`}
+          value={`${fmt(stat.value)}${stat.suffix ? " " + t(stat.suffix) : ""}`}
           icon={stat.icon}
           iconColorClass="text-primary"
           iconWrapper

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Search, Users, Trash2 } from "lucide-react"
 import { EmptyState } from "@/components/shared/EmptyState"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { formatNumber } from "@/lib/formatNumber"
 
 const initials = (name = "") =>
   name
@@ -15,7 +16,7 @@ const initials = (name = "") =>
     .join("")
 
 export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEdit, onDelete }) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   if (filtered.length === 0 && !isLoading && !search) {
     return (
@@ -175,7 +176,7 @@ export function EmployeeTableCard({ filtered, isLoading, search, setSearch, onEd
                     </div>
                   </td>
                   <td className="py-4 px-5 text-end font-mono font-medium text-foreground">
-                    ${e.salary?.toLocaleString()}
+                    {formatNumber(e.salary ?? 0, language === 'ar', { style: 'currency', currency: 'EGP' })}
                   </td>
                   <td className="py-4 px-5 text-center">
                     <Badge

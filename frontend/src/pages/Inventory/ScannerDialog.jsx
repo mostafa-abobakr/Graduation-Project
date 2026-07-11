@@ -38,7 +38,7 @@ export function ScannerDialog({ open, setOpen, existingInventory = [], onSuccess
           let cleanName = item.item_name || item.original_invoice_name || "";
           if (!item.item_name && item.original_invoice_name) {
             cleanName = cleanName
-              .replace(/[0-9.$£€]/g, "")
+              .replace(/[0-9.$£€,]|EGP|LE|ج\.م\.?|ج م/gi, "")
               .replace(/\b(kg|g|lbs|oz|l|ml|pcs|piece|pieces|box|boxes|units)\b/gi, "")
               .replace(/[^a-zA-Z\s]/g, "")
               .replace(/\s+/g, " ")

@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import { ViewToggler } from "@/components/shared/ViewToggler";
 import {
   Select,
   SelectContent,
@@ -46,11 +47,12 @@ export default function SettingsPage() {
   const { setTheme } = useTheme();
   const { changeLanguage, t } = useLanguage();
   const [activeTab, setActiveTab] = useState("profile");
+  const queryClient = useQueryClient();
+  const initials = user?.email?.slice(0, 2).toUpperCase() || "??";
 
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState(user?.photoUrl || "");
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
 
   // Profile Settings
@@ -89,13 +91,7 @@ export default function SettingsPage() {
     language: "en",
   });
 
-  // Notifications
-  const [notifications, setNotifications] = useState({
-    emailNotifs: false,
-    pushNotifs: false,
-    shiftAlerts: false,
-    weeklyReport: false,
-  });
+
 
   // Fetch settings using React Query
   const { data: settingsData, isLoading: isLoadingSettings } = useSettings(
@@ -143,14 +139,7 @@ export default function SettingsPage() {
           language: data.preferences.language || "en",
         });
       }
-      if (data.notifications) {
-        setNotifications({
-          emailNotifs: data.notifications.emailNotifs ?? false,
-          pushNotifs: data.notifications.pushNotifs ?? false,
-          shiftAlerts: data.notifications.shiftAlerts ?? false,
-          weeklyReport: data.notifications.weeklyReport ?? false,
-        });
-      }
+
     }
   }, [settingsData]);
 
@@ -158,44 +147,6 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     if (!user?.restId) return;
-
-    let finalImageUrl = profile.imageUrl;
-
-    if (selectedFile) {
-      setIsUploadingAvatar(true);
-      const formData = new FormData();
-      formData.append("file", selectedFile);
-      formData.append("upload_preset", "user_avatars_preset");
-
-      try {
-        const response = await api.post(
-          "https://api.cloudinary.com/v1_1/dzf0esgoy/image/upload",
-          formData,
-          {
-            transformRequest: [(data, headers) => {
-              delete headers.Authorization;
-              return data;
-            }]
-          }
-        );
-        
-        if (response.status === 200) {
-          finalImageUrl = response.data.secure_url;
-          setAvatarUrl(finalImageUrl);
-          setProfile((prev) => ({ ...prev, imageUrl: finalImageUrl }));
-          setSelectedFile(null);
-        } else {
-          toast.error(response.data.error?.message || t("Failed to upload image"));
-          setIsUploadingAvatar(false);
-          return;
-        }
-      } catch (error) {
-        toast.error(error.response?.data?.error?.message || t("An error occurred during upload"));
-        setIsUploadingAvatar(false);
-        return;
-      }
-      setIsUploadingAvatar(false);
-    }
 
     updateSettingsMutation.mutate(
       {
@@ -206,12 +157,11 @@ export default function SettingsPage() {
             lastName: profile.lastName,
             email: profile.email,
             role: profile.role,
-            imageUrl: finalImageUrl,
+            imageUrl: profile.imageUrl,
           },
           restaurant,
           scheduling,
           preferences,
-          notifications,
         },
       },
       {
@@ -227,7 +177,7 @@ export default function SettingsPage() {
     );
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -241,11 +191,78 @@ export default function SettingsPage() {
       return;
     }
 
+    // Instant local preview
     const previewUrl = URL.createObjectURL(file);
     setAvatarUrl(previewUrl);
     setProfile((prev) => ({ ...prev, imageUrl: previewUrl }));
-    setSelectedFile(file);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+
+    setIsUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", "user_avatars_preset");
+
+    try {
+      const uploadRes = await api.post(
+        "https://api.cloudinary.com/v1_1/dzf0esgoy/image/upload",
+        formData,
+        {
+          transformRequest: [(data, headers) => {
+            delete headers.Authorization;
+            return data;
+          }]
+        }
+      );
+
+      if (uploadRes.status === 200) {
+        const secureUrl = uploadRes.data.secure_url;
+        await api.put(`/Settings/photo?imageUrl=${encodeURIComponent(secureUrl)}`);
+        
+        // Optimistically update cache to prevent flashing
+        queryClient.setQueryData(["Settings", user?.restId], (oldData) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            profile: { ...oldData.profile, imageUrl: secureUrl },
+          };
+        });
+        
+        // Update to the final secure URL
+        setAvatarUrl(secureUrl);
+        setProfile((prev) => ({ ...prev, imageUrl: secureUrl }));
+        toast.success(t("Profile photo updated successfully"));
+      } else {
+        toast.error(uploadRes.data.error?.message || t("Failed to upload image"));
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error?.message || error.message || t("An error occurred during upload"));
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setIsUploadingAvatar(true);
+    try {
+      await api.put(`/Settings/photo?imageUrl=string`);
+      
+      // Optimistically update cache to prevent flashing
+      queryClient.setQueryData(["Settings", user?.restId], (oldData) => {
+        if (!oldData) return oldData;
+        return {
+          ...oldData,
+          profile: { ...oldData.profile, imageUrl: "string" },
+        };
+      });
+
+      setAvatarUrl("string");
+      setProfile((prev) => ({ ...prev, imageUrl: "string" }));
+      toast.success(t("Profile photo removed successfully"));
+    } catch (error) {
+      toast.error(t("Failed to remove profile photo"));
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const passwordMutation = useChangePassword();
@@ -275,8 +292,8 @@ export default function SettingsPage() {
     <div className="space-y-5 py-5 animate-fade-in">
       <PageHeader
         icon={Settings}
-        title="Profile & Settings"
-        description="Manage your account profile, preferences, and restaurant rules"
+        title={t("Profile & Settings")}
+        description={t("Manage your account profile, preferences, and restaurant rules")}
         actions={
           <Button
             onClick={handleSave}
@@ -288,38 +305,29 @@ export default function SettingsPage() {
             ) : (
               <Save className="h-4 w-4" />
             )}
-            {updateSettingsMutation.isPending || isUploadingAvatar ? "Saving..." : "Save Changes"}
+            {updateSettingsMutation.isPending || isUploadingAvatar ? t("Saving...") : t("Save Changes")}
           </Button>
         }
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="flex flex-wrap w-full mb-6 bg-muted/50 p-1 h-auto gap-1 justify-start">
-          <TabsTrigger value="profile" className="gap-2 flex-1 md:flex-none">
-            <User className="h-4 w-4 hidden sm:block" /> Profile
-          </TabsTrigger>
-          <TabsTrigger value="restaurant" className="gap-2 flex-1 md:flex-none">
-            <Store className="h-4 w-4 hidden sm:block" /> Restaurant
-          </TabsTrigger>
-          <TabsTrigger value="scheduling" className="gap-2 flex-1 md:flex-none">
-            <Clock className="h-4 w-4 hidden sm:block" /> Scheduling
-          </TabsTrigger>
-          <TabsTrigger value="preferences" className="gap-2 flex-1 md:flex-none">
-            <Palette className="h-4 w-4 hidden sm:block" /> Preferences
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2 flex-1 md:flex-none">
-            <Bell className="h-4 w-4 hidden sm:block" /> Notifications
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex w-full mb-6 overflow-x-auto pb-2 sm:pb-0 hide-scrollbar">
+          <ViewToggler
+            viewMode={activeTab}
+            setViewMode={setActiveTab}
+            modes={["profile", "restaurant", "scheduling", "preferences"]}
+            labels={[t("Profile"), t("Restaurant"), t("Scheduling"), t("Preferences")]}
+          />
+        </div>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-4">
+        <TabsContent value="profile" className="space-y-4 text-start">
           <Card className="p-6 bg-card border-border/60 premium-shadow">
             <h3 className="text-lg font-semibold text-foreground mb-1">
-              Personal Information
+              {t("Personal Information")}
             </h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Update your profile details and contact information.
+              {t("Update your profile details and contact information.")}
             </p>
 
             <div className="flex flex-col  gap-4">
@@ -338,12 +346,7 @@ export default function SettingsPage() {
                       <Avatar className="h-20 w-20">
                         <AvatarImage src={avatarUrl} alt="Profile picture" />
                         <AvatarFallback className="text-4xl bg-primary/10 text-primary font-bold">
-                          {profile.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")
-                            .substring(0, 2)
-                            .toUpperCase()}
+                          {initials}
                         </AvatarFallback>
                       </Avatar>
                       <button
@@ -386,21 +389,17 @@ export default function SettingsPage() {
                       ) : (
                         <Camera className="h-4 w-4" />
                       )}
-                      {isUploadingAvatar ? "Uploading..." : "Change Photo"}
+                      {isUploadingAvatar ? t("Uploading...") : t("Change Photo")}
                     </Button>
                     {avatarUrl && avatarUrl !== "string" && avatarUrl !== "null" && (
                       <Button 
                         variant="ghost" 
                         className=" h-6 text-[10px] px-1.5 gap-1 text-destructive hover:text-destructive hover:bg-destructive/10" 
-                        onClick={() => {
-                          setAvatarUrl("");
-                          setProfile((prev) => ({ ...prev, imageUrl: "" }));
-                          setSelectedFile(null);
-                        }}
+                        onClick={handleRemovePhoto}
                         disabled={isUploadingAvatar}
                       >
                         <Trash2 className="h-2.5 w-2.5" />
-                        Remove Photo
+                        {t("Remove Photo")}
                       </Button>
                     )}
                   </div>
@@ -411,7 +410,7 @@ export default function SettingsPage() {
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-foreground/80">
-                      First Name
+                      {t("First Name")}
                     </Label>
                     <Input
                       id="name"
@@ -424,7 +423,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="text-foreground/80">
-                      Last Name
+                      {t("Last Name")}
                     </Label>
                     <Input
                       id="lastName"
@@ -437,7 +436,7 @@ export default function SettingsPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-foreground/80">
-                      Email Address
+                      {t("Email Address")}
                     </Label>
                     <Input
                       id="email"
@@ -458,10 +457,10 @@ export default function SettingsPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-1">
-                  Security
+                  {t("Security")}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Change your password to keep your account secure.
+                  {t("Change your password to keep your account secure.")}
                 </p>
               </div>
               {!isChangingPassword && (
@@ -470,7 +469,7 @@ export default function SettingsPage() {
                   onClick={() => setIsChangingPassword(true)}
                   className="gap-2 shrink-0 w-full sm:w-auto"
                 >
-                  <Key className="h-4 w-4" /> Change Password
+                  <Key className="h-4 w-4" /> {t("Change Password")}
                 </Button>
               )}
             </div>
@@ -636,18 +635,18 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Restaurant Tab */}
-        <TabsContent value="restaurant" className="space-y-4">
+        <TabsContent value="restaurant" className="space-y-4 text-start">
           <Card className="p-6 bg-card border-border/60 premium-shadow">
             <h3 className="text-lg font-semibold text-foreground mb-1">
-              Restaurant Details
+              {t("Restaurant Details")}
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Manage your restaurant's identity and public information.
+              {t("Manage your restaurant's identity and public information.")}
             </p>
 
             <div className="space-y-4 max-w-xl">
               <div className="space-y-2">
-                <Label htmlFor="rest-name">Restaurant Name</Label>
+                <Label htmlFor="rest-name">{t("Restaurant Name")}</Label>
                 <Input
                   id="rest-name"
                   value={restaurant.name}
@@ -657,7 +656,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="rest-phone">Contact Phone</Label>
+                <Label htmlFor="rest-phone">{t("Contact Phone")}</Label>
                 <Input
                   id="rest-phone"
                   value={restaurant.phone}
@@ -668,7 +667,7 @@ export default function SettingsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="rest-address">Physical Address</Label>
+                  <Label htmlFor="rest-address">{t("Physical Address")}</Label>
                   <Input
                     id="rest-address"
                     value={restaurant.address}
@@ -678,7 +677,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="rest-capacity">Max Seating Capacity</Label>
+                  <Label htmlFor="rest-capacity">{t("Max Seating Capacity")}</Label>
                   <Input
                     id="rest-capacity"
                     type="number"
@@ -697,20 +696,19 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Scheduling Rules Tab */}
-        <TabsContent value="scheduling" className="space-y-4">
+        <TabsContent value="scheduling" className="space-y-4 text-start">
           <Card className="p-6 bg-card border-border/60 premium-shadow">
             <h3 className="text-lg font-semibold text-foreground mb-1 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-primary" /> Operating Hours & Rules
+              <Clock className="h-5 w-5 text-primary" /> {t("Operating Hours & Rules")}
             </h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Define your restaurant's working hours and employee scheduling
-              limits to prevent overtime.
+              {t("Define your restaurant's working hours and employee scheduling limits to prevent overtime.")}
             </p>
 
             <div className="space-y-6 max-w-2xl">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="open-time">Opening Time</Label>
+                  <Label htmlFor="open-time">{t("Opening Time")}</Label>
                   <Input
                     id="open-time"
                     type="time"
@@ -730,7 +728,7 @@ export default function SettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="close-time">Closing Time</Label>
+                  <Label htmlFor="close-time">{t("Closing Time")}</Label>
                   <Input
                     id="close-time"
                     type="time"
@@ -757,7 +755,7 @@ export default function SettingsPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="max-hours">
-                    Max Weekly Hours (Per Employee)
+                    {t("Max Weekly Hours (Per Employee)")}
                   </Label>
                   <div className="relative">
                     <Input
@@ -771,17 +769,17 @@ export default function SettingsPage() {
                         })
                       }
                     />
-                    <span className="absolute right-3 top-2 text-sm text-muted-foreground">
-                      Hours
+                    <span className="absolute end-3 top-2 text-sm text-muted-foreground">
+                      {t("Hours")}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Prevents assigning overtime shifts.
+                    {t("Prevents assigning overtime shifts.")}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="min-rest">Minimum Rest Between Shifts</Label>
+                  <Label htmlFor="min-rest">{t("Minimum Rest Between Shifts")}</Label>
                   <div className="relative">
                     <Input
                       id="min-rest"
@@ -794,18 +792,18 @@ export default function SettingsPage() {
                         })
                       }
                     />
-                    <span className="absolute right-3 top-2 text-sm text-muted-foreground">
-                      Hours
+                    <span className="absolute end-3 top-2 text-sm text-muted-foreground">
+                      {t("Hours")}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Required break time for employees.
+                    {t("Required break time for employees.")}
                   </p>
                 </div>
               </div>
 
               <div className="space-y-2 pt-2">
-                <Label>First Day of the Week</Label>
+                <Label>{t("First Day of the Week")}</Label>
                 <Select
                   value={scheduling.firstDayOfWeek}
                   onValueChange={(v) =>
@@ -826,7 +824,7 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground mt-1">
-                  This will adjust how the Schedule Grid is displayed.
+                  {t("This will adjust how the Schedule Grid is displayed.")}
                 </p>
               </div>
             </div>
@@ -837,21 +835,19 @@ export default function SettingsPage() {
               <Bot className="h-32 w-32" />
             </div>
             <h3 className="text-lg font-semibold text-foreground mb-1 flex items-center gap-2">
-              <Bot className="h-5 w-5 text-primary" /> AI Auto-Scheduling
+              <Bot className="h-5 w-5 text-primary" /> {t("AI Auto-Scheduling")}
             </h3>
             <p className="text-sm text-muted-foreground mb-6 max-w-xl">
-              Allow RestaurantAI to automatically generate optimized weekly
-              schedules based on employee availability, operating hours, and
-              traffic predictions.
+              {t("Allow RestaurantAI to automatically generate optimized weekly schedules based on employee availability, operating hours, and traffic predictions.")}
             </p>
 
             <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg border border-border/50 max-w-xl">
               <div className="space-y-0.5">
                 <Label className="text-base font-medium">
-                  Enable Auto-Scheduling
+                  {t("Enable Auto-Scheduling")}
                 </Label>
                 <p className="text-sm text-muted-foreground">
-                  AI will draft schedules for you to review.
+                  {t("AI will draft schedules for you to review.")}
                 </p>
               </div>
               <Switch
@@ -866,21 +862,21 @@ export default function SettingsPage() {
         </TabsContent>
 
         {/* Preferences Tab */}
-        <TabsContent value="preferences" className="space-y-4">
+        <TabsContent value="preferences" className="space-y-4 text-start">
           <Card className="p-6 bg-card border-border/60 premium-shadow">
             <h3 className="text-lg font-semibold text-foreground mb-1">
-              Application Preferences
+              {t("Application Preferences")}
             </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Customize how the application looks and feels.
+              {t("Customize how the application looks and feels.")}
             </p>
 
             <div className="space-y-6 max-w-xl">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Theme</Label>
+                  <Label>{t("Theme")}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Select your preferred color interface.
+                    {t("Select your preferred color interface.")}
                   </p>
                 </div>
                 <Select
@@ -893,18 +889,18 @@ export default function SettingsPage() {
                     <SelectValue placeholder="Select theme" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="light">Light</SelectItem>
-                    <SelectItem value="dark">Dark</SelectItem>
-                    <SelectItem value="system">System</SelectItem>
+                    <SelectItem value="light">{t("Light")}</SelectItem>
+                    <SelectItem value="dark">{t("Dark")}</SelectItem>
+                    <SelectItem value="system">{t("System")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Language</Label>
+                  <Label>{t("Language")}</Label>
                   <p className="text-sm text-muted-foreground">
-                    Choose your interface language.
+                    {t("Choose your interface language.")}
                   </p>
                 </div>
                 <Select
@@ -917,8 +913,8 @@ export default function SettingsPage() {
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="ar">Arabic (العربية)</SelectItem>
+                    <SelectItem value="en">{t("English")}</SelectItem>
+                    <SelectItem value="ar">{t("Arabic (العربية)")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -926,79 +922,7 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-4">
-          <Card className="p-6 bg-card border-border/60 premium-shadow">
-            <h3 className="text-lg font-semibold text-foreground mb-1">
-              Notification Settings
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Control when and how you want to be notified.
-            </p>
 
-            <div className="space-y-6 max-w-xl">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive important updates via email.
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.emailNotifs}
-                  onCheckedChange={(v) =>
-                    setNotifications({ ...notifications, emailNotifs: v })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Push Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Get real-time browser alerts.
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.pushNotifs}
-                  onCheckedChange={(v) =>
-                    setNotifications({ ...notifications, pushNotifs: v })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Shift Alerts</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Notify me about schedule changes.
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.shiftAlerts}
-                  onCheckedChange={(v) =>
-                    setNotifications({ ...notifications, shiftAlerts: v })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Weekly Reports</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive a weekly summary of activities.
-                  </p>
-                </div>
-                <Switch
-                  checked={notifications.weeklyReport}
-                  onCheckedChange={(v) =>
-                    setNotifications({ ...notifications, weeklyReport: v })
-                  }
-                />
-              </div>
-            </div>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );

@@ -3,6 +3,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Layers, AlertCircle, Clock, Pencil, Trash2, Package } from "lucide-react";
+import { formatNumber } from "@/lib/formatNumber";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function ActiveBatchesTable({ 
   batchesLoading, 
@@ -12,6 +14,7 @@ export function ActiveBatchesTable({
   onDeleteBatch,
   highlightBatchId
 }) {
+  const { language } = useLanguage();
   return (
     <Card className="border-border/50 shadow-sm bg-card h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
@@ -93,7 +96,7 @@ export function ActiveBatchesTable({
                         </span>
                       </td>
                       <td className="py-2.5 px-3 text-right font-mono text-muted-foreground">
-                        ${(batch.unitCost ?? 0).toFixed(2)}
+                        {formatNumber(batch.unitCost ?? 0, language === 'ar', { style: 'currency', currency: 'EGP' })}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <div className="flex items-center justify-center gap-1 text-muted-foreground">

@@ -31,6 +31,7 @@ import { ViewToggler } from "@/components/shared/ViewToggler";
 import { SummaryCard } from "@/components/shared/SummaryCard";
 import { LoadingSkeleton } from "@/components/shared/Skeletons";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatNumber } from "@/lib/formatNumber";
 
 const chartConfig = {
   revenue: { label: "Revenue", color: "#3b82f6" },
@@ -44,21 +45,21 @@ const VIEWS = [
   { id: "all", label: "All Time" },
 ];
 
-function formatCurrency(val) {
-  return new Intl.NumberFormat("en-US", {
+function formatCurrency(val, language) {
+  return formatNumber(val, language === 'ar', {
     style: "currency",
-    currency: "USD",
+    currency: "EGP",
     maximumFractionDigits: 0,
-  }).format(val ?? 0);
+  });
 }
 
-function formatCompact(val) {
-  return new Intl.NumberFormat("en-US", {
+function formatCompact(val, language) {
+  return formatNumber(val, language === 'ar', {
     notation: "compact",
     style: "currency",
-    currency: "USD",
+    currency: "EGP",
     maximumFractionDigits: 1,
-  }).format(val ?? 0);
+  });
 }
 
 function formatLabel(timestamp, viewMode, language = "en") {
@@ -207,7 +208,7 @@ export default function RevenuePage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <SummaryCard
           title={`${t(VIEWS.find((v) => v.id === viewMode)?.label)} ${t("Revenue")}`}
-          value={formatCompact(metrics.period_revenue)}
+          value={formatCompact(metrics.period_revenue, language)}
           icon={DollarSign}
           iconColorClass="text-primary"
           iconWrapper
@@ -219,7 +220,7 @@ export default function RevenuePage() {
         />
         <SummaryCard
           title={t("Daily Average")}
-          value={formatCompact(metrics.daily_average)}
+          value={formatCompact(metrics.daily_average, language)}
           icon={BarChart3}
           iconColorClass="text-primary"
           iconWrapper
@@ -310,7 +311,7 @@ export default function RevenuePage() {
                     fontSize: 12,
                     fontWeight: 500,
                   }}
-                  tickFormatter={(v) => formatCompact(v)}
+                  tickFormatter={(v) => formatCompact(v, language)}
                 />
                 <ChartTooltip
                   cursor={{
@@ -333,7 +334,7 @@ export default function RevenuePage() {
                             </span>
                             <span className="text-sm font-bold text-foreground">
                               {name === "Revenue"
-                                ? formatCurrency(value)
+                                ? formatCurrency(value, language)
                                 : value}
                             </span>
                           </div>
@@ -393,7 +394,7 @@ export default function RevenuePage() {
                       fill: "hsl(var(--muted-foreground))",
                       fontSize: 11,
                     }}
-                    tickFormatter={(v) => formatCompact(v)}
+                    tickFormatter={(v) => formatCompact(v, language)}
                   />
                   <YAxis
                     type="category"
@@ -419,7 +420,7 @@ export default function RevenuePage() {
                                 {t("Revenue")}
                               </span>
                               <span className="text-sm font-bold text-foreground">
-                                {formatCurrency(value)}
+                                {formatCurrency(value, language)}
                               </span>
                             </div>
                           </>

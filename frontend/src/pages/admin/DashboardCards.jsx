@@ -3,7 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Building2, CalendarCheck, Ban, DollarSign } from "lucide-react";
 
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export default function DashboardCards({ data, isLoading }) {
+  const { t } = useLanguage();
   const dashboardData = [
     {
       title: "Total Restaurants",
@@ -28,7 +31,7 @@ export default function DashboardCards({ data, isLoading }) {
     },
     {
       title: "Total Revenue",
-      value: `$${((data?.summary?.totalRestaurants ?? 0) * 500).toLocaleString()}`,
+      value: `${((data?.summary?.totalRestaurants ?? 0) * 500).toLocaleString()} ${t("EGP")}`,
       icon: <DollarSign className="h-6 w-6" />,
       color: "text-green-600",
       bgColor: "bg-green-100 dark:bg-green-900/30",

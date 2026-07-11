@@ -77,7 +77,7 @@ export function RestockDialog({ open, setOpen, item, onRestock, mode = "restock"
           {!isDeduct && (
             <div>
               <Label className="text-xs text-muted-foreground mb-1 block">
-                Unit Price ($)
+                Unit Price (EGP)
               </Label>
               <Input
                 type="number"

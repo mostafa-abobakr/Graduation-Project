@@ -145,7 +145,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                         {item.expected_orders}
                       </TableCell>
                       <TableCell className="text-center text-foreground">
-                        ${item.revenue}
+                        {item.revenue} {t("EGP")}
                       </TableCell>
                       <TableCell className="text-center">
                         <span
@@ -155,7 +155,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                               : "text-destructive"
                           }
                         >
-                          ${item.profit.toFixed()}
+                          {item.profit.toFixed()} {t("EGP")}
                         </span>
                       </TableCell>
                       <TableCell className="text-center">
@@ -357,10 +357,9 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                                 {t("Revenue")}
                                               </span>
                                               <span className="text-xs font-bold text-foreground">
-                                                $
                                                 {d.revenue?.toLocaleString(
                                                   "en-US",
-                                                )}
+                                                )} {t("EGP")}
                                               </span>
                                             </div>
                                             <div className="flex justify-between gap-6 items-center">
@@ -369,7 +368,7 @@ export default function ForecastTable({ items, alignment, isLoading }) {
                                                 {t("Profit")}
                                               </span>
                                               <span className="text-xs font-bold text-primary">
-                                                ${d.profit?.toFixed(2)}
+                                                {d.profit?.toFixed(2)} {t("EGP")}
                                               </span>
                                             </div>
                                           </div>

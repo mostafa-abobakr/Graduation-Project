@@ -7,9 +7,9 @@ import { toast } from "sonner";
 export const useInventoryItems = (restId) => {
   return useQuery({
     queryKey: ["inventoryItems", restId],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       try {
-        const response = await api.get(`/Inventory/restaurant/${restId}`, { signal });
+        const response = await api.get(`/Inventory/restaurant/${restId}`);
         return response.data.map((item) => ({
           id: item.inventoryID,
           name: item.itemName,
@@ -33,36 +33,33 @@ export const useInventoryItems = (restId) => {
     },
     enabled: !!restId,
     staleTime: 10 * 1000,
+    refetchInterval: 5000,
   });
 };
 
 export const useBatchDetails = (restId, itemId) => {
   return useQuery({
     queryKey: ["batchDetails", restId, itemId],
-    queryFn: async ({ signal }) => {
-      const res = await api.get(
-        `/InventoryBatch/restaurant/${restId}/item/${itemId}`,
-        { signal }
-      );
+    queryFn: async () => {
+      const res = await api.get(`/InventoryBatch/restaurant/${restId}/item/${itemId}`);
       return res.data;
     },
     enabled: !!itemId && !!restId,
     staleTime: 10 * 1000,
+    refetchInterval: 5000,
   });
 };
 
 export const useItemTransactions = (restId, itemId) => {
   return useQuery({
     queryKey: ["itemTransactions", restId, itemId],
-    queryFn: async ({ signal }) => {
-      const res = await api.get(
-        `/InventoryTransactions/restaurant/${restId}/item/${itemId}`,
-        { signal }
-      );
+    queryFn: async () => {
+      const res = await api.get(`/InventoryTransactions/restaurant/${restId}/item/${itemId}`);
       return res.data;
     },
     enabled: !!itemId && !!restId,
     staleTime: 10 * 1000,
+    refetchInterval: 5000,
   });
 };
 
@@ -185,12 +182,13 @@ export const useUpdateBatch = () => {
 export function useInventoryAlerts(restId) {
   return useQuery({
     queryKey: ["inventoryAlerts", restId],
-    queryFn: async ({ signal }) => {
-      const res = await api.get(`/Inventory/restaurant/${restId}/alerts`, { signal });
+    queryFn: async () => {
+      const res = await api.get(`/Inventory/restaurant/${restId}/alerts`);
       return res.data;
     },
     enabled: !!restId,
     staleTime: 10 * 1000,
+    refetchInterval: 5000,
   });
 }
 
@@ -200,13 +198,13 @@ export function useInventoryForecast({ restId, alignment, dailyData, weeklyTempe
 
   const dayQuery = useQuery({
     queryKey: ["inventoryForecast", "day", restId, dailyData],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       const payload = {
         temperature: dailyData[0],
         event: dailyData[1] || 0,
       };
-      console.log("[Inventory Forecast] Daily Payload:", payload);
-      const res = await api.post(`/InventoryForecast/daily/restaurant/${restId}`, payload, { signal });
+      
+      const res = await api.post(`/InventoryForecast/daily/restaurant/${restId}`, payload);
       return res.data;
     },
     enabled: !!restId && isDayEnabled,
@@ -214,13 +212,13 @@ export function useInventoryForecast({ restId, alignment, dailyData, weeklyTempe
 
   const weekQuery = useQuery({
     queryKey: ["inventoryForecast", "week", restId, weeklyTemperatures, weeklyEvents],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       const payload = {
         weeklyTemperatures,
         weeklyEvents: weeklyEvents || [0,0,0,0,0,0,0],
       };
-      console.log("[Inventory Forecast] Weekly Payload:", payload);
-      const res = await api.post(`/InventoryForecast/restaurant/${restId}`, payload, { signal });
+      
+      const res = await api.post(`/InventoryForecast/restaurant/${restId}`, payload);
       return res.data;
     },
     enabled: !!restId && isWeekEnabled,

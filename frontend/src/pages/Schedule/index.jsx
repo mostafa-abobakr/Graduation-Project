@@ -192,7 +192,7 @@ export default function SchedulePage() {
       endTime: formData.endTime + ":00",
       shiftType: formData.shiftType,
     }
-    console.log(payload);
+    
 
     if (isEditMode) {
       payload.scheduleID = editingShiftId

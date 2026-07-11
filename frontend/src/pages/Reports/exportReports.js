@@ -7,7 +7,7 @@ import { addReportToHistory } from "@/hooks/useReports"
 const ANALYTICS_BASE = "https://youseef-awaad-zerobite-ai-engine.hf.space"
 
 const toCurrency = (v) =>
-  `$${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 2 })}`
+  `${Number(v || 0).toLocaleString("en-US", { maximumFractionDigits: 0 })} EGP`
 
 const toIsoDate = (date) => {
   const y = date.getFullYear()

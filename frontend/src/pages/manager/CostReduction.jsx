@@ -2,9 +2,10 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Wallet, Crosshair } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatNumber } from "@/lib/formatNumber";
 
 export default function CostReduction({ data }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   if (!data) return null;
 
@@ -24,14 +25,14 @@ export default function CostReduction({ data }) {
       </div>
 
       <div className="text-2xl sm:text-3xl font-black text-foreground my-2">
-        {costPercentage}%
+        {formatNumber(costPercentage, language === 'ar')}%
       </div>
 
       <div className="flex justify-between items-center text-xs p-2 sm:p-2.5 bg-muted/70 rounded-lg border border-border/40">
         <div className="flex items-center gap-2 text-foreground font-medium">
           <Crosshair className="w-3 h-3 text-primary" />
           <span>
-            {t("Target")}: {target}%
+            {t("Target")}: {formatNumber(target, language === 'ar')}%
           </span>
         </div>
 
@@ -41,8 +42,8 @@ export default function CostReduction({ data }) {
           }`}
         >
           {diffFromTarget > 0
-            ? `+${diffFromTarget}% ${t("over")}`
-            : `${Math.abs(diffFromTarget)}% ${t("under")}`}
+            ? `+${formatNumber(diffFromTarget, language === 'ar')}% ${t("over")}`
+            : `${formatNumber(Math.abs(diffFromTarget), language === 'ar')}% ${t("under")}`}
         </span>
       </div>
     </Card>

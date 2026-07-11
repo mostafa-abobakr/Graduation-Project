@@ -56,6 +56,8 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { NotificationsDropdown } from "@/components/shared/NotificationsDropdown";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useSettings } from "@/hooks/useSettings";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -189,7 +191,7 @@ function AppSidebar() {
     >
       <SidebarContent>
         <div className={`pt-4 ${collapsed ? "px-2" : "px-4"}`}>
-          <Link to="/">
+          <Link to="/dashboard">
             <motion.div layoutId="app-logo-transition" className="flex items-center gap-2">
               <div className="h-8 w-8 flex items-center justify-center shrink-0">
                 <MainLogo className="h-full w-full text-primary" />
@@ -203,17 +205,17 @@ function AppSidebar() {
           <>{renderGroup("Platform", adminItems)}</>
         ) : (
           <>
-            {renderGroup("Home", managerHomeItems)}
+            {renderGroup("HOME", managerHomeItems)}
             <Separator className="mx-3 w-auto" />
-            {renderGroup("Finance & Reports", managerFinanceItems)}
+            {renderGroup("FINANCE & REPORTS", managerFinanceItems)}
             <Separator className="mx-3 w-auto" />
-            {renderGroup("Menu", managerMenuItems)}
+            {renderGroup("MENU", managerMenuItems)}
             <Separator className="mx-3 w-auto" />
-            {renderGroup("Inventory", managerInventoryItems)}
+            {renderGroup("INVENTORY", managerInventoryItems)}
             <Separator className="mx-3 w-auto" />
-            {renderGroup("Team", managerTeamItems)}
+            {renderGroup("TEAM", managerTeamItems)}
             <Separator className="mx-3 w-auto" />
-            {renderGroup("System", managerSystemItems)}
+            {renderGroup("SYSTEM", managerSystemItems)}
           </>
         )}
       </SidebarContent>
@@ -226,6 +228,9 @@ export default function DashboardLayout() {
   const { user, isAdmin, logout } = useAuth();
   const { t, language, toggleLanguage } = useLanguage();
   const initials = user?.email?.slice(0, 2).toUpperCase() || "??";
+  
+  const { data: settingsData } = useSettings(user?.restId);
+  const avatarUrl = settingsData?.profile?.imageUrl || user?.photoUrl || user?.imageUrl;
 
   return (
     <SidebarProvider>
@@ -254,8 +259,13 @@ export default function DashboardLayout() {
               <ThemeToggle />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="h-8 w-8 rounded-full bg-primary/15 flex items-center justify-center text-primary text-xs font-semibold cursor-pointer ring-offset-background transition-colors hover:bg-primary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-                    {initials}
+                  <button className="h-8 w-8 rounded-full flex items-center justify-center cursor-pointer ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                    <Avatar className="h-8 w-8 border border-border/50 hover:opacity-80 transition-opacity">
+                      <AvatarImage src={avatarUrl} alt="User avatar" className="object-cover" />
+                      <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">

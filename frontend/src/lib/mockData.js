@@ -68,12 +68,12 @@ export const revenueByItem = menuItems.map(item => ({
 }));
 
 export const aiInsights = [
-  { id: 1, type: "demand", title: "Weekend Demand Spike", description: "Chicken Burger demand increases by 35% on weekends. Consider preparing 40 extra units on Saturdays.", impact: "+$420/week", confidence: 94, priority: "high" },
-  { id: 2, type: "preparation", title: "Evening Fries Rush", description: "Prepare 20% more French Fries between 7PM and 9PM to avoid stockouts during peak dinner hours.", impact: "+$180/week", confidence: 89, priority: "high" },
-  { id: 3, type: "waste", title: "Pizza Waste Reduction", description: "Pizza Margherita waste decreased by 18% after implementing AI prediction. Continue current strategy.", impact: "-$95/week saved", confidence: 92, priority: "medium" },
-  { id: 4, type: "demand", title: "Salad Seasonal Trend", description: "Caesar Salad orders expected to increase 25% in the next 2 weeks due to seasonal patterns.", impact: "+$210/week", confidence: 78, priority: "medium" },
-  { id: 5, type: "waste", title: "Nuggets Overproduction", description: "Chicken Nuggets are being overproduced by 15% on weekdays. Reduce preparation by 8 units.", impact: "-$65/week saved", confidence: 86, priority: "low" },
-  { id: 6, type: "preparation", title: "Lunch Rush Optimization", description: "Start Shawarma prep 30 minutes earlier to handle the 12:30 PM surge efficiently.", impact: "+$150/week", confidence: 91, priority: "high" },
+  { id: 1, type: "demand", title: "Weekend Demand Spike", description: "Chicken Burger demand increases by 35% on weekends. Consider preparing 40 extra units on Saturdays.", impact: "+420 EGP/week", confidence: 94, priority: "high" },
+  { id: 2, type: "preparation", title: "Evening Fries Rush", description: "Prepare 20% more French Fries between 7PM and 9PM to avoid stockouts during peak dinner hours.", impact: "+180 EGP/week", confidence: 89, priority: "high" },
+  { id: 3, type: "waste", title: "Pizza Waste Reduction", description: "Pizza Margherita waste decreased by 18% after implementing AI prediction. Continue current strategy.", impact: "-95 EGP/week saved", confidence: 92, priority: "medium" },
+  { id: 4, type: "demand", title: "Salad Seasonal Trend", description: "Caesar Salad orders expected to increase 25% in the next 2 weeks due to seasonal patterns.", impact: "+210 EGP/week", confidence: 78, priority: "medium" },
+  { id: 5, type: "waste", title: "Nuggets Overproduction", description: "Chicken Nuggets are being overproduced by 15% on weekdays. Reduce preparation by 8 units.", impact: "-65 EGP/week saved", confidence: 86, priority: "low" },
+  { id: 6, type: "preparation", title: "Lunch Rush Optimization", description: "Start Shawarma prep 30 minutes earlier to handle the 12:30 PM surge efficiently.", impact: "+150 EGP/week", confidence: 91, priority: "high" },
 ];
 
 export const todaySummary = {

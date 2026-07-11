@@ -27,7 +27,7 @@ import {
 const overviewStats = [
   {
     label: "Monthly Recurring Revenue",
-    value: "$12,400",
+    value: "12,400 EGP",
     change: "+8.2%",
     up: true,
     icon: DollarSign,
@@ -48,8 +48,8 @@ const overviewStats = [
   },
   {
     label: "Avg Revenue Per User",
-    value: "$39.74",
-    change: "+$1.20",
+    value: "39.74 EGP",
+    change: "+1.20 EGP",
     up: true,
     icon: DollarSign,
   },
@@ -85,56 +85,56 @@ const customers = [
     name: "Bella's Kitchen",
     plan: "Pro",
     status: "Active",
-    mrr: "$49",
+    mrr: "49 EGP",
     joined: "Jan 15, 2025",
   },
   {
     name: "Urban Grill Co.",
     plan: "Enterprise",
     status: "Active",
-    mrr: "$149",
+    mrr: "149 EGP",
     joined: "Mar 3, 2025",
   },
   {
     name: "Sakura Sushi Bar",
     plan: "Pro",
     status: "Active",
-    mrr: "$49",
+    mrr: "49 EGP",
     joined: "May 20, 2025",
   },
   {
     name: "The Green Plate",
     plan: "Starter",
     status: "Active",
-    mrr: "$0",
+    mrr: "0 EGP",
     joined: "Jul 8, 2025",
   },
   {
     name: "Pasta Paradise",
     plan: "Pro",
     status: "Past Due",
-    mrr: "$49",
+    mrr: "49 EGP",
     joined: "Aug 12, 2025",
   },
   {
     name: "Smokehouse BBQ",
     plan: "Enterprise",
     status: "Active",
-    mrr: "$149",
+    mrr: "149 EGP",
     joined: "Sep 1, 2025",
   },
   {
     name: "Café Lumière",
     plan: "Starter",
     status: "Active",
-    mrr: "$0",
+    mrr: "0 EGP",
     joined: "Oct 22, 2025",
   },
   {
     name: "Taco Fiesta",
     plan: "Pro",
     status: "Cancelled",
-    mrr: "$0",
+    mrr: "0 EGP",
     joined: "Nov 5, 2025",
   },
 ];
@@ -143,31 +143,31 @@ const recentTransactions = [
   {
     customer: "Urban Grill Co.",
     type: "Renewal",
-    amount: "$149.00",
+    amount: "149.00 EGP",
     date: "Mar 3, 2026",
   },
   {
     customer: "Bella's Kitchen",
     type: "Renewal",
-    amount: "$49.00",
+    amount: "49.00 EGP",
     date: "Mar 1, 2026",
   },
   {
     customer: "Smokehouse BBQ",
     type: "Upgrade",
-    amount: "$149.00",
+    amount: "149.00 EGP",
     date: "Feb 28, 2026",
   },
   {
     customer: "Sakura Sushi Bar",
     type: "Renewal",
-    amount: "$49.00",
+    amount: "49.00 EGP",
     date: "Feb 20, 2026",
   },
   {
     customer: "Pasta Paradise",
     type: "Payment Failed",
-    amount: "$49.00",
+    amount: "49.00 EGP",
     date: "Feb 12, 2026",
   },
 ];
@@ -183,7 +183,7 @@ export default function AdminBillingView() {
                 <stat.icon className="h-4 w-4 text-primary" />
               </div>
               <span
-                className={`text-xs font-medium flex items-center gap-0.5 ${stat.up ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"}`}
+                className={`text-xs font-medium flex items-center gap-0.5 {stat.up ? "text-emerald-600 dark:text-emerald-400" : "text-destructive"} EGP`}
               >
                 {stat.up ? (
                   <ArrowUp className="h-3 w-3" />
@@ -355,7 +355,7 @@ export default function AdminBillingView() {
                     <td className="px-4 py-3">
                       <Badge
                         variant="secondary"
-                        className={`text-xs font-normal ${c.status === "Active" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : c.status === "Past Due" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-destructive/10 text-destructive"}`}
+                        className={`text-xs font-normal {c.status === "Active" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : c.status === "Past Due" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" : "bg-destructive/10 text-destructive"} EGP`}
                       >
                         {c.status}
                       </Badge>
@@ -412,7 +412,7 @@ export default function AdminBillingView() {
                     <td className="px-4 py-3">
                       <Badge
                         variant="secondary"
-                        className={`text-xs font-normal ${t.type === "Upgrade" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : t.type === "Payment Failed" ? "bg-destructive/10 text-destructive" : ""}`}
+                        className={`text-xs font-normal {t.type === "Upgrade" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : t.type === "Payment Failed" ? "bg-destructive/10 text-destructive" : ""} EGP`}
                       >
                         {t.type}
                       </Badge>

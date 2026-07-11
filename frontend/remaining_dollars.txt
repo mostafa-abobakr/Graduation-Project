@@ -1,0 +1,9 @@
+d:/University/Graduation-Project/frontend/src/hooks/useInventoryImport.js:45: const n = parseFloat(tokens[i].replace(/[$£€,]|EGP|LE|ج\.م\.?|ج م/gi, ""));
+d:/University/Graduation-Project/frontend/src/pages/Auth/Register/PaymentGateway.jsx:53: return /^\d{3,4}$/.test(cvv);
+d:/University/Graduation-Project/frontend/src/pages/Inventory/InventoryUtils.js:67: const n = parseFloat(tokens[i].replace(/[$£€,]|EGP|LE|ج\.م\.?|ج م/gi, ""));
+d:/University/Graduation-Project/frontend/src/pages/Inventory/ItemFormDialog.jsx:62: const regex = /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\uFE0F]+$/u;
+d:/University/Graduation-Project/frontend/src/pages/Inventory/ScannerDialog.jsx:41: .replace(/[0-9.$£€,]|EGP|LE|ج\.م\.?|ج م/gi, "")
+d:/University/Graduation-Project/frontend/src/pages/MenuManagementPage.jsx:204: /^[\p{Emoji_Presentation}\p{Extended_Pictographic}\u200d\uFE0F]+$/u;
+d:/University/Graduation-Project/frontend/src/pages/SettingsPage.jsx:492: label: "One special character (!@#$%^&*)",
+d:/University/Graduation-Project/frontend/src/pages/SettingsPage.jsx:493: valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pw),
+d:/University/Graduation-Project/frontend/src/schemas/auth/validations.js:13: .regex(/^\d+$/, "Phone must be a number")

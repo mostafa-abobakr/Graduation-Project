@@ -7,7 +7,8 @@ export function ViewToggler({
   labels,
   className = "",
 }) {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const isRtl = language === "ar"
 
   return (
     <div
@@ -18,8 +19,8 @@ export function ViewToggler({
         className="absolute top-1.5 bottom-1.5 bg-background rounded-lg shadow transition-transform duration-300 ease-out"
         style={{
           width: `calc((100% - 12px) / ${modes.length})`,
-          left: "6px",
-          transform: `translateX(calc(${modes.indexOf(viewMode)} * 100%))`,
+          ...(isRtl ? { right: "6px" } : { left: "6px" }),
+          transform: `translateX(calc(${modes.indexOf(viewMode)} * ${isRtl ? -100 : 100}%))`,
         }}
       />
       {modes.map((mode, index) => (

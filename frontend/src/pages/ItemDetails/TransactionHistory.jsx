@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { History, AlertCircle, TrendingUp, CalendarDays, TrendingDown, Clock, ChevronUp, ChevronDown } from "lucide-react";
+import { formatNumber } from "@/lib/formatNumber";
+import { useLanguage } from "@/contexts/LanguageContext";
 export function TransactionHistory({ transactionsLoading, transactionsError, timelineEvents, unit }) {
+  const { language } = useLanguage();
   return (
     <Card className="border-border/50 shadow-sm bg-card h-full">
       <CardHeader>
@@ -63,7 +66,7 @@ export function TransactionHistory({ transactionsLoading, transactionsError, tim
                             </div>
                             {(event.data.price > 0) && (
                               <div className="text-xs text-muted-foreground mt-1 font-mono">
-                                ${event.data.price.toFixed(2)} / unit
+                                {formatNumber(event.data.price, language === 'ar', { style: 'currency', currency: 'EGP' })} / unit
                               </div>
                             )}
                           </div>

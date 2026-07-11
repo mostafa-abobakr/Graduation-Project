@@ -17,7 +17,8 @@ import {
   Info,
 } from "lucide-react"
 
-// Helper component to render the correct icon based on alert type
+import { formatNumber } from "@/lib/formatNumber"
+
 const AlertIcon = ({ type, severity }) => {
   const iconMap = {
     // Business Rule-Based Alerts
@@ -53,8 +54,31 @@ const AlertIcon = ({ type, severity }) => {
   return <Icon className={`h-4 w-4 ${color}`} strokeWidth={3} />
 }
 
+const renderAlertMessage = (message, t, language) => {
+  const isArabic = language === "ar";
+
+  if (isArabic) {
+    const regex = /'(.*?)' Has A High Margin \((.*?)\%\) But Lower Than Average Sales Volume \((.*?) Orders\)\. Consider Featuring This Item To Boost Profit\./i;
+    const match = message.match(regex);
+    if (match) {
+      const [, itemName, margin, orders] = match;
+      const localizedMargin = formatNumber(margin, isArabic);
+      const localizedOrders = formatNumber(orders, isArabic);
+      return `الصنف '${t(itemName)}' يحقق هامش ربح عالي (${localizedMargin}%) ولكن حجم مبيعاته أقل من المتوسط (${localizedOrders} طلبات). ينصح بإبراز هذا الصنف لزيادة الأرباح.`;
+    }
+
+    return (
+      <div dir="ltr" className="text-left inline-block">
+        {t(message)}
+      </div>
+    );
+  }
+
+  return t(message);
+};
+
 const Alerts = ({ data }) => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   if (!data) return null
 
@@ -65,7 +89,7 @@ const Alerts = ({ data }) => {
           <CardTitle className="text-lg md:text-xl font-bold text-foreground">
             {t("Smart Alerts")}
           </CardTitle>
-          <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0">
+          <div className="p-2 bg-primary/10 rounded-full text-primary shrink-0 ms-2">
             <TriangleAlert className="w-4 h-4" />
           </div>
         </div>
@@ -88,16 +112,15 @@ const Alerts = ({ data }) => {
               {data.alerts.map((alert, index) => (
                 <li
                   key={alert.link ?? index}
-                  className="flex items-start sm:items-center justify-between gap-4 p-3 rounded-lg border border-border/50 bg-background shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300"
+                  className="flex flex-col justify-center p-3 rounded-lg border border-border/50 bg-background shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300"
                 >
-                  <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
+                  <div className={`flex items-start sm:items-center gap-3 flex-1 min-w-0 ${language === 'ar' ? 'flex-row-reverse text-right' : 'flex-row text-left'}`}>
                     <div className="mt-0.5 sm:mt-0 p-1.5 rounded-full shrink-0 shadow-xs border border-border/40 bg-muted/20">
-                      {/* Integrated the new AlertIcon component here */}
                       <AlertIcon type={alert.type} severity={alert.severity} />
                     </div>
-                    <p className="text-xs sm:text-sm text-foreground leading-relaxed">
-                      {t(alert.message)}
-                    </p>
+                    <div className="text-xs sm:text-sm text-foreground leading-relaxed w-full">
+                      {renderAlertMessage(alert.message, t, language)}
+                    </div>
                   </div>
                 </li>
               ))}

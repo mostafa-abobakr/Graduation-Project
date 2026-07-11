@@ -100,7 +100,7 @@ const testimonials = [
     name: "James Wright",
     role: "Operations Manager, BurgerCo",
     quote:
-      "The ROI was immediate. We saved $2,400 in the first month alone across our 3 locations.",
+      "The ROI was immediate. We saved 2,400 EGP in the first month alone across our 3 locations.",
     rating: 5,
   },
 ];
@@ -160,7 +160,11 @@ export default function LandingPage() {
     <PageTransition className="min-h-screen bg-background">
       <nav className="fixed top-0 w-full z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <motion.div layoutId="app-logo-transition" className="flex items-center gap-2">
+          <motion.div
+            layoutId="app-logo-transition"
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          >
             <div className="h-8 w-8 flex items-center justify-center">
               <MainLogo className="h-full w-full text-primary" />
             </div>
@@ -442,7 +446,7 @@ export default function LandingPage() {
             {pricing.map((p) => (
               <motion.div key={p.name} variants={fadeUpVariant}>
                 <Card
-                  className={`h-full flex flex-col p-7 bg-card border-border/60 relative premium-shadow ${p.popular ? "border-primary glow-green" : ""}`}
+                  className={`h-full flex flex-col p-7 bg-card border-border/60 relative premium-shadow {p.popular ? "border-primary glow-green" : ""} EGP`}
                 >
                   {p.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
@@ -457,7 +461,7 @@ export default function LandingPage() {
                   </p>
                   <div className="mb-5">
                     <span className="stat-number text-foreground">
-                      ${p.price}
+                      {p.price} EGP
                     </span>
                     <span className="text-muted-foreground text-sm">
                       /{t("mo")}

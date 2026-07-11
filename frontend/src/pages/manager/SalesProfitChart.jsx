@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/chart"
 import { BarChart3 } from "lucide-react"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { formatNumber } from "@/lib/formatNumber"
 
 const chartConfig = {
   revenue: {
@@ -21,7 +22,7 @@ const chartConfig = {
 }
 
 const SalesProfitDashboard = ({ data, viewMode }) => {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
 
   if (!data) return null
 
@@ -55,7 +56,7 @@ const SalesProfitDashboard = ({ data, viewMode }) => {
 
       <CardContent className="p-6 pt-0 flex-1 flex flex-col">
         {/* Legend */}
-        <div className="flex gap-5 mb-6 text-sm font-semibold text-muted-foreground ml-2">
+        <div className="flex gap-5 mb-6 text-sm font-semibold text-muted-foreground ms-2">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded bg-blue-500 shadow-sm shadow-blue-500/20" />
             <span>{t("Revenue")}</span>
@@ -118,6 +119,12 @@ const SalesProfitDashboard = ({ data, viewMode }) => {
                   fontWeight: 500,
                 }}
                 dy={15}
+                tickFormatter={(value) => {
+                  if (language === 'ar' && typeof value === 'string') {
+                    return value.replace(/AM/g, 'ص').replace(/PM/g, 'م');
+                  }
+                  return value;
+                }}
               />
               <YAxis
                 axisLine={false}
@@ -128,11 +135,11 @@ const SalesProfitDashboard = ({ data, viewMode }) => {
                   fontWeight: 500,
                 }}
                 tickFormatter={(value) =>
-                  new Intl.NumberFormat("en-US", {
+                  formatNumber(value, language === 'ar', {
                     notation: "compact",
                     style: "currency",
-                    currency: "USD",
-                  }).format(value)
+                    currency: "EGP",
+                  })
                 }
               />
               <ChartTooltip
@@ -155,11 +162,11 @@ const SalesProfitDashboard = ({ data, viewMode }) => {
                             {name}
                           </span>
                           <span className="text-sm font-bold text-foreground">
-                            {new Intl.NumberFormat("en-US", {
+                            {formatNumber(value, language === 'ar', {
                               style: "currency",
-                              currency: "USD",
+                              currency: "EGP",
                               maximumFractionDigits: 0,
-                            }).format(value)}
+                            })}
                           </span>
                         </div>
                       </>

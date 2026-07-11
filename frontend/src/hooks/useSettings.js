@@ -5,8 +5,8 @@ import { toast } from "sonner";
 export function useSettings(restId) {
   return useQuery({
     queryKey: ["Settings", restId],
-    queryFn: async ({ signal }) => {
-      const response = await api.get(`/Settings/all/${restId}`, { signal });
+    queryFn: async () => {
+      const response = await api.get(`/Settings/all/${restId}`);
       return response.data;
     },
     enabled: !!restId,

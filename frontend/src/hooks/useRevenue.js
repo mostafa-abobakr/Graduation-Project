@@ -6,14 +6,14 @@ const AI_ENGINE_URL = import.meta.env.VITE_AI_ENGINE_URL || "https://youseef-awa
 export function useRevenueData(restId) {
   return useQuery({
     queryKey: ["revenueData", restId],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       if (!restId) return null;
       const res = await api.get(
-        `${AI_ENGINE_URL}/analytics/dashboard/revenue/${restId}`,
-        { signal }
+        `${AI_ENGINE_URL}/analytics/dashboard/revenue/${restId}`
       );
       return res.data;
     },
     enabled: !!restId,
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
   });
 }

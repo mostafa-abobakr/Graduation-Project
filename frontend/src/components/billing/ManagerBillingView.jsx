@@ -5,16 +5,16 @@ import { Progress } from "@/components/ui/progress";
 import { CreditCard, Check, Zap, Crown, Building2, Download, ArrowUpRight } from "lucide-react";
 
 const plans = [
-  { name: "Operations Pro", price: "$49", interval: "/month", description: "Ideal for growing restaurants focusing on core operations.", features: ["Dashboard & POS System", "AI Insights & Demand Forecasting", "Inventory Alerts & Forecasting", "Menu Management & Analytics", "Revenue Tracking & Reports"], current: true, cta: "Current Plan", accent: true },
-  { name: "Full Management Suite", price: "$129", interval: "/month", description: "For premium restaurants that need full staff and operations management.", features: ["All Operations Pro Features", "Staff Management", "Smart Staff Scheduling", "Advanced Priority Support"], current: false, cta: "Upgrade", accent: false },
+  { name: "Operations Pro", price: "49 EGP", interval: "/month", description: "Ideal for growing restaurants focusing on core operations.", features: ["Dashboard & POS System", "AI Insights & Demand Forecasting", "Inventory Alerts & Forecasting", "Menu Management & Analytics", "Revenue Tracking & Reports"], current: true, cta: "Current Plan", accent: true },
+  { name: "Full Management Suite", price: "129 EGP", interval: "/month", description: "For premium restaurants that need full staff and operations management.", features: ["All Operations Pro Features", "Staff Management", "Smart Staff Scheduling", "Advanced Priority Support"], current: false, cta: "Upgrade", accent: false },
 ];
 
 const paymentHistory = [
-  { id: "INV-2024-012", date: "Mar 1, 2026", amount: "$49.00", status: "Paid", plan: "Pro" },
-  { id: "INV-2024-011", date: "Feb 1, 2026", amount: "$49.00", status: "Paid", plan: "Pro" },
-  { id: "INV-2024-010", date: "Jan 1, 2026", amount: "$49.00", status: "Paid", plan: "Pro" },
-  { id: "INV-2024-009", date: "Dec 1, 2025", amount: "$49.00", status: "Paid", plan: "Pro" },
-  { id: "INV-2024-008", date: "Nov 1, 2025", amount: "$49.00", status: "Paid", plan: "Pro" },
+  { id: "INV-2024-012", date: "Mar 1, 2026", amount: "49.00 EGP", status: "Paid", plan: "Pro" },
+  { id: "INV-2024-011", date: "Feb 1, 2026", amount: "49.00 EGP", status: "Paid", plan: "Pro" },
+  { id: "INV-2024-010", date: "Jan 1, 2026", amount: "49.00 EGP", status: "Paid", plan: "Pro" },
+  { id: "INV-2024-009", date: "Dec 1, 2025", amount: "49.00 EGP", status: "Paid", plan: "Pro" },
+  { id: "INV-2024-008", date: "Nov 1, 2025", amount: "49.00 EGP", status: "Paid", plan: "Pro" },
 ];
 
 const usageStats = [
@@ -33,7 +33,7 @@ export default function ManagerBillingView() {
             <div className="h-10 w-10 rounded-lg bg-primary/15 flex items-center justify-center"><Crown className="h-5 w-5 text-primary" /></div>
             <div>
               <div className="flex items-center gap-2"><h3 className="font-semibold text-foreground">Pro Plan</h3><Badge variant="secondary" className="text-xs">Active</Badge></div>
-              <p className="text-sm text-muted-foreground">Next billing date: April 1, 2026 · $49.00</p>
+              <p className="text-sm text-muted-foreground">Next billing date: April 1, 2026 · 49.00 EGP</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -64,7 +64,7 @@ export default function ManagerBillingView() {
         <h2 className="text-lg font-semibold text-foreground mb-4">Subscription Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {plans.map((plan) => (
-            <Card key={plan.name} className={`p-6 flex flex-col border-border/60 ${plan.accent ? "ring-2 ring-primary/40 bg-primary/[0.03]" : "bg-card"}`}>
+            <Card key={plan.name} className={`p-6 flex flex-col border-border/60 {plan.accent ? "ring-2 ring-primary/40 bg-primary/[0.03]" : "bg-card"} EGP`}>
               <div className="flex items-center gap-2 mb-1">
                 {plan.name === "Operations Pro" && <Crown className="h-4 w-4 text-primary" />}
                 {plan.name === "Full Management Suite" && <Building2 className="h-4 w-4 text-muted-foreground" />}

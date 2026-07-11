@@ -13,6 +13,7 @@ import { AddEmployeeDialog } from "@/components/staff/AddEmployeeDialog"
 import { EditEmployeeDialog } from "@/components/staff/EditEmployeeDialog"
 import { EmployeeTableCard } from "@/components/staff/EmployeeTableCard"
 import { useLanguage } from "@/contexts/LanguageContext"
+import { formatNumber } from "@/lib/formatNumber"
 
 const parseTimeToMinutes = (timeStr) => {
   if (!timeStr) return null
@@ -208,7 +209,7 @@ export default function StaffPage() {
             isLoading ? (
               <Skeleton className="h-8 w-20" />
             ) : (
-              `$${monthlySalary.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+              formatNumber(monthlySalary, language === 'ar', { style: 'currency', currency: 'EGP' })
             )
           }
           icon={DollarSign}

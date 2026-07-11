@@ -72,10 +72,10 @@ export default function PaymentGateway() {
 
   const prices = {
     Basic: 0,
-    "Operations Pro": 49,
-    "Full Management Suite": 129,
+    "Operations Pro": 1500,
+    "Full Management Suite": 2000,
   };
-  const price = prices[plan] !== undefined ? prices[plan] : 49;
+  const price = prices[plan] !== undefined ? prices[plan] : 1500;
 
   const handlePayment = async (e) => {
     e.preventDefault();
@@ -276,7 +276,7 @@ export default function PaymentGateway() {
                   value={formData.cardNumber}
                   onChange={(e) => {
                     let val = e.target.value.replace(/\D/g, "");
-                    val = val.replace(/(.{4})/g, "$1 ").trim();
+                    val = val.replace(/(.{4})/g, "1 EGP ").trim();
                     setFormData({ ...formData, cardNumber: val });
                   }}
                   disabled={price === 0}
@@ -371,12 +371,12 @@ export default function PaymentGateway() {
               <div className="flex justify-between items-center text-muted-foreground">
                 <span>{plan} Plan (Monthly)</span>
                 <span className="font-semibold text-foreground">
-                  ${price}.00
+                  {price.toLocaleString("en-US")}.00 EGP
                 </span>
               </div>
               <div className="flex justify-between items-center text-muted-foreground">
                 <span>Setup Fee</span>
-                <span className="font-semibold text-foreground">$0.00</span>
+                <span className="font-semibold text-foreground">0.00 EGP</span>
               </div>
             </div>
 
@@ -385,9 +385,9 @@ export default function PaymentGateway() {
                 Total Due Today
               </span>
               <div className="text-right">
-                <span className="text-3xl font-bold text-primary">$0.00</span>
+                <span className="text-3xl font-bold text-primary">0.00 EGP</span>
                 <p className="text-sm text-muted-foreground">
-                  then ${price}.00/mo
+                  then {price.toLocaleString("en-US")}.00 EGP/mo
                 </p>
               </div>
             </div>

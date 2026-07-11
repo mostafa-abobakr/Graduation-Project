@@ -6,8 +6,8 @@ import api from "@/api/axios";
 export const useAdminDashboard = () => {
   return useQuery({
     queryKey: ["Admin_dashboard"],
-    queryFn: async ({ signal }) => {
-      const res = await api.get("/admin/dashboard", { signal });
+    queryFn: async () => {
+      const res = await api.get("/admin/dashboard");
       return res.data;
     },
     staleTime: 1000 * 60 * 2,

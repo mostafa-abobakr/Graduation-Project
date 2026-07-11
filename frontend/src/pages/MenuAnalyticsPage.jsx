@@ -10,9 +10,10 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useMenuPerformance } from "@/hooks/useMenuAnalytics";
+import { formatNumber } from "@/lib/formatNumber";
 
 export default function MenuAnalyticsPage() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState("orders");
   const [sortAsc, setSortAsc] = useState(false);
@@ -232,16 +233,16 @@ export default function MenuAnalyticsPage() {
                       {item.orders.toLocaleString("en-US")}
                     </td>
                     <td className="py-4 px-5 text-center font-medium text-foreground">
-                      {item.revenue.toLocaleString("en-US", {
+                      {formatNumber(item.revenue, language === 'ar', {
                         style: "currency",
-                        currency: "USD",
+                        currency: "EGP",
                         maximumFractionDigits: 0,
                       })}
                     </td>
                     <td className="py-4 px-5 text-center font-medium text-emerald-600 dark:text-emerald-500">
-                      {item.profit.toLocaleString("en-US", {
+                      {formatNumber(item.profit, language === 'ar', {
                         style: "currency",
-                        currency: "USD",
+                        currency: "EGP",
                         maximumFractionDigits: 0,
                       })}
                     </td>

@@ -42,9 +42,9 @@ export default function ForecastSummaryCards({ data, alignment, isLoading }) {
       {statistics.map((stat) => {
         const displayValue =
           stat.name !== "Orders" && stat.value >= 1000
-            ? `$${(stat.value / 1000).toFixed(1)}K`
+            ? `${(stat.value / 1000).toFixed(1)}${t("k")} ${t("EGP")}`
             : stat.name !== "Orders"
-              ? `$${stat.value}`
+              ? `${stat.value} ${t("EGP")}`
               : stat.value
 
         return (

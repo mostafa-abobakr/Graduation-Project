@@ -6,11 +6,11 @@ const AI_ENGINE_URL = import.meta.env.VITE_AI_ENGINE_URL || "https://youseef-awa
 export function useMenuPerformance(restId) {
   return useQuery({
     queryKey: ["menuPerformance", restId],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       if (!restId) return null;
       const res = await api.get(
         `${AI_ENGINE_URL}/analytics/menu/performance/${restId}`,
-        { signal, headers: { accept: "application/json" } }
+        { headers: { accept: "application/json" } }
       );
       return res.data?.data || res.data;
     },

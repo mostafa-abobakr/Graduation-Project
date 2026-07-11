@@ -177,7 +177,7 @@ export default function AddStock() {
                             <td className="py-2 px-3"><Input defaultValue={item.name} className="h-8" /></td>
                             <td className="py-2 px-3"><Input type="number" defaultValue={item.quantity} className="h-8 text-right" /></td>
                             <td className="py-2 px-3"><Input defaultValue={item.unit} className="h-8" /></td>
-                            <td className="py-2 px-3"><Input defaultValue={`$${item.price.toFixed(2)}`} className="h-8 text-right" /></td>
+                            <td className="py-2 px-3"><Input defaultValue={`${item.price.toFixed(2)} EGP`} className="h-8 text-right" /></td>
                           </tr>
                         ))}
                       </tbody>

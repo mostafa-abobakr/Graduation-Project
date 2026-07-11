@@ -96,7 +96,7 @@ export function BatchEditDialog({ batch, restId, itemId, open, onClose, token, s
           {/* Unit Cost */}
           <div>
             <Label className="text-xs text-muted-foreground mb-1 block">
-              Unit Cost ($)
+              Unit Cost (EGP)
             </Label>
             <div className="relative">
               <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

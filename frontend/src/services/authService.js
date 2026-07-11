@@ -38,7 +38,7 @@ export const registerUser = async () => {
       return { success: false, error: "Registration succeeded, but data seeding failed: " + seedResult.error };
     }
 
-    // console.log("Seeding triggered during registration:", seedResult);
+    console.log("Seeding triggered during registration:", seedResult);
 
     toast.success("Registration successful!");
 

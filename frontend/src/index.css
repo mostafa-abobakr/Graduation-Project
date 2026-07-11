@@ -132,7 +132,7 @@
 
 @layer components {
   .stat-number {
-    @apply text-3xl font-bold tracking-tight;
+    @apply text-2xl font-bold tracking-tight;
     font-family: 'DM Sans', system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
   }

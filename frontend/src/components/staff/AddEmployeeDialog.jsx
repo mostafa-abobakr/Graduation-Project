@@ -133,7 +133,7 @@ export function AddEmployeeDialog({ isOpen, onOpenChange }) {
                 {errors.phone && <span className="text-xs text-destructive">{errors.phone.message}</span>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="salary">Salary ($)</Label>
+                <Label htmlFor="salary">Salary (EGP)</Label>
                 <Input
                   id="salary"
                   type="number"

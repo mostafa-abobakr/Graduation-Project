@@ -10,9 +10,8 @@ const getAuthHeaders = () => {
 export const useEmployees = () => {
   return useQuery({
     queryKey: ["employees"],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       const response = await api.get("/Employees", {
-        signal,
         headers: getAuthHeaders(),
       });
       const list = response.data.employees ?? response.data ?? []
@@ -41,16 +40,14 @@ const convert24to12 = (time24) => {
 export const useShifts = (startDate, endDate) => {
   return useQuery({
     queryKey: ["shifts", startDate, endDate],
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       const startFormatted = `${startDate.getFullYear()}/${String(startDate.getMonth() + 1).padStart(2, "0")}/${String(startDate.getDate()).padStart(2, "0")}`
       const endFormatted = `${endDate.getFullYear()}/${String(endDate.getMonth() + 1).padStart(2, "0")}/${String(endDate.getDate()).padStart(2, "0")}`
 
       const response = await api.get(`/Schedule/range?startDate=${startFormatted}&endDate=${endFormatted}`, {
-        signal,
         headers: getAuthHeaders(),
       })
-      console.log(response.data);
-      console.log(startFormatted, endFormatted);
+      
 
       return response.data.map(item => ({
         id: `shift-${item.scheduleID}`,
@@ -77,7 +74,7 @@ export const useAddShift = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload) => {
-      console.log(payload);
+      
       
       return await api.post("/Schedule", payload, {
         headers: getAuthHeaders(),

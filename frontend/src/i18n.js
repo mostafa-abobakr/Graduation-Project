@@ -16,6 +16,29 @@ i18n
     interpolation: {
       escapeValue: false, // React already safe from XSS
     },
+    saveMissing: true,
+    missingKeyHandler: (lngs, ns, key, fallbackValue) => {
+      if (import.meta.env?.DEV) {
+        console.warn(`[i18next] Missing key: "${key}" in namespace "${ns}" and language "${lngs.join(', ')}"`);
+      }
+    },
+    parseMissingKeyHandler: (key) => {
+      const commonTokens = {
+        'Optimal': 'مخزون مثالي',
+        'Low Stock': 'مخزون منخفض',
+        'Overstock': 'فائض في المخزون',
+      };
+
+      if (commonTokens[key]) {
+        return commonTokens[key];
+      }
+
+      if (typeof key === 'string') {
+        const cleaned = key.replace(/_/g, ' ').toLowerCase();
+        return cleaned.replace(/\b\w/g, (char) => char.toUpperCase());
+      }
+      return key;
+    }
   });
 
 export default i18n;

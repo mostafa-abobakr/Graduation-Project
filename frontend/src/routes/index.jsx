@@ -68,6 +68,7 @@ const Routes = [
   {
     path: ROUTES.LANDING,
     element: <LandingPage />,
+    loader: requireGuest,
   },
   {
     path: ROUTES.LOGIN,

@@ -64,7 +64,7 @@ export const parseInvoiceText = (text) => {
     let costIdx = -1,
       cost = 0;
     for (let i = tokens.length - 1; i > qtyIdx; i--) {
-      const n = parseFloat(tokens[i].replace(/[$€£]/g, ""));
+      const n = parseFloat(tokens[i].replace(/[$£€,]|EGP|LE|ج\.م\.?|ج م/gi, ""));
       if (!isNaN(n)) {
         costIdx = i;
         cost = n;

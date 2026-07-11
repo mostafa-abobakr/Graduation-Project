@@ -14,7 +14,7 @@ export default function BillingPlans() {
   const plans = [
     {
       name: "Operations Pro",
-      price: "49",
+      price: "1500",
       description: t(
         "Ideal for growing restaurants focusing on core operations.",
       ),
@@ -29,7 +29,7 @@ export default function BillingPlans() {
     },
     {
       name: "Full Management Suite",
-      price: "129",
+      price: "2000",
       description: t(
         "For premium restaurants that need full staff and operations management.",
       ),
@@ -98,7 +98,7 @@ export default function BillingPlans() {
               </h2>
               <div className="mb-4">
                 <span className="text-4xl font-extrabold text-foreground">
-                  ${plan.price}
+                  {Number(plan.price).toLocaleString("en-US")} {t("EGP")}
                 </span>
                 <span className="text-muted-foreground">/{t("mo")}</span>
               </div>
