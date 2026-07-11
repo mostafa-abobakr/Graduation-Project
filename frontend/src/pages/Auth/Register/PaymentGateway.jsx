@@ -276,7 +276,7 @@ export default function PaymentGateway() {
                   value={formData.cardNumber}
                   onChange={(e) => {
                     let val = e.target.value.replace(/\D/g, "");
-                    val = val.replace(/(.{4})/g, "1 EGP ").trim();
+                    val = val.replace(/(.{4})/g, "$1 ").trim();
                     setFormData({ ...formData, cardNumber: val });
                   }}
                   disabled={price === 0}
