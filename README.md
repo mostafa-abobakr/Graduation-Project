@@ -1,3 +1,7 @@
+<div align="center">
+  
+<img src="https://drive.google.com/uc?export=view&id=174Oo2U0_W18qHK6DsjUWNAKGNeXV8ebc" alt="zeroBite Logo" height="120" />&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://drive.google.com/uc?export=view&id=1KAKJe-26csZIDYFrkMZWrA1rycvYmBc1" alt="zeroBite Text Logo" height="120" />
+
 # 🍽️ Intelligent Restaurant Demand & Staffing Optimizer
 
 ### Graduation Project | IT Department | FCIS Mansoura University
@@ -5,6 +9,11 @@
 ![Project Status](https://img.shields.io/badge/Status-In%20Development-yellow)
 ![University](https://img.shields.io/badge/FCIS-Mansoura%20University-blue)
 ![Department](https://img.shields.io/badge/Department-Information%20Technology-green)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-zeroBite-success)](https://zer0bite.vercel.app/)
+
+> **🌐 Live Demo:** Check out the working deployment at **[zer0bite.vercel.app](https://zer0bite.vercel.app/)**
+
+</div>
 
 ## 📖 Overview
 
@@ -14,7 +23,7 @@ Based on these predictions, the system automatically provides actionable insight
 
 ## 🚀 Key Features
 
-* **🧠 AI-Driven Demand Forecasting:** accurately predicts hourly customer traffic and order volume using historical data and external factors (Weather, Holidays).
+* **🧠 AI-Driven Demand Forecasting:** Accurately predicts hourly customer traffic and order volume using historical data and external factors (Weather, Holidays).
 * **👥 Dynamic Staffing Optimization:** Calculates the precise number of cooks and servers needed per hour to prevent understaffing or overstaffing.
 * **🛒 Smart Inventory Management:** Generates data-driven "Smart Shopping Lists" for critical ingredients to reduce food waste.
 * **🗓️ Interactive Manager Dashboard:** A clean, visual interface for scheduling staff and monitoring operational efficiency.
@@ -30,32 +39,10 @@ The project follows a modular **Monorepo** structure:
 * **🎨 UI/UX:** Figma/Adobe XD (Design Systems & Prototyping).
 
 ## 📂 Project Structure
-```
+```text
 ├── ai_engine/       # Machine Learning models and training scripts
 ├── backend/         # Server-side logic and API endpoints
 ├── frontend/        # Web Client interface
 ├── mobile/          # Flutter Mobile Application
 ├── design/          # UI/UX Assets and Wireframes
 └── README.md        # Project documentation
-```
-
-##🎓 Team Members
-
-Supervised by: Dr.Heba Kandil & Eng.Mayada Magdy
-
-### Development Team
-
-| Role | Team Member |
-| :--- | :--- |
-| **Team Leader & AI Engineer** | **Yousef Awaad Mohamed Mesad** |
-| **AI Engineer** | Yousef Sameh Mahmoud Elgiar |
-| **Backend Developer** | Yousef Sherif Ibrahim Kassem |
-| **Backend Developer** | Mohamed El-Shahat Mohamed Hassan |
-| **Frontend Developer (Web)** | Mostafa Mohamed Mostafa Mohamed Abobakr |
-| **Frontend Developer (Web)** | Mahmoud Mohamed Mohamed El-Baz |
-| **Mobile Developer (Flutter)** | Yousef Mohamed Ahmed Abdel Fattah |
-| **Mobile Developer (Flutter)** | Hassan Abdelhamid Abd Albary Mohamed |
-| **UI/UX Designer** | Yousef Mohamed Abdel Monem Mohamed |
-| **UI/UX Designer** | Ahmed Saad Atya Mohamed |
-
-Submitted to the Faculty of Computers and Information Sciences (FCIS), Mansoura University - Information Technology Department (2025).
